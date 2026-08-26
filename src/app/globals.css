@@ -1,0 +1,207 @@
+/* App-level interactive primitives on top of the local UI tokens */
+
+.ms-btn {
+  appearance: none;
+  border: 1px solid var(--ms-edge);
+  background: var(--ms-bg-2);
+  color: var(--ms-text);
+  padding: 3px 8px;
+  border-radius: var(--ms-radius);
+  cursor: pointer;
+  font-size: var(--ms-fs-body);
+}
+
+.ms-btn:hover {
+  background: var(--ms-bg-3);
+  color: var(--ms-text-bright);
+}
+
+.ms-btn-primary {
+  border-color: var(--ms-accent-soft);
+  color: var(--ms-text-bright);
+}
+
+.ms-input,
+.ms-textarea,
+.ms-select {
+  width: 100%;
+  max-width: 420px;
+  background: var(--ms-bg-1);
+  border: 1px solid var(--ms-edge-soft);
+  border-radius: var(--ms-radius);
+  padding: 4px 8px;
+  color: var(--ms-text);
+  outline: none;
+}
+
+.ms-textarea {
+  min-height: 88px;
+  max-width: 100%;
+  font-family: var(--ms-font-mono);
+  font-size: var(--ms-fs-meta);
+  resize: vertical;
+}
+
+.ms-input:focus,
+.ms-textarea:focus,
+.ms-select:focus {
+  border-color: var(--ms-accent-soft);
+}
+
+.ms-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: var(--ms-space-2);
+}
+
+.ms-label {
+  font-size: var(--ms-fs-meta);
+  color: var(--ms-text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ms-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--ms-space-3);
+  min-height: 0;
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .ms-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ms-panel {
+  border: 1px solid var(--ms-edge-soft);
+  border-radius: var(--ms-radius);
+  padding: var(--ms-space-2);
+  background: rgba(14, 18, 24, 0.55);
+  min-height: 0;
+}
+
+.ms-panel-title {
+  margin: 0 0 var(--ms-space-2);
+  font-size: var(--ms-fs-meta);
+  color: var(--ms-text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ms-sev-critical {
+  color: var(--ms-danger);
+}
+.ms-sev-high {
+  color: #d08070;
+}
+.ms-sev-medium {
+  color: var(--ms-warn);
+}
+.ms-sev-low,
+.ms-sev-info {
+  color: var(--ms-info);
+}
+
+.ms-mono {
+  font-family: var(--ms-font-mono);
+  font-size: var(--ms-fs-meta);
+}
+
+.ms-muted {
+  color: var(--ms-text-dim);
+}
+
+.ms-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ms-space-2);
+}
+
+.ms-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ms-space-2);
+  flex-wrap: wrap;
+}
+
+.ms-finding {
+  border-top: 1px solid var(--ms-edge-soft);
+  padding: var(--ms-space-2) 0;
+}
+
+.ms-finding:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.ms-pre {
+  white-space: pre-wrap;
+  font-family: var(--ms-font-mono);
+  font-size: var(--ms-fs-meta);
+  line-height: 1.4;
+  color: var(--ms-text);
+  margin: 0;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.ms-notes-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 260px);
+  gap: var(--ms-space-3);
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .ms-notes-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ms-notes-field {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ms-notes-open {
+  flex: 1;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  height: 100%;
+  resize: none;
+  border: 0;
+  background: transparent;
+  padding: 4px;
+  font-family: var(--ms-font-sans);
+  font-size: var(--ms-fs-body);
+  line-height: 1.5;
+}
+
+.ms-notes-open:focus {
+  border-color: transparent;
+}
+
+.ms-notes-open::placeholder {
+  color: var(--ms-text-dim);
+}
+
+.ms-notes-saved {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ms-notes-saved .ms-rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
