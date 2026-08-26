@@ -3,6 +3,7 @@
 import { Shell, Rail, NextBadgeAtom } from "@/ui";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { AccountSettings } from "./AccountSettings";
 
 const NAV = [
   { id: "workspace", label: "Workspace", href: "/" },
@@ -16,7 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <Shell statusText="local · work sync">
+    <Shell statusText="local · work sync" topRight={<AccountSettings />}>
       <NextBadgeAtom />
       <Rail
         label="Navigate"

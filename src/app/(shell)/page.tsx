@@ -3,6 +3,7 @@
 import { Workspace } from "@/ui";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
+import { LineEditor } from "@/components/LineEditor";
 
 type Note = {
   id: string;
@@ -79,6 +80,8 @@ export default function WorkspacePage() {
           method: "POST",
           body: JSON.stringify({ body }),
         });
+        const draftMeta = localStorage.getItem("work-sync:line-meta:draft");
+        if (draftMeta) localStorage.setItem(`work-sync:line-meta:${created.id}`, draftMeta);
         setSaved((prev) => [created, ...prev]);
         setActiveId(created.id);
       }
@@ -132,14 +135,7 @@ export default function WorkspacePage() {
       {error ? <p className="ms-sev-critical">{error}</p> : null}
       <div className="ms-notes-layout">
         <div className="ms-panel ms-notes-field">
-          <textarea
-            className="ms-textarea ms-notes-open"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Write a note…"
-            aria-label="Note"
-            spellCheck
-          />
+          <LineEditor value={body} onChange={setBody} storageKey={activeId ?? "draft"} />
         </div>
         <aside className="ms-panel ms-notes-saved">
           <h2 className="ms-panel-title">Saved notes</h2>

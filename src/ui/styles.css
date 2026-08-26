@@ -78,6 +78,33 @@ a:hover {
   color: var(--ms-text-dim);
 }
 
+.ms-shell-top-right {
+  margin-left: auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: var(--ms-font-sans);
+}
+
+.ms-account-trigger {
+  height: 23px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--ms-radius);
+  background: transparent;
+  color: var(--ms-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ms-account-trigger:hover { background: var(--ms-bg-3); border-color: var(--ms-edge); color: var(--ms-text-bright); }
+.ms-account-avatar { width: 17px; height: 17px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--ms-accent-soft); color: var(--ms-text-bright); background: var(--ms-bg-2); font-size: 10px; }
+.ms-account-avatar.is-large { width: 38px; height: 38px; font-size: 16px; flex: 0 0 auto; }
+
 .ms-brand-word {
   color: var(--ms-text-bright);
   font-weight: 500;
