@@ -237,6 +237,89 @@
 .ms-comment-box button.is-primary { color: var(--ms-text-bright); background: var(--ms-accent-soft); }
 .ms-menu-meta { margin: 4px 6px 2px; color: #626b75; font-size: 11px; }
 
+/* Tables workspace */
+.ms-tables-sidebar { min-height: 0; border-right: 1px solid var(--ms-edge-soft); background: rgba(9, 13, 18, .72); padding: 13px 9px; }
+.ms-tables-side-head { height: 31px; display: flex; align-items: flex-start; justify-content: space-between; padding: 0 7px; }
+.ms-tables-side-head h1 { margin: 0; color: var(--ms-text-bright); font-size: 15px; font-weight: 600; }
+.ms-tables-side-head > span { color: var(--ms-text-dim); font-size: 17px; }
+.ms-table-list { display: flex; flex-direction: column; gap: 3px; margin: 5px 0; }
+.ms-table-list button { width: 100%; min-height: 36px; display: grid; grid-template-columns: 23px 1fr auto; align-items: center; border: 0; border-radius: 7px; padding: 0 10px; background: transparent; color: var(--ms-text); font: 13px var(--ms-font-sans); text-align: left; cursor: pointer; }
+.ms-table-list button:hover, .ms-table-list button.is-active { background: var(--ms-bg-3); color: var(--ms-text-bright); }
+.ms-table-icon { color: var(--ms-accent); font-size: 16px; }
+.ms-table-more { letter-spacing: 1px; }
+.ms-add-table { width: 100%; min-height: 31px; display: grid; grid-template-columns: 24px 1fr auto; align-items: center; border: 0; background: transparent; color: var(--ms-text); text-align: left; font: 13px var(--ms-font-sans); cursor: pointer; }
+.ms-add-table:hover { color: var(--ms-text-bright); }
+.ms-add-table > span { color: var(--ms-text-dim); font-size: 17px; }
+
+.ms-table-stage { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 12px 20px 20px; overflow: hidden; background: rgba(11, 15, 20, .48); }
+.ms-view-tabs { height: 39px; display: flex; align-items: flex-start; gap: 5px; }
+.ms-view-tabs button { height: 33px; border: 1px solid transparent; border-radius: 14px; padding: 0 12px; background: transparent; color: var(--ms-text-dim); font: 13px var(--ms-font-sans); cursor: pointer; }
+.ms-view-tabs button.is-active { border-color: var(--ms-accent-soft); background: rgba(28, 70, 113, .42); color: #6aaeff; }
+.ms-view-tabs .ms-view-add { width: 32px; padding: 0; font-size: 20px; }
+.ms-data-frame { position: relative; min-width: 0; flex: 1; border: 8px solid rgba(32, 38, 45, .85); border-radius: 18px; background: var(--ms-bg-1); overflow: visible; }
+.ms-data-toolbar { height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 7px; background: rgba(32, 38, 45, .85); border-radius: 8px 8px 0 0; }
+.ms-toolbar-main, .ms-toolbar-end { display: flex; align-items: center; gap: 2px; }
+.ms-data-toolbar button { height: 31px; border: 0; border-radius: 4px; padding: 0 9px; background: transparent; color: var(--ms-text-bright); font: 13px var(--ms-font-sans); cursor: pointer; }
+.ms-data-toolbar button:hover { background: rgba(255,255,255,.06); }
+.ms-data-toolbar button.is-accent { color: #68aefb; }
+.ms-data-toolbar i { width: 1px; height: 17px; margin: 0 5px; background: var(--ms-edge); }
+.ms-toolbar-end button { width: 32px; padding: 0; color: var(--ms-text); }
+.ms-table-search { position: absolute; z-index: 4; top: 46px; right: 66px; width: 240px; height: 36px; display: grid; grid-template-columns: 26px 1fr 28px; align-items: center; padding: 0 6px; border: 1px solid var(--ms-edge); border-radius: 5px; background: #171d24; box-shadow: 0 8px 22px rgba(0,0,0,.35); }
+.ms-table-search input { min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 12px var(--ms-font-sans); }
+.ms-table-search button { border: 0; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
+.ms-data-scroll { max-width: 100%; min-height: 230px; overflow: auto; border-radius: 0 0 8px 8px; }
+.ms-data-grid { min-width: 820px; width: 100%; table-layout: fixed; border-collapse: collapse; color: var(--ms-text); }
+.ms-data-grid th, .ms-data-grid td { height: 36px; border-right: 1px solid var(--ms-edge-soft); border-bottom: 1px solid var(--ms-edge-soft); padding: 0; text-align: left; }
+.ms-data-grid th { position: relative; background: #0e1318; color: var(--ms-text-bright); font-weight: 500; }
+.ms-data-grid th:not(.ms-row-number):not(.ms-add-column) { width: 145px; }
+.ms-data-grid th:nth-child(2) { width: 175px; }
+.ms-data-grid .ms-row-number { width: 42px; text-align: center; color: var(--ms-text-bright); font: 11px var(--ms-font-mono); }
+.ms-grid-select { display: inline-block; width: 17px; height: 17px; border: 1px solid var(--ms-edge); border-radius: 4px; }
+.ms-data-grid th > input { width: calc(100% - 57px); height: 34px; border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 600 12px var(--ms-font-sans); }
+.ms-column-type { width: 31px; display: inline-grid; place-items: center; color: var(--ms-text); }
+.ms-data-grid th > button { position: absolute; right: 5px; top: 5px; width: 27px; height: 27px; opacity: 0; border: 0; border-radius: 4px; background: var(--ms-bg-3); color: var(--ms-text); cursor: pointer; }
+.ms-data-grid th:hover > button { opacity: 1; }
+.ms-data-grid .ms-add-column { width: auto; min-width: 48px; }
+.ms-data-grid .ms-add-column > button { position: static; opacity: 1; background: transparent; font-size: 18px; }
+.ms-data-grid td > input { width: 100%; height: 35px; padding: 0 9px; border: 0; outline: 0; background: transparent; color: var(--ms-text); font: 12px var(--ms-font-sans); }
+.ms-data-grid td > input:focus { box-shadow: inset 0 0 0 1px var(--ms-accent-soft); background: rgba(61,111,140,.07); }
+.ms-data-grid td > input::placeholder { color: #55606d; }
+.ms-cell-upload { margin-left: 8px; opacity: 0; border: 1px solid var(--ms-edge); border-radius: 3px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 11px var(--ms-font-sans); cursor: pointer; }
+.ms-data-grid td:hover .ms-cell-upload { opacity: 1; }
+.ms-grid-check { height: 100%; display: grid; place-items: center; cursor: pointer; }
+.ms-grid-check input { position: absolute; opacity: 0; }
+.ms-grid-check span { width: 15px; height: 15px; border: 1px solid var(--ms-edge); border-radius: 3px; }
+.ms-grid-check input:checked + span { background: var(--ms-accent); box-shadow: inset 0 0 0 3px var(--ms-bg-1); }
+.ms-grid-add-row { width: 100%; height: 36px; border: 0; background: transparent; color: var(--ms-text); text-align: left; padding-left: 15px; font-size: 18px; cursor: pointer; }
+.ms-grid-add-row:hover { background: rgba(255,255,255,.025); }
+.ms-data-scroll { scrollbar-color: var(--ms-edge) var(--ms-bg-1); scrollbar-width: thin; }
+.ms-data-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.ms-data-scroll::-webkit-scrollbar-track { background: var(--ms-bg-1); }
+.ms-data-scroll::-webkit-scrollbar-thumb { border-radius: 8px; background: var(--ms-edge); }
+
+.ms-column-picker { position: absolute; z-index: 12; top: 44px; left: 280px; width: 360px; max-height: min(555px, calc(100vh - 120px)); overflow: auto; padding: 8px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2026; box-shadow: 0 18px 48px rgba(0,0,0,.55); }
+.ms-column-picker > label { height: 37px; display: grid; grid-template-columns: 28px 1fr; align-items: center; }
+.ms-column-picker > label span { display: grid; place-items: center; font-size: 17px; }
+.ms-column-picker > label input { border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 13px var(--ms-font-sans); }
+.ms-picker-rule { height: 1px; margin: 2px 0 9px; background: var(--ms-edge); }
+.ms-column-picker h3 { margin: 7px 0 5px; color: var(--ms-text); font-size: 11px; font-weight: 600; }
+.ms-ai-types, .ms-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.ms-ai-types button, .ms-type-grid button { min-height: 31px; display: flex; align-items: center; gap: 10px; border: 0; border-radius: 5px; padding: 0 6px; background: transparent; color: var(--ms-text-bright); font: 13px var(--ms-font-sans); text-align: left; cursor: pointer; }
+.ms-ai-types button { color: var(--ms-text); }
+.ms-ai-types button::first-letter { color: #4e92ff; }
+.ms-ai-types button:hover, .ms-type-grid button:hover { background: #2d343c; }
+.ms-type-grid button > span { width: 18px; display: inline-grid; place-items: center; font-size: 16px; }
+.ms-type-grid button em { margin-left: auto; border-radius: 4px; padding: 1px 4px; background: var(--ms-accent-soft); color: #74b8ff; font-style: normal; font-size: 10px; }
+
+@media (max-width: 900px) {
+  .ms-tables-page { grid-template-columns: 1fr; }
+  .ms-tables-sidebar { display: none; }
+  .ms-table-stage { padding: 9px; }
+  .ms-column-picker { left: 10px; width: min(360px, calc(100vw - 90px)); }
+  .ms-toolbar-main button:nth-of-type(3), .ms-toolbar-main button:nth-of-type(4) { display: none; }
+  .ms-toolbar-end { display: none; }
+}
+
 @media (max-width: 700px) {
   .ms-shell { grid-template-columns: 54px minmax(0, 1fr); }
   .ms-rail-label, .ms-rail-item { font-size: 0; }

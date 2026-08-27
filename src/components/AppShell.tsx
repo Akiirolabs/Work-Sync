@@ -7,6 +7,7 @@ import { AccountSettings } from "./AccountSettings";
 
 const NAV = [
   { id: "workspace", label: "Workspace", href: "/" },
+  { id: "tables", label: "Tables", href: "/tables" },
   { id: "sources", label: "Sources", href: "/sources" },
   { id: "verify", label: "Verify", href: "/verify" },
   { id: "history", label: "History", href: "/history" },
