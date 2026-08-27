@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { LiquidChromeOrb } from "@/ui";
 
 type BlockKind = "text" | "h1" | "h2" | "h3" | "h4" | "bullets" | "numbered" | "todo" | "code" | "quote";
 type Line = { id: string; text: string; kind: BlockKind; comments: string[]; accent: boolean; align: "left" | "center" | "right" };
@@ -70,7 +71,7 @@ export function LineEditor({ value, onChange, storageKey }: { value: string; onC
       <input ref={(el) => { inputs.current[line.id] = el; }} value={line.text} onChange={(e) => update(line.id, { text: e.target.value })} onKeyDown={(e) => onKey(e, line)} style={{ textAlign: line.align }} placeholder={index === 0 ? "Write a note…" : ""} aria-label={`Line ${index + 1}`} />
       {line.comments.length > 0 && <button className="ms-comment-count" type="button" onClick={() => { setActive(line.id); setCommenting(true); }} title={line.comments.join("\n")}>▱ {line.comments.length}</button>}
       {active === line.id && <div className="ms-line-menu" role="menu">
-        <button className="ms-menu-item ms-menu-ask" onClick={() => setActive(null)}><Glyph>✦</Glyph><span>Ask AI</span><span className="ms-menu-chevron">›</span></button>
+        <button className="ms-menu-item ms-menu-ask" onClick={() => setActive(null)}><span className="ms-menu-glyph"><LiquidChromeOrb size={16} title="Ask AI" /></span><span>Ask AI</span><span className="ms-menu-chevron">›</span></button>
         <div className="ms-menu-rule" /><p className="ms-menu-label">Turn into</p>
         <div className="ms-turn-grid">
           {([['text','T'],['h1','H1'],['h2','H2'],['h3','H3'],['h4','H4'],['bullets','•≡'],['numbered','1≡'],['todo','☑'],['code','‹/›'],['quote','❞']] as [BlockKind,string][]).map(([kind,label]) => <button key={kind} className={line.kind === kind ? "is-active" : ""} onClick={() => setKind(line.id, kind)} title={kind}>{label}</button>)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { LiquidChromeOrb } from "@/ui";
 
 type User = { id: string; name: string; email: string };
 
@@ -30,7 +31,7 @@ export function AccountSettings() {
 
   return <>
     <button className="ms-account-trigger" type="button" onClick={() => setOpen(true)} aria-label="Open settings">
-      <span className="ms-account-avatar">{user?.name?.[0]?.toUpperCase() ?? "○"}</span>
+      <LiquidChromeOrb size={17} title="Open settings" />
       <span>{user?.name ?? "Settings"}</span>
       <span aria-hidden>⌄</span>
     </button>
