@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { TABLE_ICONS, TYPE_INFO, addColumn as addColumnModel, addRow as addRowModel, changeColumnType, deleteColumn, duplicateColumn, duplicateTable, hideColumn, insertColumn, makeTable, showColumn, updateCell as updateCellModel, type Column, type ColumnType, type Row, type WorkTable } from "@/lib/table-model";
+import { TABLE_ICON_GROUPS, TYPE_INFO, addColumn as addColumnModel, addRow as addRowModel, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, normalizeTableIcon, showColumn, updateCell as updateCellModel, type Column, type ColumnType, type Row, type WorkTable } from "@/lib/table-model";
 import { LineEditor } from "@/components/LineEditor";
 const STORAGE_KEY = "work-sync:tables";
 
@@ -13,7 +13,7 @@ function Cell({ row, column, onChange, onOpenPage }: { row: Row; column: Column;
   if (column.type === "single" || column.type === "multiple") return <input value={String(value)} onChange={(e) => onChange(e.target.value)} placeholder="Select…" />;
   if (column.type === "people") return <input value={String(value)} onChange={(e) => onChange(e.target.value)} placeholder="Empty" />;
   if (column.type === "files") return <button className="ms-cell-upload" type="button">+ Add file</button>;
-  if (column.type === "page") { const title = String(value).split("\n").find((line) => line.trim())?.trim() ?? ""; return <button className="ms-page-cell" type="button" onClick={onOpenPage}><span>▤</span>{title || "Open page"}</button>; }
+  if (column.type === "page") { const page = decodePageCell(value); return <button className="ms-page-cell" type="button" onClick={onOpenPage}><span>▤</span>{page.title || "Open page"}</button>; }
   return <input type={column.type === "number" || column.type === "currency" || column.type === "percent" ? "number" : column.type === "email" ? "email" : column.type === "url" ? "url" : "text"} value={String(value)} onChange={(e) => onChange(e.target.value)} />;
 }
 
@@ -64,7 +64,7 @@ export default function TablesPage() {
   useEffect(() => {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as WorkTable[];
-      const initial = parsed.length ? parsed : [makeTable(1)]; setTables(initial); setActiveId(initial[0]!.id);
+      const initial = parsed.length ? parsed.map((table) => ({ ...table, icon: normalizeTableIcon(table.icon) })) : [makeTable(1)]; setTables(initial); setActiveId(initial[0]!.id);
     } catch { const initial = makeTable(1); setTables([initial]); setActiveId(initial.id); }
     setReady(true);
   }, []);
@@ -90,7 +90,7 @@ export default function TablesPage() {
   const currentTable = table;
   const pageRow = openPage ? table.rows.find((row) => row.id === openPage.rowId) : undefined;
   const pageColumn = openPage ? table.columns.find((column) => column.id === openPage.columnId) : undefined;
-  const pageBody = pageRow && pageColumn ? String(pageRow.cells[pageColumn.id] ?? "") : "";
+  const pageDocument = decodePageCell(pageRow && pageColumn ? pageRow.cells[pageColumn.id] : "");
   function summaryFor(column: Column) { const kind = summaries[column.id]; if (!kind) return ""; const values = currentTable.rows.map((row) => row.cells[column.id]).filter((value) => value !== "" && value !== undefined && value !== false); if (kind === "count") return `${currentTable.rows.length} rows`; if (kind === "filled") return `${values.length} values`; return `${Math.round(((currentTable.rows.length - values.length) / Math.max(1, currentTable.rows.length)) * 100)}% empty`; }
 
   return <main className="ms-tables-page">
@@ -98,11 +98,11 @@ export default function TablesPage() {
       <div className="ms-tables-side-head"><h1>Tables</h1><span>«</span></div>
       <div className="ms-table-list">
         {tables.map((item) => <div key={item.id} className={`ms-table-list-item${item.id === table.id ? " is-active" : ""}`} onClick={() => setActiveId(item.id)}>
-          <button type="button" className="ms-table-icon" aria-label={`Change icon for ${item.name}`} onClick={(e) => { e.stopPropagation(); setIconMenu(iconMenu === item.id ? null : item.id); setTableMenu(null); }}>{item.icon ?? "▦"}</button>
+          <button type="button" className="ms-table-icon" aria-label={`Change icon for ${item.name}`} onClick={(e) => { e.stopPropagation(); setIconMenu(iconMenu === item.id ? null : item.id); setTableMenu(null); }}>{normalizeTableIcon(item.icon)}</button>
           {renamingTable === item.id ? <input className="ms-table-rename" aria-label={`Rename ${item.name}`} value={item.name} autoFocus onClick={(e) => e.stopPropagation()} onChange={(e) => setTables((all) => all.map((entry) => entry.id === item.id ? { ...entry, name: e.target.value } : entry))} onBlur={() => setRenamingTable(null)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setRenamingTable(null); }} /> : <span>{item.name}</span>}
           <button type="button" className="ms-table-more" aria-label={`Options for ${item.name}`} onClick={(e) => { e.stopPropagation(); setTableMenu(tableMenu === item.id ? null : item.id); setIconMenu(null); }}>•••</button>
           {tableMenu === item.id && <div className="ms-table-small-menu" role="menu" onClick={(e) => e.stopPropagation()}><button className="is-highlight" onClick={() => { void navigator.clipboard.writeText(`${location.href}#table-${item.id}`); setTableMenu(null); }}><span>↗</span>Copy link</button><button onClick={() => { setRenamingTable(item.id); setTableMenu(null); }}><span>◇</span>Rename</button><button onClick={() => copyTable(item)}><span>▣</span>Duplicate</button><div /><button className="is-danger" disabled={tables.length === 1} onClick={() => removeTable(item.id)}><span>♜</span>Delete</button></div>}
-          {iconMenu === item.id && <div className="ms-table-icon-menu" role="dialog" aria-label={`Choose icon for ${item.name}`} onClick={(e) => e.stopPropagation()}>{TABLE_ICONS.map((icon) => <button key={icon} className={(item.icon ?? "▦") === icon ? "is-active" : ""} onClick={() => setIcon(item.id, icon)}>{icon}</button>)}</div>}
+          {iconMenu === item.id && <div className="ms-table-icon-menu" role="dialog" aria-label={`Choose icon for ${item.name}`} onClick={(e) => e.stopPropagation()}>{TABLE_ICON_GROUPS.map((group) => <section key={group.label}><h3>{group.label}</h3><div>{group.icons.map((icon) => <button key={icon.symbol} aria-label={`${icon.label} symbol`} title={icon.label} className={normalizeTableIcon(item.icon) === icon.symbol ? "is-active" : ""} onClick={() => setIcon(item.id, icon.symbol)}>{icon.symbol}</button>)}</div></section>)}</div>}
         </div>)}
       </div>
       <button type="button" className="ms-add-table" onClick={addTable}><span>＋</span> Add <span>⌄</span></button>
@@ -129,7 +129,7 @@ export default function TablesPage() {
         {picker === "add" && <ColumnPicker search={typeSearch} onSearch={setTypeSearch} onSelect={addColumn} hiddenColumns={table.columns.filter((column) => column.hidden)} onShow={(id) => { changeTable((current) => showColumn(current, id)); setPicker(null); }} />}
         {selectedColumn && <ColumnPicker column={selectedColumn} search={typeSearch} onSearch={setTypeSearch} onSelect={(type) => { changeTable((current) => changeColumnType(current, selectedColumn.id, type)); setPicker(null); }} />}
         {actionColumn && columnMenu && createPortal(<ColumnActions column={actionColumn} position={columnMenu} summarizeOpen={summaryMenu === actionColumn.id} moreOpen={moreMenu === actionColumn.id} onEdit={() => { setPicker(actionColumn.id); setColumnMenu(null); setTypeSearch(""); }} onDuplicate={() => { changeTable((current) => duplicateColumn(current, actionColumn.id)); setColumnMenu(null); }} onInsert={(side) => { changeTable((current) => insertColumn(current, actionColumn.id, side)); setColumnMenu(null); }} onFilter={() => { setFilterColumn(actionColumn.id); setFilterOpen(true); setColumnMenu(null); }} onToggleSummarize={() => setSummaryMenu(summaryMenu === actionColumn.id ? null : actionColumn.id)} onSummarize={(kind) => { setSummaries((all) => ({ ...all, [actionColumn.id]: kind })); setColumnMenu(null); }} onFreeze={() => { setFrozenColumn(frozenColumn === actionColumn.id ? null : actionColumn.id); setColumnMenu(null); }} onHide={() => { changeTable((current) => hideColumn(current, actionColumn.id)); setColumnMenu(null); }} onDelete={() => { changeTable((current) => deleteColumn(current, actionColumn.id)); setColumnMenu(null); }} onToggleMore={() => setMoreMenu(moreMenu === actionColumn.id ? null : actionColumn.id)} />, document.body)}
-        {openPage && pageRow && pageColumn && createPortal(<div className="ms-page-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpenPage(null); }}><section className="ms-page-modal" role="dialog" aria-modal="true" aria-label={`${pageColumn.name} page`}><header><div><span>{TYPE_INFO[pageColumn.type].icon}</span><div><p>{table.name} · {pageColumn.name}</p><h2>{pageBody.split("\n").find((line) => line.trim())?.trim() || "Untitled page"}</h2></div></div><button type="button" aria-label="Close page" onClick={() => setOpenPage(null)}>×</button></header><div className="ms-page-modal-editor"><LineEditor value={pageBody} onChange={(body) => updateCell(pageRow.id, pageColumn.id, body)} storageKey={`table-page:${table.id}:${pageRow.id}:${pageColumn.id}`} /></div></section></div>, document.body)}
+        {openPage && pageRow && pageColumn && createPortal(<div className="ms-page-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpenPage(null); }}><section className="ms-page-modal" role="dialog" aria-modal="true" aria-label={`${pageColumn.name} page`}><header><div><span>{TYPE_INFO[pageColumn.type].icon}</span><div><p>{table.name} · {pageColumn.name}</p><input aria-label="Page title" value={pageDocument.title} onChange={(event) => updateCell(pageRow.id, pageColumn.id, encodePageCell(event.target.value, pageDocument.body))} placeholder="Untitled page" /></div></div><button type="button" aria-label="Close page" onClick={() => setOpenPage(null)}>×</button></header><div className="ms-page-modal-editor"><LineEditor value={pageDocument.body} onChange={(body) => updateCell(pageRow.id, pageColumn.id, encodePageCell(pageDocument.title, body))} storageKey={`table-page:${table.id}:${pageRow.id}:${pageColumn.id}`} /></div></section></div>, document.body)}
       </div>
     </section>
   </main>;

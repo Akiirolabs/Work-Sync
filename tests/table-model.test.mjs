@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { addColumn, addRow, changeColumnType, deleteColumn, duplicateColumn, duplicateTable, hideColumn, insertColumn, makeTable, showColumn, updateCell } from "../src/lib/table-model.ts";
+import { TABLE_ICON_GROUPS, addColumn, addRow, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, normalizeTableIcon, showColumn, updateCell } from "../src/lib/table-model.ts";
 
 test("creates a themed table with five columns and three rows", () => {
   const table = makeTable(1);
   assert.equal(table.name, "Table");
-  assert.equal(table.icon, "▦");
+  assert.equal(table.icon, "▤");
   assert.equal(table.columns.length, 5);
   assert.equal(table.rows.length, 3);
 });
@@ -66,4 +66,20 @@ test("stores page content only in its exact row and column cell", () => {
   assert.equal(table.rows[0]?.cells[pageColumn.id], "Page title\nPrivate page body");
   assert.equal(table.rows[1]?.cells[pageColumn.id], undefined);
   for (const column of table.columns.slice(0, -1)) assert.equal(table.rows[0]?.cells[column.id], undefined);
+});
+
+test("stores a renameable page title separately from its body", () => {
+  const encoded = encodePageCell("Experiment 42", "First observation\nSecond observation");
+  assert.deepEqual(decodePageCell(encoded), { title: "Experiment 42", body: "First observation\nSecond observation" });
+  assert.deepEqual(decodePageCell("Legacy title\nLegacy body"), { title: "Legacy title", body: "Legacy title\nLegacy body" });
+});
+
+test("offers categorized office and lab technology table icons", () => {
+  assert.deepEqual(TABLE_ICON_GROUPS.map((group) => group.label), ["Office", "Lab & technology"]);
+  assert.ok(TABLE_ICON_GROUPS.flatMap((group) => group.icons).length >= 70);
+  assert.ok(TABLE_ICON_GROUPS[0].icons.some((icon) => icon.label === "Office"));
+  assert.ok(TABLE_ICON_GROUPS[1].icons.some((icon) => icon.label === "Artificial intelligence"));
+  assert.equal(TABLE_ICON_GROUPS.flatMap((group) => group.icons).some((icon) => /\p{Extended_Pictographic}/u.test(icon.symbol)), false);
+  assert.equal(normalizeTableIcon("📋"), "▤");
+  assert.equal(normalizeTableIcon("AI"), "AI");
 });

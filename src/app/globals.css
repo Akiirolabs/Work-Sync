@@ -255,8 +255,10 @@
 .ms-table-small-menu > button.is-danger:hover { color: #ef8175; }
 .ms-table-small-menu > button:disabled { opacity: .35; cursor: not-allowed; }
 .ms-table-small-menu > div { height: 1px; margin: 7px 0; background: var(--ms-edge); }
-.ms-table-icon-menu { position: absolute; z-index: 26; top: 34px; left: 2px; width: 184px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px; border: 1px solid var(--ms-edge); border-radius: 8px; background: #1e2329; box-shadow: 0 14px 38px rgba(0,0,0,.55); }
-.ms-table-icon-menu button { height: 34px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--ms-text-bright); font-size: 16px; cursor: pointer; }
+.ms-table-icon-menu { position: absolute; z-index: 26; top: 34px; left: 2px; width: 286px; max-height: min(520px, calc(100vh - 120px)); display: flex; flex-direction: column; gap: 12px; padding: 11px; overflow-y: auto; border: 1px solid var(--ms-edge); border-radius: 8px; background: #1e2329; box-shadow: 0 14px 38px rgba(0,0,0,.55); }
+.ms-table-icon-menu section h3 { margin: 0 0 5px; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); letter-spacing: .05em; text-transform: uppercase; }
+.ms-table-icon-menu section > div { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
+.ms-table-icon-menu button { min-width: 0; height: 34px; padding: 0 2px; overflow: hidden; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--ms-text-bright); font: 600 12px var(--ms-font-mono); text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .ms-table-icon-menu button:hover, .ms-table-icon-menu button.is-active { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); color: var(--ms-accent); }
 .ms-add-table { width: 100%; min-height: 31px; display: grid; grid-template-columns: 24px 1fr auto; align-items: center; border: 0; background: transparent; color: var(--ms-text); text-align: left; font: 13px var(--ms-font-sans); cursor: pointer; }
 .ms-add-table:hover { color: var(--ms-text-bright); }
@@ -349,7 +351,9 @@
 .ms-page-modal > header > div { display: flex; align-items: center; gap: 11px; }
 .ms-page-modal > header > div > span { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--ms-edge); border-radius: 6px; color: var(--ms-accent); background: var(--ms-bg-2); font-size: 17px; }
 .ms-page-modal header p { margin: 0 0 2px; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); letter-spacing: .05em; }
-.ms-page-modal header h2 { margin: 0; color: var(--ms-text-bright); font-size: 15px; font-weight: 600; }
+.ms-page-modal header input { width: min(560px, 65vw); border: 0; border-bottom: 1px solid transparent; outline: 0; padding: 0 0 2px; background: transparent; color: var(--ms-text-bright); font: 600 15px var(--ms-font-sans); }
+.ms-page-modal header input:hover, .ms-page-modal header input:focus { border-bottom-color: var(--ms-accent-soft); }
+.ms-page-modal header input::placeholder { color: var(--ms-text-dim); }
 .ms-page-modal > header > button { width: 34px; height: 34px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--ms-text-dim); font-size: 23px; cursor: pointer; }
 .ms-page-modal > header > button:hover { border-color: var(--ms-edge); background: var(--ms-bg-3); color: var(--ms-text-bright); }
 .ms-page-modal-editor { flex: 1; min-height: 0; overflow: auto; padding: 20px max(28px, 8vw); }
