@@ -57,3 +57,13 @@ test("duplicates a table with independent identifiers and remapped data", () => 
   assert.equal(copy.rows[0]?.cells[copy.columns[0].id], "Copied value");
   assert.equal(copy.name, "Table copy");
 });
+
+test("stores page content only in its exact row and column cell", () => {
+  let table = addColumn(makeTable(1), "page");
+  const pageColumn = table.columns.at(-1); const firstRow = table.rows[0]; const secondRow = table.rows[1];
+  assert.ok(pageColumn && firstRow && secondRow);
+  table = updateCell(table, firstRow.id, pageColumn.id, "Page title\nPrivate page body");
+  assert.equal(table.rows[0]?.cells[pageColumn.id], "Page title\nPrivate page body");
+  assert.equal(table.rows[1]?.cells[pageColumn.id], undefined);
+  for (const column of table.columns.slice(0, -1)) assert.equal(table.rows[0]?.cells[column.id], undefined);
+});

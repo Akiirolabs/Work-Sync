@@ -300,6 +300,9 @@
 .ms-data-grid tfoot td { height: 32px; border-right: 1px solid var(--ms-edge-soft); border-top: 1px solid var(--ms-edge); padding: 0 8px; color: var(--ms-text-dim); background: #10151b; font: 10px var(--ms-font-mono); }
 .ms-cell-upload { margin-left: 8px; opacity: 0; border: 1px solid var(--ms-edge); border-radius: 3px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 11px var(--ms-font-sans); cursor: pointer; }
 .ms-data-grid td:hover .ms-cell-upload { opacity: 1; }
+.ms-page-cell { width: 100%; height: 35px; display: flex; align-items: center; gap: 7px; border: 0; padding: 0 9px; background: transparent; color: var(--ms-text); font: 12px var(--ms-font-sans); text-align: left; cursor: pointer; }
+.ms-page-cell:hover { background: rgba(61,111,140,.09); color: var(--ms-text-bright); }
+.ms-page-cell span { color: var(--ms-accent); }
 .ms-grid-check { height: 100%; display: grid; place-items: center; cursor: pointer; }
 .ms-grid-check input { position: absolute; opacity: 0; }
 .ms-grid-check span { width: 15px; height: 15px; border: 1px solid var(--ms-edge); border-radius: 3px; }
@@ -339,6 +342,24 @@
 .ms-action-submenu.is-bottom { top: auto; bottom: 5px; }
 .ms-action-submenu button { width: 100%; height: 31px; border: 0; border-radius: 5px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
 .ms-action-submenu button:hover { background: #31373e; color: var(--ms-text-bright); }
+
+.ms-page-modal-backdrop { position: fixed; z-index: 300; inset: 0; display: grid; place-items: center; padding: 28px; background: rgba(3, 6, 9, .72); backdrop-filter: blur(3px); }
+.ms-page-modal { width: min(1100px, 94vw); height: min(820px, 90vh); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--ms-edge); border-radius: 10px; background: #0d1218; box-shadow: 0 28px 90px rgba(0,0,0,.72); }
+.ms-page-modal > header { min-height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 11px 20px; border-bottom: 1px solid var(--ms-edge-soft); background: #11171e; }
+.ms-page-modal > header > div { display: flex; align-items: center; gap: 11px; }
+.ms-page-modal > header > div > span { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--ms-edge); border-radius: 6px; color: var(--ms-accent); background: var(--ms-bg-2); font-size: 17px; }
+.ms-page-modal header p { margin: 0 0 2px; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); letter-spacing: .05em; }
+.ms-page-modal header h2 { margin: 0; color: var(--ms-text-bright); font-size: 15px; font-weight: 600; }
+.ms-page-modal > header > button { width: 34px; height: 34px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--ms-text-dim); font-size: 23px; cursor: pointer; }
+.ms-page-modal > header > button:hover { border-color: var(--ms-edge); background: var(--ms-bg-3); color: var(--ms-text-bright); }
+.ms-page-modal-editor { flex: 1; min-height: 0; overflow: auto; padding: 20px max(28px, 8vw); }
+.ms-page-modal-editor .ms-line-editor { min-height: 100%; }
+
+@media (max-width: 700px) {
+  .ms-page-modal-backdrop { padding: 0; }
+  .ms-page-modal { width: 100vw; height: 100vh; max-height: none; border: 0; border-radius: 0; }
+  .ms-page-modal-editor { padding: 16px 28px; }
+}
 
 @media (max-width: 900px) {
   .ms-tables-page { grid-template-columns: 1fr; }

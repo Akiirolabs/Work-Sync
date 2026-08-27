@@ -29,3 +29,10 @@ test("column menus are portal-rendered and anchored to the opening chevron", () 
   assert.match(tablesPage, /createPortal\(<ColumnActions/);
   assert.match(tablesPage, /rect\.bottom \+ 5/);
 });
+
+test("page cells use the Workspace editor in a dismissible cell-scoped modal", () => {
+  assert.match(tablesPage, /<LineEditor value=\{pageBody\}/);
+  assert.match(tablesPage, /aria-label="Close page"/);
+  assert.match(tablesPage, /event\.target === event\.currentTarget/);
+  assert.match(tablesPage, /table-page:\$\{table\.id\}:\$\{pageRow\.id\}:\$\{pageColumn\.id\}/);
+});

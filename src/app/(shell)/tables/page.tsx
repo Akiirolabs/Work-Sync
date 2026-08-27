@@ -3,15 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { TABLE_ICONS, TYPE_INFO, addColumn as addColumnModel, addRow as addRowModel, changeColumnType, deleteColumn, duplicateColumn, duplicateTable, hideColumn, insertColumn, makeTable, showColumn, updateCell as updateCellModel, type Column, type ColumnType, type Row, type WorkTable } from "@/lib/table-model";
+import { LineEditor } from "@/components/LineEditor";
 const STORAGE_KEY = "work-sync:tables";
 
-function Cell({ row, column, onChange }: { row: Row; column: Column; onChange: (value: string | boolean) => void }) {
+function Cell({ row, column, onChange, onOpenPage }: { row: Row; column: Column; onChange: (value: string | boolean) => void; onOpenPage: () => void }) {
   const value = row.cells[column.id] ?? "";
   if (column.type === "checkbox") return <label className="ms-grid-check"><input type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} /><span /></label>;
   if (column.type === "date") return <input type="date" value={String(value)} onChange={(e) => onChange(e.target.value)} />;
   if (column.type === "single" || column.type === "multiple") return <input value={String(value)} onChange={(e) => onChange(e.target.value)} placeholder="Select…" />;
   if (column.type === "people") return <input value={String(value)} onChange={(e) => onChange(e.target.value)} placeholder="Empty" />;
   if (column.type === "files") return <button className="ms-cell-upload" type="button">+ Add file</button>;
+  if (column.type === "page") { const title = String(value).split("\n").find((line) => line.trim())?.trim() ?? ""; return <button className="ms-page-cell" type="button" onClick={onOpenPage}><span>▤</span>{title || "Open page"}</button>; }
   return <input type={column.type === "number" || column.type === "currency" || column.type === "percent" ? "number" : column.type === "email" ? "email" : column.type === "url" ? "url" : "text"} value={String(value)} onChange={(e) => onChange(e.target.value)} />;
 }
 
@@ -57,6 +59,7 @@ export default function TablesPage() {
   const [filterColumn, setFilterColumn] = useState<string | null>(null);
   const [frozenColumn, setFrozenColumn] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<Record<string, "count" | "filled" | "empty">>({});
+  const [openPage, setOpenPage] = useState<{ rowId: string; columnId: string } | null>(null);
 
   useEffect(() => {
     try {
@@ -85,6 +88,9 @@ export default function TablesPage() {
   const visibleColumns = table.columns.filter((column) => !column.hidden);
   const frozenIndex = visibleColumns.findIndex((column) => column.id === frozenColumn);
   const currentTable = table;
+  const pageRow = openPage ? table.rows.find((row) => row.id === openPage.rowId) : undefined;
+  const pageColumn = openPage ? table.columns.find((column) => column.id === openPage.columnId) : undefined;
+  const pageBody = pageRow && pageColumn ? String(pageRow.cells[pageColumn.id] ?? "") : "";
   function summaryFor(column: Column) { const kind = summaries[column.id]; if (!kind) return ""; const values = currentTable.rows.map((row) => row.cells[column.id]).filter((value) => value !== "" && value !== undefined && value !== false); if (kind === "count") return `${currentTable.rows.length} rows`; if (kind === "filled") return `${values.length} values`; return `${Math.round(((currentTable.rows.length - values.length) / Math.max(1, currentTable.rows.length)) * 100)}% empty`; }
 
   return <main className="ms-tables-page">
@@ -115,7 +121,7 @@ export default function TablesPage() {
         <div className="ms-data-scroll">
           <table className="ms-data-grid">
             <thead><tr><th className="ms-row-number"><span className="ms-grid-select" /></th>{visibleColumns.map((column, columnIndex) => <th className={frozenIndex >= columnIndex ? "is-frozen" : ""} style={frozenIndex >= columnIndex ? { left: 42 + columnIndex * 145 } : undefined} key={column.id}><span className="ms-column-type">{TYPE_INFO[column.type].icon}</span><input aria-label={`${column.name} column name`} value={column.name} onChange={(e) => changeTable((current) => ({ ...current, columns: current.columns.map((col) => col.id === column.id ? { ...col, name: e.target.value } : col) }))} /><button aria-label={`Options for ${column.name} column`} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const width = 303; const left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)); const top = Math.max(8, Math.min(rect.bottom + 5, window.innerHeight - 520)); setPicker(null); setColumnMenu(columnMenu?.id === column.id ? null : { id: column.id, left, top }); setSummaryMenu(null); setMoreMenu(null); }}>⌄</button></th>)}<th className="ms-add-column"><button aria-label="Add column" onClick={() => { setColumnMenu(null); setPicker(picker === "add" ? null : "add"); }}>＋</button></th></tr></thead>
-            <tbody>{visibleRows.map((row, index) => <tr key={row.id}><td className="ms-row-number">{index + 1}</td>{visibleColumns.map((column, columnIndex) => <td className={frozenIndex >= columnIndex ? "is-frozen" : ""} style={frozenIndex >= columnIndex ? { left: 42 + columnIndex * 145 } : undefined} key={column.id}><Cell row={row} column={column} onChange={(value) => updateCell(row.id, column.id, value)} /></td>)}<td /></tr>)}</tbody>
+            <tbody>{visibleRows.map((row, index) => <tr key={row.id}><td className="ms-row-number">{index + 1}</td>{visibleColumns.map((column, columnIndex) => <td className={frozenIndex >= columnIndex ? "is-frozen" : ""} style={frozenIndex >= columnIndex ? { left: 42 + columnIndex * 145 } : undefined} key={column.id}><Cell row={row} column={column} onChange={(value) => updateCell(row.id, column.id, value)} onOpenPage={() => setOpenPage({ rowId: row.id, columnId: column.id })} /></td>)}<td /></tr>)}</tbody>
             {Object.keys(summaries).length > 0 && <tfoot><tr><td className="ms-row-number">Σ</td>{visibleColumns.map((column) => <td key={column.id}>{summaryFor(column)}</td>)}<td /></tr></tfoot>}
           </table>
           <button className="ms-grid-add-row" onClick={addRow}>＋</button>
@@ -123,6 +129,7 @@ export default function TablesPage() {
         {picker === "add" && <ColumnPicker search={typeSearch} onSearch={setTypeSearch} onSelect={addColumn} hiddenColumns={table.columns.filter((column) => column.hidden)} onShow={(id) => { changeTable((current) => showColumn(current, id)); setPicker(null); }} />}
         {selectedColumn && <ColumnPicker column={selectedColumn} search={typeSearch} onSearch={setTypeSearch} onSelect={(type) => { changeTable((current) => changeColumnType(current, selectedColumn.id, type)); setPicker(null); }} />}
         {actionColumn && columnMenu && createPortal(<ColumnActions column={actionColumn} position={columnMenu} summarizeOpen={summaryMenu === actionColumn.id} moreOpen={moreMenu === actionColumn.id} onEdit={() => { setPicker(actionColumn.id); setColumnMenu(null); setTypeSearch(""); }} onDuplicate={() => { changeTable((current) => duplicateColumn(current, actionColumn.id)); setColumnMenu(null); }} onInsert={(side) => { changeTable((current) => insertColumn(current, actionColumn.id, side)); setColumnMenu(null); }} onFilter={() => { setFilterColumn(actionColumn.id); setFilterOpen(true); setColumnMenu(null); }} onToggleSummarize={() => setSummaryMenu(summaryMenu === actionColumn.id ? null : actionColumn.id)} onSummarize={(kind) => { setSummaries((all) => ({ ...all, [actionColumn.id]: kind })); setColumnMenu(null); }} onFreeze={() => { setFrozenColumn(frozenColumn === actionColumn.id ? null : actionColumn.id); setColumnMenu(null); }} onHide={() => { changeTable((current) => hideColumn(current, actionColumn.id)); setColumnMenu(null); }} onDelete={() => { changeTable((current) => deleteColumn(current, actionColumn.id)); setColumnMenu(null); }} onToggleMore={() => setMoreMenu(moreMenu === actionColumn.id ? null : actionColumn.id)} />, document.body)}
+        {openPage && pageRow && pageColumn && createPortal(<div className="ms-page-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpenPage(null); }}><section className="ms-page-modal" role="dialog" aria-modal="true" aria-label={`${pageColumn.name} page`}><header><div><span>{TYPE_INFO[pageColumn.type].icon}</span><div><p>{table.name} · {pageColumn.name}</p><h2>{pageBody.split("\n").find((line) => line.trim())?.trim() || "Untitled page"}</h2></div></div><button type="button" aria-label="Close page" onClick={() => setOpenPage(null)}>×</button></header><div className="ms-page-modal-editor"><LineEditor value={pageBody} onChange={(body) => updateCell(pageRow.id, pageColumn.id, body)} storageKey={`table-page:${table.id}:${pageRow.id}:${pageColumn.id}`} /></div></section></div>, document.body)}
       </div>
     </section>
   </main>;
