@@ -22,6 +22,8 @@ test("table ellipsis exposes the exact compact menu actions", () => {
 
 test("column chevrons expose every referenced action", () => {
   for (const label of ["Edit column", "Duplicate column", "Insert left", "Insert right", "Filter column", "Summarize column", "Freeze up to this column", "Hide column", "Delete column", "View more actions"]) assert.match(tablesPage, new RegExp(label));
+  assert.match(tablesPage, /aria-label="Column name"/);
+  assert.match(tablesPage, /onRename=/);
 });
 
 test("column menus are portal-rendered and anchored to the opening chevron", () => {
@@ -34,6 +36,14 @@ test("page cells use the Workspace editor in a dismissible cell-scoped modal", (
   assert.match(tablesPage, /<LineEditor value=\{pageDocument\.body\}/);
   assert.match(tablesPage, /aria-label="Close page"/);
   assert.match(tablesPage, /aria-label="Page title"/);
+  assert.match(tablesPage, /data-table-popup/);
   assert.match(tablesPage, /event\.target === event\.currentTarget/);
   assert.match(tablesPage, /table-page:\$\{table\.id\}:\$\{pageRow\.id\}:\$\{pageColumn\.id\}/);
+});
+
+test("all app popups support click-away dismissal", () => {
+  assert.match(tablesPage, /document\.addEventListener\("pointerdown", dismissPopups\)/);
+  assert.match(tablesPage, /setOpenPage\(null\)/);
+  assert.match(editor, /document\.addEventListener\("pointerdown", dismissLineMenu\)/);
+  assert.match(account, /event\.target === event\.currentTarget/);
 });

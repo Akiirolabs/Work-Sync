@@ -322,6 +322,10 @@
 .ms-column-picker > label input { border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 13px var(--ms-font-sans); }
 .ms-picker-rule { height: 1px; margin: 2px 0 9px; background: var(--ms-edge); }
 .ms-column-picker h3 { margin: 7px 0 5px; color: var(--ms-text); font-size: 11px; font-weight: 600; }
+.ms-column-name-field { display: grid; gap: 5px; padding: 2px 2px 9px; }
+.ms-column-name-field label { color: var(--ms-text-dim); font: 10px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
+.ms-column-name-field input { height: 34px; border: 1px solid var(--ms-edge); border-radius: 5px; outline: 0; padding: 0 9px; background: var(--ms-bg-1); color: var(--ms-text-bright); font: 13px var(--ms-font-sans); }
+.ms-column-name-field input:focus { border-color: var(--ms-accent-soft); box-shadow: 0 0 0 2px rgba(72, 151, 255, .12); }
 .ms-ai-types, .ms-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
 .ms-ai-types button, .ms-type-grid button { min-height: 31px; display: flex; align-items: center; gap: 10px; border: 0; border-radius: 5px; padding: 0 6px; background: transparent; color: var(--ms-text-bright); font: 13px var(--ms-font-sans); text-align: left; cursor: pointer; }
 .ms-ai-types button { color: var(--ms-text); }

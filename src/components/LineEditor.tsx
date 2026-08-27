@@ -41,6 +41,15 @@ export function LineEditor({ value, onChange, storageKey }: { value: string; onC
   useEffect(() => {
     if (loadedKey === storageKey) localStorage.setItem(`work-sync:line-meta:${storageKey}`, JSON.stringify(lines.map(({ kind, comments, accent, align }) => ({ kind, comments, accent, align }))));
   }, [lines, loadedKey, storageKey]);
+  useEffect(() => {
+    if (!active) return;
+    function dismissLineMenu(event: PointerEvent) {
+      if (event.target instanceof Element && (event.target.closest(".ms-line-menu") || event.target.closest(".ms-line-toggle"))) return;
+      setActive(null); setCommenting(false);
+    }
+    document.addEventListener("pointerdown", dismissLineMenu);
+    return () => document.removeEventListener("pointerdown", dismissLineMenu);
+  }, [active]);
 
   function commit(next: Line[]) { setLines(next); onChange(next.map((line) => line.text).join("\n")); }
   function update(id: string, patch: Partial<Line>) { commit(lines.map((line) => line.id === id ? { ...line, ...patch } : line)); }

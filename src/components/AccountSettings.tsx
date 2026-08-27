@@ -35,7 +35,7 @@ export function AccountSettings() {
       <span>{user?.name ?? "Settings"}</span>
       <span aria-hidden>⌄</span>
     </button>
-    <dialog ref={dialog} className="ms-dialog" onClose={() => setOpen(false)}>
+    <dialog ref={dialog} className="ms-dialog" onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }} onClose={() => setOpen(false)}>
       <div className="ms-dialog-head"><div><p className="ms-eyebrow">Work Sync</p><h2>Settings</h2></div><button className="ms-icon-btn" onClick={() => setOpen(false)} aria-label="Close">×</button></div>
       {user ? <div className="ms-account-card">
         <div className="ms-account-avatar is-large">{user.name[0]?.toUpperCase()}</div>
