@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "@/ui/styles.css";
 import "./globals.css";
-import { AnimatedFavicon } from "@/components/AnimatedFavicon";
 
 export const metadata: Metadata = {
   title: "Work Sync",
@@ -19,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body><AnimatedFavicon />{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -6,24 +6,12 @@ const tablesPage = await readFile(new URL("../src/app/(shell)/tables/page.tsx", 
 const account = await readFile(new URL("../src/components/AccountSettings.tsx", import.meta.url), "utf8");
 const editor = await readFile(new URL("../src/components/LineEditor.tsx", import.meta.url), "utf8");
 const orbCss = await readFile(new URL("../src/ui/LiquidChromeOrb.module.css", import.meta.url), "utf8");
-const favicon = await readFile(new URL("../src/app/icon.svg", import.meta.url), "utf8");
-const faviconAnimator = await readFile(new URL("../src/components/AnimatedFavicon.tsx", import.meta.url), "utf8");
-const atomArtwork = await readFile(new URL("../src/ui/atomArtwork.ts", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
   assert.match(editor, /<LiquidChromeOrb size=\{16\} title="Ask AI"/);
-  assert.match(orbCss, /\.artwork > svg/);
-  assert.match(editor, /LiquidChromeOrb/);
-  assert.match(favicon, /class="atom"/);
-  assert.match(favicon, /animation: atom-spin/);
-  assert.match(favicon, /prefers-reduced-motion/);
-  assert.match(faviconAnimator, /requestAnimationFrame\(draw\)/);
-  assert.match(faviconAnimator, /prefers-reduced-motion: reduce/);
-  assert.match(faviconAnimator, /data:image\/svg\+xml/);
-  assert.match(faviconAnimator, /renderAtomSvg\(atomFrameAt\(time\)\)/);
-  assert.match(atomArtwork, /ms-atom-chrome/);
-  assert.match(atomArtwork, /ms-atom-a/);
+  assert.match(orbCss, /animation: ms-chrome-spin/);
+  assert.match(orbCss, /animation: ms-orbit-a/);
 });
 
 test("table ellipsis exposes the exact compact menu actions", () => {

@@ -1,7 +1,6 @@
 "use client";
 
 import styles from "./LiquidChromeOrb.module.css";
-import { renderAtomSvg } from "./atomArtwork";
 
 export type LiquidChromeOrbProps = {
   /** Pixel size of the sphere (default 18 — fits dense chrome). */
@@ -27,7 +26,37 @@ export function LiquidChromeOrb({
       aria-label={title}
       title={title}
     >
-      <span className={styles.artwork} dangerouslySetInnerHTML={{ __html: renderAtomSvg(undefined, true) }} />
+      <span className={styles.core}>
+        <svg className={styles.svg} viewBox="0 0 24 24" aria-hidden>
+          <circle className={styles.nucleus} cx="12" cy="12" r="1.35" />
+          <g className={styles.orbitA}>
+            <ellipse className={styles.orbit} cx="12" cy="12" rx="8.2" ry="3.2" />
+            <circle className={styles.electron} cx="20.2" cy="12" r="0.85" />
+          </g>
+          <g className={styles.orbitB}>
+            <ellipse
+              className={styles.orbit}
+              cx="12"
+              cy="12"
+              rx="8.2"
+              ry="3.2"
+              transform="rotate(60 12 12)"
+            />
+            <circle className={styles.electron} cx="8" cy="5.2" r="0.75" />
+          </g>
+          <g className={styles.orbitC}>
+            <ellipse
+              className={styles.orbit}
+              cx="12"
+              cy="12"
+              rx="8.2"
+              ry="3.2"
+              transform="rotate(-60 12 12)"
+            />
+            <circle className={styles.electron} cx="7.5" cy="18" r="0.7" />
+          </g>
+        </svg>
+      </span>
     </span>
   );
 }
