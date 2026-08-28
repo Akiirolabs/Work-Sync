@@ -25,7 +25,12 @@ const ROUTES = [
 ] as const;
 
 function AOLogo() {
-  return <span className={styles.logo} aria-hidden><span>A</span><i /><span>O</span></span>;
+  return <span className={styles.logo} aria-hidden>
+    <svg viewBox="0 0 32 32" focusable="false">
+      <path d="M3.75 22.5 9.25 8.75l5.5 13.75M5.9 17h6.7" />
+      <rect x="18" y="8.75" width="10" height="13.75" rx="5" />
+    </svg>
+  </span>;
 }
 
 export function AOMacroMenu() {

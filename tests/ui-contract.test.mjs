@@ -58,8 +58,11 @@ test("AO replaces the badge overlay without scanning or animating Next internals
   assert.doesNotMatch(appShell, /NextBadgeAtom/);
   assert.doesNotMatch(aoMenu, /nextjs-portal|shadowRoot|MutationObserver|requestAnimationFrame/);
   assert.match(aoCss, /position: fixed/);
+  assert.match(aoCss, /left: 16px/);
   assert.match(aoCss, /border-radius: 50%/);
   assert.doesNotMatch(aoCss, /animation:/);
+  assert.doesNotMatch(aoCss, /\.logo::before|\.logo::after/);
+  assert.match(aoMenu, /<svg viewBox="0 0 32 32"/);
   assert.match(nextConfig, /devIndicators: false/);
 });
 
