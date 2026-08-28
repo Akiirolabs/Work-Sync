@@ -12,6 +12,7 @@ const aoCss = await readFile(new URL("../src/components/AOMacroMenu.module.css",
 const workspacePage = await readFile(new URL("../src/app/(shell)/page.tsx", import.meta.url), "utf8");
 const nextConfig = await readFile(new URL("../next.config.ts", import.meta.url), "utf8");
 const todoPage = await readFile(new URL("../src/app/(shell)/todo/page.tsx", import.meta.url), "utf8");
+const globalCss = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -201,4 +202,8 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(todoPage, /saveTaskEdit\(item\.id\)/);
   assert.match(todoPage, /closest\("\[data-todo-menu\]"/);
   assert.match(aoMenu, /field\.type === "date" \? "date"/);
+  assert.match(globalCss, /\.ms-workspace:has\(\.ms-todo-panel\) \{ overflow: hidden; \}/);
+  assert.match(globalCss, /\.ms-todo-panel \{[\s\S]*?flex: 1;[\s\S]*?min-height: 0;[\s\S]*?overflow: hidden;/);
+  assert.match(globalCss, /\.ms-todo-list \{[\s\S]*?flex: 1;[\s\S]*?min-height: 0;[\s\S]*?padding: 0 6px 16px 0;[\s\S]*?overflow-y: auto;/);
+  assert.match(globalCss, /\.ms-todo-item \{ flex: 0 0 auto; \}/);
 });

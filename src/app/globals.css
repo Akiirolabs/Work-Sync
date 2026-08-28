@@ -250,14 +250,37 @@
 .ms-comment-box button.is-primary { color: var(--ms-text-bright); background: var(--ms-accent-soft); }
 .ms-menu-meta { margin: 4px 6px 2px; color: #626b75; font-size: 11px; }
 
-.ms-todo-panel { max-width: 780px; padding: 14px; }
+.ms-workspace:has(.ms-todo-panel) { overflow: hidden; }
+.ms-todo-panel {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: 780px;
+  padding: 14px;
+  overflow: hidden;
+}
 .ms-todo-add { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1.4fr) auto; gap: 8px; }
 .ms-todo-add input { min-width: 0; height: 36px; box-sizing: border-box; border: 1px solid var(--ms-border); border-radius: 5px; outline: 0; padding: 0 10px; background: #10151a; color: var(--ms-text); font: inherit; }
 .ms-todo-add input:focus { border-color: var(--ms-accent-soft); }
 .ms-todo-filters { display: flex; gap: 5px; margin: 12px 0; }
 .ms-todo-filters button { border: 1px solid var(--ms-border); border-radius: 12px; padding: 4px 10px; background: transparent; color: var(--ms-text-dim); font: 10px var(--ms-font-sans); text-transform: capitalize; cursor: pointer; }
 .ms-todo-filters button.is-active { border-color: var(--ms-accent-soft); background: #24313a; color: var(--ms-text); }
-.ms-todo-list { display: flex; flex-direction: column; gap: 5px; }
+.ms-todo-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 0;
+  padding: 0 6px 16px 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scroll-padding-bottom: 16px;
+}
+.ms-todo-item { flex: 0 0 auto; }
 .ms-todo-item { position: relative; min-height: 48px; display: grid; grid-template-columns: 24px 1fr 59px; align-items: center; gap: 7px; padding: 7px; border: 1px solid var(--ms-border); border-radius: 6px; background: #11161b; }
 .ms-todo-item > span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ms-todo-item strong { font-size: 12px; font-weight: 500; }
