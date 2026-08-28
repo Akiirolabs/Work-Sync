@@ -4,6 +4,7 @@ import { Workspace } from "@/ui";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
 import { LineEditor } from "@/components/LineEditor";
+import { AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY } from "@/lib/ao-macro";
 
 type Note = {
   id: string;
@@ -52,6 +53,20 @@ export default function WorkspacePage() {
     if (!ready) return;
     localStorage.setItem(DRAFT_KEY, JSON.stringify({ body, activeId }));
   }, [body, activeId, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    function consumeAOText() {
+      const text = localStorage.getItem(AO_WORKSPACE_TEXT_KEY)?.trim();
+      if (!text) return;
+      localStorage.removeItem(AO_WORKSPACE_TEXT_KEY);
+      setActiveId(null);
+      setBody((current) => current.trim() ? `${current.trimEnd()}\n${text}` : text);
+    }
+    consumeAOText();
+    window.addEventListener(AO_WORKSPACE_TEXT_EVENT, consumeAOText);
+    return () => window.removeEventListener(AO_WORKSPACE_TEXT_EVENT, consumeAOText);
+  }, [ready]);
 
   function newNote() {
     setActiveId(null);

@@ -1,9 +1,10 @@
 "use client";
 
-import { Shell, Rail, NextBadgeAtom } from "@/ui";
+import { Shell, Rail } from "@/ui";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { AccountSettings } from "./AccountSettings";
+import { AOMacroMenu } from "./AOMacroMenu";
 
 const NAV = [
   { id: "workspace", label: "Workspace", href: "/" },
@@ -19,7 +20,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <Shell statusText="local · work sync" topRight={<AccountSettings />}>
-      <NextBadgeAtom />
+      <AOMacroMenu />
       <Rail
         label="Navigate"
         items={NAV.map((item) => ({

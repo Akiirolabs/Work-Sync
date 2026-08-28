@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { TABLE_ICON_GROUPS, TYPE_INFO, addColumn as addColumnModel, addRow as addRowModel, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, normalizeTableIcon, showColumn, updateCell as updateCellModel, type Column, type ColumnType, type Row, type WorkTable } from "@/lib/table-model";
 import { LineEditor } from "@/components/LineEditor";
+import { AO_TABLE_COMMAND_EVENT, AO_TABLE_COMMAND_KEY, applyTableMacro, type AOTableCommand } from "@/lib/ao-macro";
 const STORAGE_KEY = "work-sync:tables";
 
 function Cell({ row, column, onChange, onOpenPage }: { row: Row; column: Column; onChange: (value: string | boolean) => void; onOpenPage: () => void }) {
@@ -69,6 +70,26 @@ export default function TablesPage() {
     setReady(true);
   }, []);
   useEffect(() => { if (ready) localStorage.setItem(STORAGE_KEY, JSON.stringify(tables)); }, [tables, ready]);
+  useEffect(() => {
+    if (!ready) return;
+    function consumeAOCommand() {
+      const raw = localStorage.getItem(AO_TABLE_COMMAND_KEY);
+      if (!raw) return;
+      localStorage.removeItem(AO_TABLE_COMMAND_KEY);
+      try {
+        const command = JSON.parse(raw) as AOTableCommand;
+        if (!command || !["add-table", "add-row", "add-column"].includes(command.action)) return;
+        setTables((current) => {
+          const result = applyTableMacro(current, activeId, command);
+          setActiveId(result.activeId);
+          return result.tables;
+        });
+      } catch { /* ignore invalid macro commands */ }
+    }
+    consumeAOCommand();
+    window.addEventListener(AO_TABLE_COMMAND_EVENT, consumeAOCommand);
+    return () => window.removeEventListener(AO_TABLE_COMMAND_EVENT, consumeAOCommand);
+  }, [ready, activeId]);
   useEffect(() => {
     function dismissPopups(event: PointerEvent) {
       if (event.target instanceof Element && event.target.closest("[data-table-popup]")) return;

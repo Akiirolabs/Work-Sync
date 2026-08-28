@@ -6,6 +6,11 @@ const tablesPage = await readFile(new URL("../src/app/(shell)/tables/page.tsx", 
 const account = await readFile(new URL("../src/components/AccountSettings.tsx", import.meta.url), "utf8");
 const editor = await readFile(new URL("../src/components/LineEditor.tsx", import.meta.url), "utf8");
 const orbCss = await readFile(new URL("../src/ui/LiquidChromeOrb.module.css", import.meta.url), "utf8");
+const appShell = await readFile(new URL("../src/components/AppShell.tsx", import.meta.url), "utf8");
+const aoMenu = await readFile(new URL("../src/components/AOMacroMenu.tsx", import.meta.url), "utf8");
+const aoCss = await readFile(new URL("../src/components/AOMacroMenu.module.css", import.meta.url), "utf8");
+const workspacePage = await readFile(new URL("../src/app/(shell)/page.tsx", import.meta.url), "utf8");
+const nextConfig = await readFile(new URL("../next.config.ts", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -46,4 +51,30 @@ test("all app popups support click-away dismissal", () => {
   assert.match(tablesPage, /setOpenPage\(null\)/);
   assert.match(editor, /document\.addEventListener\("pointerdown", dismissLineMenu\)/);
   assert.match(account, /event\.target === event\.currentTarget/);
+});
+
+test("AO replaces the badge overlay without scanning or animating Next internals", () => {
+  assert.match(appShell, /<AOMacroMenu \/>/);
+  assert.doesNotMatch(appShell, /NextBadgeAtom/);
+  assert.doesNotMatch(aoMenu, /nextjs-portal|shadowRoot|MutationObserver|requestAnimationFrame/);
+  assert.match(aoCss, /position: fixed/);
+  assert.match(aoCss, /border-radius: 50%/);
+  assert.doesNotMatch(aoCss, /animation:/);
+  assert.match(nextConfig, /devIndicators: false/);
+});
+
+test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () => {
+  for (const label of ["Macro", "Route", "Turbo", "Preferences", "Add table", "Add table record", "Add text column", "Write in Workspace", "Make a new table", "Save macro"]) assert.match(aoMenu, new RegExp(label));
+  assert.match(aoMenu, /AO_MACROS_KEY/);
+  assert.match(aoMenu, /AO_TABLE_COMMAND_KEY/);
+  assert.match(aoMenu, /AO_WORKSPACE_TEXT_KEY/);
+  assert.match(aoMenu, /document\.addEventListener\("pointerdown", dismiss\)/);
+  assert.match(aoMenu, /event\.key === "Escape"/);
+});
+
+test("AO commands are consumed once by their destination pages", () => {
+  assert.match(tablesPage, /localStorage\.removeItem\(AO_TABLE_COMMAND_KEY\)/);
+  assert.match(tablesPage, /applyTableMacro\(current, activeId, command\)/);
+  assert.match(workspacePage, /localStorage\.removeItem\(AO_WORKSPACE_TEXT_KEY\)/);
+  assert.match(workspacePage, /window\.addEventListener\(AO_WORKSPACE_TEXT_EVENT, consumeAOText\)/);
 });
