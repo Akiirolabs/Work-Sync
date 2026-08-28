@@ -107,6 +107,9 @@ test("AO preset browser is gated behind Presets and every preset can be saved", 
   assert.match(aoMenu, /macroMode === "home"/);
   assert.match(aoMenu, /setMacroMode\("presets"\)/);
   assert.match(aoMenu, /macroMode === "presets"/);
+  assert.match(aoMenu, /aria-label="Presets information"/);
+  assert.match(aoMenu, /aria-label="Text preset information"/);
+  assert.match(aoMenu, /<VaultIcon \/><b>Create macro<\/b><em>›<\/em>/);
   assert.match(aoMenu, /saveBuiltIn\(macro\)/);
   assert.match(aoMenu, /\? "Saved" : "Save"/);
   assert.match(aoMenu, /macroId: macro\.id/);
