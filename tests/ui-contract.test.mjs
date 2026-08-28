@@ -63,6 +63,9 @@ test("Select options support create, reorder, recolor, delete and macro pretext 
   assert.match(tablesPage, /Type an option and press Enter/);
   assert.match(tablesPage, /text\/select-option/);
   assert.match(tablesPage, /SELECT_COLORS\.map/);
+  assert.match(tablesPage, /createPortal\(<div className="ms-option-editor"/);
+  assert.match(tablesPage, /rect\.right \+ 7/);
+  assert.match(tablesPage, /onScroll=\{\(\) => setEditing\(null\)\}/);
   assert.match(tablesPage, /Delete option/);
   assert.match(tablesPage, /Save as macro pretext/);
   assert.match(tablesPage, /AO_MACROS_KEY/);
@@ -147,6 +150,8 @@ test("Vault manages typed entries and a five-item draggable Main Macro row", () 
   assert.match(aoMenu, /icon: undefined/);
   assert.match(aoMenu, /VAULT_CATEGORIES/);
   assert.match(aoMenu, /dataTransfer\.setData\("text\/main-macro"/);
+  assert.match(aoMenu, /data-name=\{preset\.label\}/);
+  assert.doesNotMatch(aoMenu, /<small>\{preset\.label\}<\/small>/);
   assert.match(aoMenu, /reorderMainPreset\(source, preset\.id\)/);
   assert.match(aoMenu, /deleteVaultPreset\(menuPreset\)/);
   assert.match(aoMenu, /Delete<\/button>/);

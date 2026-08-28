@@ -1,5 +1,11 @@
 /* App-level interactive primitives on top of the local UI tokens */
 
+* { scrollbar-color: var(--ms-edge) var(--ms-bg-1); scrollbar-width: thin; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: var(--ms-bg-1); }
+*::-webkit-scrollbar-thumb { border-radius: 8px; background: var(--ms-edge); }
+*::-webkit-scrollbar-thumb:hover { background: var(--ms-accent-soft); }
+
 .ms-btn {
   appearance: none;
   border: 1px solid var(--ms-edge);
@@ -388,7 +394,7 @@
 .ms-select-popup > label { height: 36px; display: grid; grid-template-columns: 27px 1fr; align-items: center; border-bottom: 1px solid var(--ms-edge); }
 .ms-select-popup > label span { display: grid; place-items: center; color: var(--ms-text-dim); }
 .ms-select-popup > label input { min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 12px var(--ms-font-sans); }
-.ms-select-options { max-height: 300px; overflow-y: auto; padding-top: 5px; }
+.ms-select-options { max-height: 300px; overflow-y: auto; overscroll-behavior: contain; padding-top: 5px; }
 .ms-select-option { position: relative; min-height: 38px; display: grid; grid-template-columns: 27px 1fr 34px; align-items: center; border-radius: 7px; }
 .ms-select-option:hover, .ms-select-option.is-selected { background: #2d343b; }
 .ms-select-option > button { height: 32px; border: 0; background: transparent; color: var(--ms-text); cursor: pointer; }
@@ -397,7 +403,7 @@
 .ms-option-choice { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 5px; text-align: left; }
 .ms-option-choice em { color: var(--ms-accent); font-style: normal; }
 .ms-option-more { opacity: .8; letter-spacing: 1px; }
-.ms-option-editor { position: absolute; z-index: 3; top: 34px; right: 5px; width: 280px; padding: 8px; border: 1px solid #36424d; border-radius: 7px; background: #1d2329; box-shadow: 0 14px 34px rgba(0,0,0,.6); }
+.ms-option-editor { position: fixed; z-index: 190; width: 280px; box-sizing: border-box; padding: 8px; border: 1px solid #36424d; border-radius: 7px; background: #1d2329; box-shadow: 0 14px 34px rgba(0,0,0,.6); }
 .ms-option-editor p { margin: 2px 3px 7px; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); text-transform: uppercase; }
 .ms-option-editor > div { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 8px; }
 .ms-option-editor > div button { aspect-ratio: 1; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; cursor: pointer; }
