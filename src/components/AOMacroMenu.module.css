@@ -79,14 +79,33 @@
 .runner > button:disabled { opacity: .45; cursor: default; }
 .error { color: #dc756b !important; }
 .notice { margin: 0 9px 7px; color: #83b7d3; font-size: 10px; }
+.mainMacros { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; margin: 3px 7px 7px; }
+.mainMacros button { min-width: 0; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; overflow: hidden; border: 1px solid #333c44; border-radius: 7px; background: #11161b; color: #dce3e8; cursor: grab; }
+.mainMacros button:hover { border-color: var(--ms-accent-soft); background: #222a31; }
+.mainMacros button:active { cursor: grabbing; }
+.mainMacros button span { font: 600 12px var(--ms-font-mono); color: #9fc6dc; }
+.mainMacros button small { width: calc(100% - 6px); overflow: hidden; color: #86919a; font: 8px var(--ms-font-sans); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .vault { padding: 1px 0 8px; }
 .createPreset { width: calc(100% - 16px); margin: 0 8px 8px; }
-.vault > div { min-height: 48px; display: grid; grid-template-columns: 20px 1fr 30px; align-items: center; margin: 0 7px 5px; border-radius: 7px; padding: 3px 5px; background: #11161b; }
-.vault > div > span { color: #83b7d3; font-size: 11px; text-align: center; }
-.vault > div > button { border: 0; background: transparent; color: #9aa4ad; cursor: pointer; }
-.vault > div > button:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
-.vault > div > button:nth-child(2) strong { color: #e7ebef; font-size: 11px; font-weight: 500; }
-.vault > div > button:nth-child(2) small { max-width: 250px; overflow: hidden; color: #7f8992; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.vaultItems { max-height: 371px; overflow-y: auto; scrollbar-width: thin; }
+.vaultItem { min-height: 48px; display: grid; grid-template-columns: 20px 1fr 49px; align-items: center; margin: 0 7px 5px; border-radius: 7px; padding: 3px 5px; background: #11161b; }
+.vaultItem > span { color: #83b7d3; font-size: 11px; text-align: center; }
+.vaultItem > button { min-width: 0; display: flex; flex-direction: column; gap: 2px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.vaultItem > button strong { color: #e7ebef; font-size: 11px; font-weight: 500; }
+.vaultItem > button small { max-width: 238px; overflow: hidden; color: #7f8992; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.vaultTail { display: grid; grid-template-columns: 18px 27px; align-items: center; gap: 2px; }
+.vaultTail > span { width: 16px; height: 16px; display: grid; place-items: center; border: 1px solid #46515b; border-radius: 4px; color: #9aa6b0; font: 8px var(--ms-font-mono); }
+.vaultTail button { width: 27px; height: 29px; border: 0; border-radius: 5px; background: transparent; color: #9aa4ad; font-size: 16px; cursor: pointer; }
+.vaultTail button:hover { background: #2d343a; color: #e7ebef; }
+.vaultActions { position: fixed; z-index: 2147483647; width: 218px; box-sizing: border-box; padding: 7px; border: 1px solid #39434c; border-radius: 8px; background: #1b2026; color: #e5e9ed; box-shadow: 0 16px 42px rgba(0,0,0,.65); }
+.vaultActions > p { margin: 2px 4px 6px; color: #7f8992; font: 9px var(--ms-font-mono); text-transform: uppercase; letter-spacing: .05em; }
+.mainIconGrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; margin-bottom: 7px; }
+.mainIconGrid button { height: 27px; border: 1px solid transparent; border-radius: 5px; background: #11161b; color: #aeb8c0; font: 10px var(--ms-font-mono); cursor: pointer; }
+.mainIconGrid button:hover, .mainIconGrid button.active { border-color: var(--ms-accent-soft); background: #28323a; color: #e7ebef; }
+.vaultActions > button { width: 100%; height: 33px; display: grid; grid-template-columns: 25px 1fr; align-items: center; border: 0; border-radius: 5px; background: transparent; color: #dfe5e9; text-align: left; font: 10px var(--ms-font-sans); cursor: pointer; }
+.vaultActions > button:hover { background: #30373e; }
+.vaultActions > button.danger:hover { color: #ef8175; }
+.vaultActions hr { height: 1px; margin: 6px 1px; border: 0; background: #343c44; }
 .empty { margin: 25px 10px; color: #7f8992; font-size: 11px; text-align: center; }
 .builder { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
 .builder > label, .builderSteps label { display: flex; flex-direction: column; gap: 4px; color: #aab2ba; font-size: 10px; }

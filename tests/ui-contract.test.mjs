@@ -132,6 +132,20 @@ test("Vault uses its atom as the information affordance and keeps navigation arr
   assert.doesNotMatch(aoMenu, /<span className=\{styles\.infoMark\}[^>]*aria-label="Vault information"/);
 });
 
+test("Vault manages typed entries and a five-item draggable Main Macro row", () => {
+  assert.match(aoMenu, /MAIN_MACRO_LIMIT = 5/);
+  assert.match(aoMenu, /className=\{styles\.vaultItems\}/);
+  assert.match(aoCss, /\.vaultItems \{ max-height: 371px; overflow-y: auto/);
+  assert.match(aoMenu, /data-vault-chevron/);
+  assert.match(aoMenu, /isTextPreset\(preset\) \? "T" : "M"/);
+  assert.match(aoMenu, /Add to Main Macro/);
+  assert.match(aoMenu, /className=\{styles\.mainIconGrid\}/);
+  assert.match(aoMenu, /dataTransfer\.setData\("text\/main-macro"/);
+  assert.match(aoMenu, /reorderMainPreset\(source, preset\.id\)/);
+  assert.match(aoMenu, /deleteVaultPreset\(menuPreset\)/);
+  assert.match(aoMenu, /Delete<\/button>/);
+});
+
 test("AO commands are consumed once by their destination pages", () => {
   assert.match(tablesPage, /localStorage\.removeItem\(AO_TABLE_COMMAND_KEY\)/);
   assert.match(tablesPage, /applyTableMacro\(current, activeId, command\)/);

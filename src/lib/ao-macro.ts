@@ -15,7 +15,7 @@ export const AO_WORKSPACE_OPEN_EVENT = "work-sync:ao-workspace-open";
 
 export type AOTableCommand = { action: string; tableId?: string; columnId?: string; rowId?: string; destinationRowId?: string; name?: string; title?: string; text?: string; type?: string; template?: string; query?: string; count?: number; page?: string; commands?: AOTableCommand[] };
 export type AOCustomMacroStep = { macroId: string; values: Record<string, string> };
-export type AOMacroPreset = { id: string; label: string; text: string; macroId?: string; steps?: AOCustomMacroStep[]; pinned?: boolean; createdAt?: string; lastUsedAt?: string };
+export type AOMacroPreset = { id: string; label: string; text: string; macroId?: string; steps?: AOCustomMacroStep[]; pinned?: boolean; createdAt?: string; lastUsedAt?: string; main?: boolean; mainOrder?: number; icon?: string };
 export type AOTableMacroResult = { tables: WorkTable[]; activeId: string; openPage?: { rowId: string; columnId: string }; openColumn?: string; focusCell?: { rowId: string; columnId: string }; filter?: { columnId: string; query: string }; summary?: string };
 
 export function saveMacroPretext(entries: AOMacroPreset[], label: string): AOMacroPreset[] {

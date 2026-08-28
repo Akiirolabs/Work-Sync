@@ -83,7 +83,6 @@ const vault: AOMacroDefinition[] = [
   { id: "vault-duplicate", label: "Duplicate saved macro", description: "Create an editable copy of a Vault entry.", category: "Vault", action: "vault-duplicate", fields: [preset, text("name", "Copy name", "Preset copy")] },
   { id: "vault-rename", label: "Rename saved macro", description: "Change a Vault entry name.", category: "Vault", action: "vault-rename", fields: [preset, text("name", "New name", "Preset name")] },
   { id: "vault-edit", label: "Edit saved macro", description: "Replace a Vault entry's reusable text.", category: "Vault", action: "vault-edit", fields: [preset, { key: "text", label: "New text", type: "textarea", placeholder: "Reusable text" }] },
-  { id: "vault-delete", label: "Delete saved macro", description: "Remove a Vault entry after confirmation.", category: "Vault", action: "vault-delete", fields: [preset] },
   { id: "vault-recent", label: "Recently used macros", description: "Show the latest runnable Vault entries.", category: "Vault", action: "vault-recent" },
 ];
 
