@@ -12,8 +12,9 @@ export const AO_TABLE_COMMAND_EVENT = "work-sync:ao-table-command";
 export const AO_WORKSPACE_TEXT_EVENT = "work-sync:ao-workspace-text";
 export const AO_WORKSPACE_OPEN_EVENT = "work-sync:ao-workspace-open";
 
-export type AOTableCommand = { action: string; tableId?: string; columnId?: string; rowId?: string; destinationRowId?: string; name?: string; title?: string; text?: string; type?: string; template?: string; query?: string; count?: number; page?: string };
-export type AOMacroPreset = { id: string; label: string; text: string; pinned?: boolean; createdAt?: string; lastUsedAt?: string };
+export type AOTableCommand = { action: string; tableId?: string; columnId?: string; rowId?: string; destinationRowId?: string; name?: string; title?: string; text?: string; type?: string; template?: string; query?: string; count?: number; page?: string; commands?: AOTableCommand[] };
+export type AOCustomMacroStep = { macroId: string; values: Record<string, string> };
+export type AOMacroPreset = { id: string; label: string; text: string; macroId?: string; steps?: AOCustomMacroStep[]; pinned?: boolean; createdAt?: string; lastUsedAt?: string };
 export type AOTableMacroResult = { tables: WorkTable[]; activeId: string; openPage?: { rowId: string; columnId: string }; openColumn?: string; focusCell?: { rowId: string; columnId: string }; filter?: { columnId: string; query: string }; summary?: string };
 
 const id = () => crypto.randomUUID();
@@ -33,6 +34,12 @@ function newTable(number: number, name?: string, template?: string): WorkTable {
 }
 
 export function applyTableMacro(tables: WorkTable[], activeId: string, command: AOTableCommand): AOTableMacroResult {
+  if (command.action === "batch") {
+    return (command.commands ?? []).reduce<AOTableMacroResult>((result, next) => {
+      const applied = applyTableMacro(result.tables, result.activeId, next);
+      return { ...applied, openPage: applied.openPage ?? result.openPage, openColumn: applied.openColumn ?? result.openColumn, focusCell: applied.focusCell ?? result.focusCell, filter: applied.filter ?? result.filter, summary: applied.summary ?? result.summary };
+    }, { tables, activeId });
+  }
   if (["add-table", "table-create", "table-template"].includes(command.action)) {
     let next = newTable(tables.length + 1, command.name, command.template);
     if (command.action === "add-table" && command.text?.trim()) { next = { ...next, name: "Turbo" }; next = updateCell(next, next.rows[0]!.id, next.columns[0]!.id, command.text.trim()); }

@@ -57,3 +57,22 @@ test("next-empty-row macro returns a precise cell focus target", () => {
   const result = applyTableMacro([initial], initial.id, { action: "row-empty", tableId: initial.id, columnId: initial.columns[0].id });
   assert.deepEqual(result.focusCell, { rowId: initial.rows[0].id, columnId: initial.columns[0].id });
 });
+
+test("custom macro batches execute every saved table step in order", () => {
+  const initial = makeTable(1);
+  const result = applyTableMacro([initial], initial.id, {
+    action: "batch",
+    commands: [
+      { action: "table-rename", tableId: initial.id, name: "Research" },
+      { action: "row-many", tableId: initial.id, count: 2 },
+      { action: "column-add", tableId: initial.id, type: "page", name: "Lab notes" },
+    ],
+  });
+  assert.equal(result.tables[0].name, "Research");
+  assert.equal(result.tables[0].rows.length, 5);
+  assert.deepEqual(result.tables[0].columns.at(-1), {
+    id: result.tables[0].columns.at(-1).id,
+    name: "Lab notes",
+    type: "page",
+  });
+});

@@ -67,20 +67,46 @@ test("AO replaces the badge overlay without scanning or animating Next internals
 });
 
 test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () => {
-  for (const label of ["Macro", "Route", "Turbo", "Vault", "Preferences", "Search macros", "Create text preset", "Write in Workspace", "Make a new table", "Run macro"]) assert.match(aoMenu, new RegExp(label));
+  for (const label of ["Macro", "Route", "Turbo", "Vault", "Preferences", "Presets", "Search macros", "Create text preset", "Create macro", "Open Vault", "Write in Workspace", "Make a new table", "Run macro"]) assert.match(aoMenu, new RegExp(label));
   assert.match(aoMenu, /AO_MACROS_KEY/);
   assert.match(aoMenu, /AO_TABLE_COMMAND_KEY/);
   assert.match(aoMenu, /AO_WORKSPACE_TEXT_KEY/);
   assert.match(aoMenu, /document\.addEventListener\("pointerdown", dismiss\)/);
-  assert.match(aoMenu, /event\.key === "Escape"/);
+  assert.match(aoMenu, /event\.key !== "Escape"/);
   assert.doesNotMatch(aoMenu, /<span>M<\/span>|<span>R<\/span>|<span>T<\/span>/);
   for (const label of ["Macro information", "Route information", "Turbo information"]) assert.match(aoMenu, new RegExp(label));
   assert.match(aoCss, /content: attr\(data-tip\)/);
   assert.match(aoMenu, /AO_MACRO_CATALOG\.length/);
-  assert.match(aoMenu, /createWorkspaceNote\(valueFor\("title"\)\)/);
-  assert.match(aoMenu, /See, run and manage all saved macros at a glance/);
+  assert.match(aoMenu, /createWorkspaceNote\(get\("title"\)\)/);
+  assert.match(aoMenu, /See, run and manage all saved text and custom macros/);
   assert.match(aoMenu, /type === "textarea"/);
   assert.match(aoMenu, /value: "__new_page__"/);
+});
+
+test("AO preset browser is gated behind Presets and every preset can be saved", () => {
+  assert.match(aoMenu, /macroMode === "home"/);
+  assert.match(aoMenu, /setMacroMode\("presets"\)/);
+  assert.match(aoMenu, /macroMode === "presets"/);
+  assert.match(aoMenu, /saveBuiltIn\(macro\)/);
+  assert.match(aoMenu, /\? "Saved" : "Save"/);
+  assert.match(aoMenu, /macroId: macro\.id/);
+});
+
+test("AO builds reusable multi-step macros and stores them in Vault", () => {
+  assert.match(aoMenu, /type MacroMode = "home" \| "presets" \| "builder"/);
+  assert.match(aoMenu, /Add built-in preset elements to create a reusable sequence/);
+  assert.match(aoMenu, /Save macro to Vault/);
+  assert.match(aoMenu, /steps: builderSteps\.map/);
+  assert.match(aoMenu, /action: "batch", commands/);
+  assert.match(aoMenu, /Run custom macro/);
+  assert.match(aoCss, /\.builderPanel/);
+});
+
+test("Vault uses its atom as the information affordance and keeps navigation arrow behavior", () => {
+  assert.match(aoMenu, /<VaultIcon info \/><b>Vault<\/b><em>›<\/em>/);
+  assert.match(aoMenu, /className=\{`\$\{styles\.vaultIcon\}\$\{info \? ` \$\{styles\.vaultInfo\}`/);
+  assert.match(aoCss, /\.vaultInfo:hover::after/);
+  assert.doesNotMatch(aoMenu, /<span className=\{styles\.infoMark\}[^>]*aria-label="Vault information"/);
 });
 
 test("AO commands are consumed once by their destination pages", () => {
