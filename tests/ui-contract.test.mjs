@@ -160,7 +160,10 @@ test("Vault manages typed entries and a five-item draggable Main Macro row", () 
   assert.match(aoMenu, /icon: undefined/);
   assert.match(aoMenu, /VAULT_CATEGORIES/);
   assert.match(aoMenu, /dataTransfer\.setData\("text\/main-macro"/);
-  assert.match(aoMenu, /data-name=\{preset\.label\}/);
+  assert.match(aoMenu, /onMouseEnter=\{\(event\) => showMainTooltip/);
+  assert.match(aoMenu, /createPortal\(<div className=\{styles\.mainMacroTooltip\}/);
+  assert.match(aoMenu, /role="tooltip"/);
+  assert.match(aoCss, /\.mainMacroTooltip \{ position: fixed; z-index: 2147483647;/);
   assert.doesNotMatch(aoMenu, /<small>\{preset\.label\}<\/small>/);
   assert.match(aoMenu, /reorderMainPreset\(source, preset\.id\)/);
   assert.match(aoMenu, /deleteVaultPreset\(menuPreset\)/);

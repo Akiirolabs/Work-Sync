@@ -52,6 +52,7 @@ export function AOMacroMenu() {
   const [customToRun, setCustomToRun] = useState<AOMacroPreset | null>(null);
   const [vaultMenu, setVaultMenu] = useState<{ id: string; left: number; top: number } | null>(null);
   const [mainIconPrompt, setMainIconPrompt] = useState<string | null>(null);
+  const [mainTooltip, setMainTooltip] = useState<{ label: string; left: number; top: number } | null>(null);
 
   function readLocalData() {
     try { const parsed = JSON.parse(localStorage.getItem(AO_MACROS_KEY) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(parsed) ? parsed.map((item) => item.main ? item : { ...item, icon: undefined }) : []); } catch { setPresets([]); }
@@ -77,8 +78,9 @@ export function AOMacroMenu() {
   }, [customToRun, macroMode, selected, vaultMenu, view]);
 
   async function refreshNotes() { try { setNotes(await api<Note[]>("/api/v1/notes")); } catch { setNotes([]); } }
-  function showView(next: View) { readLocalData(); setView(next); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setError(""); setNotice(""); if (next === "macro") setMacroMode("home"); if (next === "vault") { setVaultRecent(false); setVaultCategory("All"); } if (next === "macro" || next === "vault") void refreshNotes(); }
-  function close() { setOpen(false); setView("main"); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setError(""); }
+  function showView(next: View) { readLocalData(); setView(next); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setMainTooltip(null); setError(""); setNotice(""); if (next === "macro") setMacroMode("home"); if (next === "vault") { setVaultRecent(false); setVaultCategory("All"); } if (next === "macro" || next === "vault") void refreshNotes(); }
+  function close() { setOpen(false); setView("main"); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setMainTooltip(null); setError(""); }
+  function showMainTooltip(button: HTMLButtonElement, label: string) { const rect = button.getBoundingClientRect(); const width = Math.min(190, Math.max(72, label.length * 6 + 16)); setMainTooltip({ label, left: Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8)), top: Math.max(8, rect.top - 31) }); }
   function savePresets(next: AOMacroPreset[]) { setPresets(next); localStorage.setItem(AO_MACROS_KEY, JSON.stringify(next)); }
   function presetById(presetId?: string) { return presets.find((item) => item.id === presetId); }
   function touchPreset(presetId: string) { const next = presets.map((item) => item.id === presetId ? { ...item, lastUsedAt: new Date().toISOString() } : item); savePresets(next); return next.find((item) => item.id === presetId); }
@@ -281,7 +283,7 @@ export function AOMacroMenu() {
       {view === "vault" && !customToRun && <div className={styles.vault}>
         <label className={styles.search}><span>⌕</span><input aria-label="Search Vault" value={vaultQuery} onChange={(event) => setVaultQuery(event.target.value)} placeholder="Search saved macros…" /></label>
         <div className={styles.vaultMainHeader}><strong>Main Macro</strong><span>{mainItems.length}/{MAIN_MACRO_LIMIT}</span></div>
-        {mainItems.length ? <div className={styles.mainMacros} aria-label="Main Macro shortcuts">{mainItems.map((preset) => <button type="button" key={preset.id} data-name={preset.label} draggable onDragStart={(event) => event.dataTransfer.setData("text/main-macro", preset.id)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/main-macro"); if (source) reorderMainPreset(source, preset.id); }} onClick={() => launchPreset(preset)} aria-label={`Run ${preset.label}`} title={`${preset.label} · drag to rearrange`}><span>{preset.icon}</span></button>)}</div> : <p className={styles.mainEmpty}>Choose up to five shortcuts from Vault.</p>}
+        {mainItems.length ? <div className={styles.mainMacros} aria-label="Main Macro shortcuts">{mainItems.map((preset) => <button type="button" key={preset.id} draggable onMouseEnter={(event) => showMainTooltip(event.currentTarget, preset.label)} onMouseLeave={() => setMainTooltip(null)} onFocus={(event) => showMainTooltip(event.currentTarget, preset.label)} onBlur={() => setMainTooltip(null)} onDragStart={(event) => { setMainTooltip(null); event.dataTransfer.setData("text/main-macro", preset.id); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/main-macro"); if (source) reorderMainPreset(source, preset.id); }} onClick={() => launchPreset(preset)} aria-label={`Run ${preset.label}`}><span>{preset.icon}</span></button>)}</div> : <p className={styles.mainEmpty}>Choose up to five shortcuts from Vault.</p>}
         <div className={styles.categories}>{VAULT_CATEGORIES.map((item) => <button type="button" key={item} className={vaultCategory === item ? styles.active : ""} onClick={() => setVaultCategory(item)}>{item}</button>)}</div>
         {vaultRecent && <p className={styles.notice}>Recently used macros</p>}{notice && <p className={styles.notice}>{notice}</p>}
         <button type="button" className={styles.createPreset} onClick={() => { setView("macro"); setMacroMode("home"); beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!); }}>＋ Create text preset</button>
@@ -292,6 +294,7 @@ export function AOMacroMenu() {
         {mainIconPrompt !== menuPreset.id && <button type="button" onClick={() => toggleMainPreset(menuPreset)}><span>＋</span>{menuPreset.main ? "Remove from Main Macro" : "Add to Main Macro"}</button>}
         <hr /><button type="button" className={styles.danger} onClick={() => deleteVaultPreset(menuPreset)}><span>♜</span>Delete</button>
       </div>, document.body)}
+      {mainTooltip && createPortal(<div className={styles.mainMacroTooltip} style={{ left: mainTooltip.left, top: mainTooltip.top }} role="tooltip">{mainTooltip.label}</div>, document.body)}
       {view === "preferences" && <div className={styles.preferences}><p className={styles.hint}>Text presets are now created, searched and run inside Macro and Vault.</p><button type="button" className={styles.save} onClick={() => showView("vault")}>Open Vault</button></div>}
     </section>}
     <button type="button" className={styles.trigger} aria-label="Open AO macro key menu" aria-expanded={open} onClick={() => { setOpen((current) => !current); if (open) setView("main"); }}><AOLogo /></button>

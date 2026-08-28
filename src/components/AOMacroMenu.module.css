@@ -87,8 +87,7 @@
 .mainMacros button:hover { border-color: var(--ms-accent-soft); background: #222a31; }
 .mainMacros button:active { cursor: grabbing; }
 .mainMacros button span { font: 600 11px var(--ms-font-mono); color: #9fc6dc; }
-.mainMacros button::after { content: attr(data-name); position: absolute; z-index: 10; top: calc(100% + 5px); left: 50%; width: max-content; max-width: 190px; padding: 5px 7px; border: 1px solid #39434c; border-radius: 5px; background: #0d1115; color: #dce3e8; box-shadow: 0 8px 22px rgba(0,0,0,.5); font: 9px var(--ms-font-sans); white-space: nowrap; opacity: 0; pointer-events: none; transform: translate(-50%, -2px); transition: opacity .12s ease, transform .12s ease; }
-.mainMacros button:hover::after, .mainMacros button:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.mainMacroTooltip { position: fixed; z-index: 2147483647; max-width: 190px; box-sizing: border-box; padding: 5px 7px; overflow: hidden; border: 1px solid #39434c; border-radius: 5px; background: #0d1115; color: #dce3e8; box-shadow: 0 8px 22px rgba(0,0,0,.5); font: 9px var(--ms-font-sans); text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
 .vault { padding: 1px 0 8px; }
 .vaultMainHeader { display: flex; align-items: center; justify-content: space-between; margin: 2px 9px 5px; color: #929da6; font: 9px var(--ms-font-mono); letter-spacing: .06em; text-transform: uppercase; }
 .vaultMainHeader span { color: #6f7a84; }
