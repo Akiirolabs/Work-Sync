@@ -3,7 +3,7 @@
 .trigger:hover, .trigger[aria-expanded="true"] { border-color: var(--ms-accent-soft); background: #10151a; box-shadow: 0 0 0 3px rgba(106,164,200,.12), 0 8px 26px rgba(0,0,0,.55); }
 .logo { width: 31px; height: 31px; display: grid; place-items: center; color: inherit; }
 .logo svg { width: 27px; height: 27px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.15; stroke-linecap: square; stroke-linejoin: miter; }
-.panel { position: absolute; left: 0; bottom: 52px; width: min(320px, calc(100vw - 28px)); max-height: min(560px, calc(100vh - 92px)); overflow: auto; border: 1px solid #303840; border-radius: 11px; background: #171b20; color: #e7ebef; box-shadow: 0 20px 54px rgba(0,0,0,.68); }
+.panel { position: absolute; left: 0; bottom: 52px; width: min(360px, calc(100vw - 28px)); max-height: min(620px, calc(100vh - 92px)); overflow: auto; border: 1px solid #303840; border-radius: 11px; background: #171b20; color: #e7ebef; box-shadow: 0 20px 54px rgba(0,0,0,.68); }
 .header { min-height: 58px; display: grid; grid-template-columns: 36px 1fr 32px; align-items: center; gap: 8px; padding: 8px 9px 8px 12px; border-bottom: 1px solid #2c333a; }
 .header > .logo { width: 29px; height: 29px; border: 1px solid #39434c; border-radius: 50%; color: #8dbbd5; }
 .header > .logo svg { width: 22px; height: 22px; }
@@ -44,5 +44,42 @@
 .saved small { overflow: hidden; color: #7f8a94; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .saved button { width: 27px; height: 27px; border: 0; border-radius: 5px; background: transparent; color: #929ca5; cursor: pointer; }
 .saved button:hover { background: #33262a; color: #db756b; }
+
+.vaultIcon { width: 18px; height: 18px; display: grid; place-items: center; color: #e7ebef; }
+.vaultIcon svg { width: 18px; height: 18px; overflow: visible; fill: none; stroke: currentColor; stroke-width: .8; }
+.vaultIcon svg circle { fill: currentColor; stroke: none; }
+.macroBrowser { min-height: 350px; }
+.search { min-height: 39px; display: grid; grid-template-columns: 27px 1fr; align-items: center; margin: 8px; padding: 0 8px; border: 1px solid #343c44; border-radius: 7px; background: #0e1216; color: #88939d; }
+.search input { min-width: 0; border: 0; outline: 0; background: transparent; color: #e8ecef; font: 12px var(--ms-font-sans); }
+.categories { display: flex; gap: 5px; padding: 0 8px 8px; overflow-x: auto; scrollbar-width: thin; }
+.categories button { flex: 0 0 auto; height: 27px; border: 1px solid #303840; border-radius: 13px; padding: 0 9px; background: transparent; color: #949ea7; font: 10px var(--ms-font-sans); cursor: pointer; }
+.categories button:hover, .categories button.active { border-color: var(--ms-accent-soft); background: #26313a; color: #e9edf0; }
+.macroResults { max-height: 440px; padding: 0 7px 7px; overflow-y: auto; }
+.macroResults > button { width: 100%; min-height: 48px; display: grid; grid-template-columns: 1fr 15px; grid-template-rows: auto auto; align-items: center; border: 0; border-radius: 7px; padding: 7px 9px; background: transparent; color: #e7ebef; text-align: left; cursor: pointer; }
+.macroResults > button:hover { background: #2d3339; }
+.macroResults span { font-size: 12px; }
+.macroResults small { grid-column: 1; overflow: hidden; color: #7f8992; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.macroResults em { grid-column: 2; grid-row: 1 / 3; color: #7f8992; font-style: normal; }
+.runner { display: flex; flex-direction: column; gap: 9px; padding: 12px; }
+.runner > p { margin: 0 0 2px; color: #8d98a2; font-size: 10px; line-height: 1.45; }
+.runner label { display: flex; flex-direction: column; gap: 4px; color: #aab2ba; font-size: 10px; }
+.runner input, .runner select, .runner textarea { width: 100%; box-sizing: border-box; border: 1px solid #343c44; border-radius: 6px; outline: 0; padding: 0 8px; background: #0e1216; color: #e8ecef; font: 11px var(--ms-font-sans); }
+.runner input, .runner select { height: 35px; }
+.runner textarea { min-height: 92px; padding: 8px; resize: vertical; }
+.runner input:focus, .runner select:focus, .runner textarea:focus { border-color: var(--ms-accent-soft); }
+.runner > button, .createPreset { min-height: 35px; border: 1px solid #3b4853; border-radius: 6px; background: #222a31; color: #e6ebef; font: 11px var(--ms-font-sans); cursor: pointer; }
+.runner > button:hover, .createPreset:hover { border-color: var(--ms-accent-soft); background: #2b353e; }
+.runner > button:disabled { opacity: .45; cursor: default; }
+.error { color: #dc756b !important; }
+.notice { margin: 0 9px 7px; color: #83b7d3; font-size: 10px; }
+.vault { padding: 1px 0 8px; }
+.createPreset { width: calc(100% - 16px); margin: 0 8px 8px; }
+.vault > div { min-height: 48px; display: grid; grid-template-columns: 20px 1fr 30px; align-items: center; margin: 0 7px 5px; border-radius: 7px; padding: 3px 5px; background: #11161b; }
+.vault > div > span { color: #83b7d3; font-size: 11px; text-align: center; }
+.vault > div > button { border: 0; background: transparent; color: #9aa4ad; cursor: pointer; }
+.vault > div > button:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.vault > div > button:nth-child(2) strong { color: #e7ebef; font-size: 11px; font-weight: 500; }
+.vault > div > button:nth-child(2) small { max-width: 250px; overflow: hidden; color: #7f8992; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.empty { margin: 25px 10px; color: #7f8992; font-size: 11px; text-align: center; }
 
 @media (max-width: 520px) { .root { left: 12px; bottom: 12px; } .panel { bottom: 50px; } }

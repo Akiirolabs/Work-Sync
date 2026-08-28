@@ -61,6 +61,7 @@ export default function TablesPage() {
   const [frozenColumn, setFrozenColumn] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<Record<string, "count" | "filled" | "empty">>({});
   const [openPage, setOpenPage] = useState<{ rowId: string; columnId: string } | null>(null);
+  const [focusCell, setFocusCell] = useState<{ rowId: string; columnId: string } | null>(null);
 
   useEffect(() => {
     try {
@@ -78,10 +79,15 @@ export default function TablesPage() {
       localStorage.removeItem(AO_TABLE_COMMAND_KEY);
       try {
         const command = JSON.parse(raw) as AOTableCommand;
-        if (!command || !["add-table", "add-row", "add-column"].includes(command.action)) return;
+        if (!command || typeof command.action !== "string") return;
         setTables((current) => {
           const result = applyTableMacro(current, activeId, command);
           setActiveId(result.activeId);
+          if (result.openPage) setOpenPage(result.openPage);
+          if (result.focusCell) setFocusCell(result.focusCell);
+          if (result.openColumn) { setPicker(result.openColumn); setTypeSearch(""); }
+          if (result.filter) { setFilterColumn(result.filter.columnId); setQuery(result.filter.query); setFilterOpen(true); }
+          if (result.summary) setSummaries((currentSummaries) => ({ ...currentSummaries, [result.summary!]: "count" }));
           return result.tables;
         });
       } catch { /* ignore invalid macro commands */ }
@@ -90,6 +96,13 @@ export default function TablesPage() {
     window.addEventListener(AO_TABLE_COMMAND_EVENT, consumeAOCommand);
     return () => window.removeEventListener(AO_TABLE_COMMAND_EVENT, consumeAOCommand);
   }, [ready, activeId]);
+  useEffect(() => {
+    if (!focusCell) return;
+    const cell = document.querySelector(`[data-ao-cell="${focusCell.rowId}:${focusCell.columnId}"]`);
+    const target = cell?.querySelector<HTMLElement>("input, button");
+    target?.focus();
+    setFocusCell(null);
+  }, [focusCell, tables]);
   useEffect(() => {
     function dismissPopups(event: PointerEvent) {
       if (event.target instanceof Element && event.target.closest("[data-table-popup]")) return;
@@ -150,7 +163,7 @@ export default function TablesPage() {
         <div className="ms-data-scroll">
           <table className="ms-data-grid">
             <thead><tr><th className="ms-row-number"><span className="ms-grid-select" /></th>{visibleColumns.map((column, columnIndex) => <th className={frozenIndex >= columnIndex ? "is-frozen" : ""} style={frozenIndex >= columnIndex ? { left: 42 + columnIndex * 145 } : undefined} key={column.id}><span className="ms-column-type">{TYPE_INFO[column.type].icon}</span><input aria-label={`${column.name} column name`} value={column.name} onChange={(e) => changeTable((current) => ({ ...current, columns: current.columns.map((col) => col.id === column.id ? { ...col, name: e.target.value } : col) }))} /><button aria-label={`Options for ${column.name} column`} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const width = 303; const left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)); const top = Math.max(8, Math.min(rect.bottom + 5, window.innerHeight - 520)); setPicker(null); setColumnMenu(columnMenu?.id === column.id ? null : { id: column.id, left, top }); setSummaryMenu(null); setMoreMenu(null); }}>⌄</button></th>)}<th className="ms-add-column"><button aria-label="Add column" onClick={() => { setColumnMenu(null); setPicker(picker === "add" ? null : "add"); }}>＋</button></th></tr></thead>
-            <tbody>{visibleRows.map((row, index) => <tr key={row.id}><td className="ms-row-number">{index + 1}</td>{visibleColumns.map((column, columnIndex) => <td className={frozenIndex >= columnIndex ? "is-frozen" : ""} style={frozenIndex >= columnIndex ? { left: 42 + columnIndex * 145 } : undefined} key={column.id}><Cell row={row} column={column} onChange={(value) => updateCell(row.id, column.id, value)} onOpenPage={() => setOpenPage({ rowId: row.id, columnId: column.id })} /></td>)}<td /></tr>)}</tbody>
+            <tbody>{visibleRows.map((row, index) => <tr key={row.id}><td className="ms-row-number">{index + 1}</td>{visibleColumns.map((column, columnIndex) => <td data-ao-cell={`${row.id}:${column.id}`} className={frozenIndex >= columnIndex ? "is-frozen" : ""} style={frozenIndex >= columnIndex ? { left: 42 + columnIndex * 145 } : undefined} key={column.id}><Cell row={row} column={column} onChange={(value) => updateCell(row.id, column.id, value)} onOpenPage={() => setOpenPage({ rowId: row.id, columnId: column.id })} /></td>)}<td /></tr>)}</tbody>
             {Object.keys(summaries).length > 0 && <tfoot><tr><td className="ms-row-number">Σ</td>{visibleColumns.map((column) => <td key={column.id}>{summaryFor(column)}</td>)}<td /></tr></tfoot>}
           </table>
           <button className="ms-grid-add-row" onClick={addRow}>＋</button>

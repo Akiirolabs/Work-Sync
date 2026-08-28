@@ -67,7 +67,7 @@ test("AO replaces the badge overlay without scanning or animating Next internals
 });
 
 test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () => {
-  for (const label of ["Macro", "Route", "Turbo", "Preferences", "Add table", "Add table record", "Add text column", "Write in Workspace", "Make a new table", "Save macro"]) assert.match(aoMenu, new RegExp(label));
+  for (const label of ["Macro", "Route", "Turbo", "Vault", "Preferences", "Search macros", "Create text preset", "Write in Workspace", "Make a new table", "Run macro"]) assert.match(aoMenu, new RegExp(label));
   assert.match(aoMenu, /AO_MACROS_KEY/);
   assert.match(aoMenu, /AO_TABLE_COMMAND_KEY/);
   assert.match(aoMenu, /AO_WORKSPACE_TEXT_KEY/);
@@ -76,11 +76,18 @@ test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () 
   assert.doesNotMatch(aoMenu, /<span>M<\/span>|<span>R<\/span>|<span>T<\/span>/);
   for (const label of ["Macro information", "Route information", "Turbo information"]) assert.match(aoMenu, new RegExp(label));
   assert.match(aoCss, /content: attr\(data-tip\)/);
+  assert.match(aoMenu, /AO_MACRO_CATALOG\.length/);
+  assert.match(aoMenu, /createWorkspaceNote\(valueFor\("title"\)\)/);
+  assert.match(aoMenu, /See, run and manage all saved macros at a glance/);
+  assert.match(aoMenu, /type === "textarea"/);
+  assert.match(aoMenu, /value: "__new_page__"/);
 });
 
 test("AO commands are consumed once by their destination pages", () => {
   assert.match(tablesPage, /localStorage\.removeItem\(AO_TABLE_COMMAND_KEY\)/);
   assert.match(tablesPage, /applyTableMacro\(current, activeId, command\)/);
+  assert.match(tablesPage, /data-ao-cell/);
+  assert.match(tablesPage, /setFocusCell\(result\.focusCell\)/);
   assert.match(workspacePage, /localStorage\.removeItem\(AO_WORKSPACE_TEXT_KEY\)/);
   assert.match(workspacePage, /window\.addEventListener\(AO_WORKSPACE_TEXT_EVENT, consumeAOText\)/);
 });

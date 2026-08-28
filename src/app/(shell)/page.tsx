@@ -4,7 +4,7 @@ import { Workspace } from "@/ui";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
 import { LineEditor } from "@/components/LineEditor";
-import { AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY } from "@/lib/ao-macro";
+import { AO_WORKSPACE_OPEN_EVENT, AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY } from "@/lib/ao-macro";
 
 type Note = {
   id: string;
@@ -67,6 +67,26 @@ export default function WorkspacePage() {
     window.addEventListener(AO_WORKSPACE_TEXT_EVENT, consumeAOText);
     return () => window.removeEventListener(AO_WORKSPACE_TEXT_EVENT, consumeAOText);
   }, [ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    function consumeAOOpen() {
+      const raw = localStorage.getItem(AO_WORKSPACE_OPEN_KEY);
+      if (!raw) return;
+      localStorage.removeItem(AO_WORKSPACE_OPEN_KEY);
+      try {
+        const note = JSON.parse(raw) as { id?: unknown; body?: unknown };
+        if (typeof note.id !== "string" || typeof note.body !== "string") return;
+        setActiveId(note.id);
+        setBody(note.body);
+        setError(null);
+        void load();
+      } catch { /* ignore invalid AO note targets */ }
+    }
+    consumeAOOpen();
+    window.addEventListener(AO_WORKSPACE_OPEN_EVENT, consumeAOOpen);
+    return () => window.removeEventListener(AO_WORKSPACE_OPEN_EVENT, consumeAOOpen);
+  }, [ready, load]);
 
   function newNote() {
     setActiveId(null);
