@@ -113,9 +113,9 @@ export function AOMacroMenu() {
       </header>
 
       {view === "main" && <div className={styles.list}>
-        <button type="button" onClick={() => setView("macro")}><span>M</span><b>Macro</b><em>›</em></button>
-        <button type="button" onClick={() => setView("route")}><span>R</span><b>Route</b><em>›</em></button>
-        <button type="button" onClick={() => setView("turbo")}><span>T</span><b>Turbo</b><em>›</em></button>
+        <button type="button" onClick={() => setView("macro")}><span className={styles.infoMark} tabIndex={0} aria-label="Macro information" data-tip="Run saved actions and reusable text presets.">i</span><b>Macro</b><em>›</em></button>
+        <button type="button" onClick={() => setView("route")}><span className={styles.infoMark} tabIndex={0} aria-label="Route information" data-tip="Jump directly to a destination in Work Sync.">i</span><b>Route</b><em>›</em></button>
+        <button type="button" onClick={() => setView("turbo")}><span className={styles.infoMark} tabIndex={0} aria-label="Turbo information" data-tip="Send written input to Workspace or a new table.">i</span><b>Turbo</b><em>›</em></button>
         <hr />
         <button type="button" onClick={() => setView("preferences")}><span>⚙</span><b>Preferences</b><em>›</em></button>
       </div>}

@@ -73,6 +73,9 @@ test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () 
   assert.match(aoMenu, /AO_WORKSPACE_TEXT_KEY/);
   assert.match(aoMenu, /document\.addEventListener\("pointerdown", dismiss\)/);
   assert.match(aoMenu, /event\.key === "Escape"/);
+  assert.doesNotMatch(aoMenu, /<span>M<\/span>|<span>R<\/span>|<span>T<\/span>/);
+  for (const label of ["Macro information", "Route information", "Turbo information"]) assert.match(aoMenu, new RegExp(label));
+  assert.match(aoCss, /content: attr\(data-tip\)/);
 });
 
 test("AO commands are consumed once by their destination pages", () => {
