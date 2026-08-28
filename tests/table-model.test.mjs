@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { TABLE_ICON_GROUPS, addColumn, addRow, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, normalizeTableIcon, showColumn, updateCell } from "../src/lib/table-model.ts";
+import { TABLE_ICON_GROUPS, addColumn, addRow, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, moveColumn, normalizeTableIcon, setColumnOptions, showColumn, updateCell } from "../src/lib/table-model.ts";
 
 test("creates a themed table with five columns and three rows", () => {
   const table = makeTable(1);
@@ -82,4 +82,12 @@ test("offers categorized office and lab technology table icons", () => {
   assert.equal(TABLE_ICON_GROUPS.flatMap((group) => group.icons).some((icon) => /\p{Extended_Pictographic}/u.test(icon.symbol)), false);
   assert.equal(normalizeTableIcon("📋"), "▤");
   assert.equal(normalizeTableIcon("AI"), "AI");
+});
+
+test("moves columns and persists colored select options", () => {
+  let table = makeTable(1); const first = table.columns[0]; const target = table.columns[3]; const select = table.columns[2];
+  table = moveColumn(table, first.id, target.id);
+  assert.equal(table.columns[3].id, first.id);
+  table = setColumnOptions(table, select.id, [{ id: "secure", label: "secure-ticket", color: "#247c82" }]);
+  assert.deepEqual(table.columns.find((column) => column.id === select.id)?.options, [{ id: "secure", label: "secure-ticket", color: "#247c82" }]);
 });

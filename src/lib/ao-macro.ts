@@ -3,6 +3,7 @@ import {
   duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, showColumn,
   updateCell, type ColumnType, type WorkTable,
 } from "./table-model.ts";
+import { wrapExternalValue } from "./text-layout.ts";
 
 export const AO_MACROS_KEY = "work-sync:ao-macros";
 export const AO_TABLE_COMMAND_KEY = "work-sync:ao-table-command";
@@ -16,6 +17,11 @@ export type AOTableCommand = { action: string; tableId?: string; columnId?: stri
 export type AOCustomMacroStep = { macroId: string; values: Record<string, string> };
 export type AOMacroPreset = { id: string; label: string; text: string; macroId?: string; steps?: AOCustomMacroStep[]; pinned?: boolean; createdAt?: string; lastUsedAt?: string };
 export type AOTableMacroResult = { tables: WorkTable[]; activeId: string; openPage?: { rowId: string; columnId: string }; openColumn?: string; focusCell?: { rowId: string; columnId: string }; filter?: { columnId: string; query: string }; summary?: string };
+
+export function saveMacroPretext(entries: AOMacroPreset[], label: string): AOMacroPreset[] {
+  const text = label.trim(); if (!text || entries.some((item) => !item.macroId && !item.steps?.length && item.text === text)) return entries;
+  return [...entries, { id: crypto.randomUUID(), label: text, text, createdAt: new Date().toISOString() }];
+}
 
 const id = () => crypto.randomUUID();
 const safeType = (value?: string): ColumnType => value && value in TYPE_INFO ? value as ColumnType : "text";
@@ -80,7 +86,7 @@ export function applyTableMacro(tables: WorkTable[], activeId: string, command: 
   if (command.action === "page-column-first") { updated = addColumn(updated, "page"); const created = updated.columns.at(-1)!; if (command.name?.trim()) updated = { ...updated, columns: updated.columns.map((item) => item.id === created.id ? { ...item, name: command.name!.trim() } : item) }; const firstRow = updated.rows[0]!; updated = updateCell(updated, firstRow.id, created.id, encodePageCell(command.title?.trim() || "Untitled page", "")); openPage = { rowId: firstRow.id, columnId: created.id }; }
   if (["page-open", "page-rename", "page-append", "page-duplicate"].includes(command.action)) {
     const selectedPage = pageParts(command.page); const sourceRow = updated.rows.find((item) => item.id === selectedPage.rowId); const sourceColumn = updated.columns.find((item) => item.id === selectedPage.columnId && item.type === "page");
-    if (sourceRow && sourceColumn) { const document = decodePageCell(sourceRow.cells[sourceColumn.id]); if (command.action === "page-open") openPage = { rowId: sourceRow.id, columnId: sourceColumn.id }; if (command.action === "page-rename") updated = updateCell(updated, sourceRow.id, sourceColumn.id, encodePageCell(command.title?.trim() || document.title, document.body)); if (command.action === "page-append") updated = updateCell(updated, sourceRow.id, sourceColumn.id, encodePageCell(document.title, document.body.trim() ? `${document.body.trimEnd()}\n${command.text?.trim() ?? ""}` : command.text?.trim() ?? "")); if (command.action === "page-duplicate" && command.destinationRowId) updated = updateCell(updated, command.destinationRowId, sourceColumn.id, encodePageCell(`${document.title} copy`, document.body)); }
+    if (sourceRow && sourceColumn) { const document = decodePageCell(sourceRow.cells[sourceColumn.id]); if (command.action === "page-open") openPage = { rowId: sourceRow.id, columnId: sourceColumn.id }; if (command.action === "page-rename") updated = updateCell(updated, sourceRow.id, sourceColumn.id, encodePageCell(command.title?.trim() || document.title, document.body)); if (command.action === "page-append") { const generated = wrapExternalValue(command.text?.trim() ?? ""); updated = updateCell(updated, sourceRow.id, sourceColumn.id, encodePageCell(document.title, document.body.trim() ? `${document.body.trimEnd()}\n${generated}` : generated)); } if (command.action === "page-duplicate" && command.destinationRowId) updated = updateCell(updated, command.destinationRowId, sourceColumn.id, encodePageCell(`${document.title} copy`, document.body)); }
   }
   if (command.action === "page-fill-empty" && command.columnId) { let count = 1; updated = { ...updated, rows: updated.rows.map((item) => { if (String(item.cells[command.columnId!] ?? "").trim()) return item; return { ...item, cells: { ...item.cells, [command.columnId!]: encodePageCell(`${command.title?.trim() || "Page"} ${count++}`, "") } }; }) }; }
   return { tables: tables.map((item) => item.id === selectedId ? updated : item), activeId: selectedId, openPage, openColumn, focusCell, filter, summary };

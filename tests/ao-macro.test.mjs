@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { applyTableMacro } from "../src/lib/ao-macro.ts";
-import { decodePageCell, makeTable } from "../src/lib/table-model.ts";
+import { applyTableMacro, saveMacroPretext } from "../src/lib/ao-macro.ts";
+import { addColumn, decodePageCell, encodePageCell, makeTable, updateCell } from "../src/lib/table-model.ts";
 
 const model = await readFile(new URL("../src/lib/ao-macro.ts", import.meta.url), "utf8");
 
@@ -75,4 +75,22 @@ test("custom macro batches execute every saved table step in order", () => {
     name: "Lab notes",
     type: "page",
   });
+});
+
+test("automation wraps long generated page text into stored lines", () => {
+  let initial = addColumn(makeTable(1), "page"); const column = initial.columns.at(-1); const row = initial.rows[0];
+  initial = updateCell(initial, row.id, column.id, encodePageCell("Runbook", ""));
+  const generated = Array.from({ length: 40 }, () => "automation").join(" ");
+  const result = applyTableMacro([initial], initial.id, { action: "page-append", page: `${initial.id}:${row.id}:${column.id}`, text: generated });
+  const body = decodePageCell(result.tables[0].rows[0].cells[column.id]).body;
+  assert.ok(body.includes("\n"));
+  assert.ok(body.split("\n").every((line) => line.length <= 92));
+});
+
+test("Select options save once as reusable Vault macro pretext", () => {
+  const saved = saveMacroPretext([], "secure-ticket");
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].label, "secure-ticket");
+  assert.equal(saved[0].text, "secure-ticket");
+  assert.equal(saveMacroPretext(saved, "secure-ticket"), saved);
 });

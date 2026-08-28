@@ -46,6 +46,26 @@ test("page cells use the Workspace editor in a dismissible cell-scoped modal", (
   assert.match(tablesPage, /table-page:\$\{table\.id\}:\$\{pageRow\.id\}:\$\{pageColumn\.id\}/);
 });
 
+test("table FTR-1001 interactions are implemented", () => {
+  assert.match(tablesPage, /moveColumn\(current, source, column\.id\)/);
+  assert.match(tablesPage, /moveToNextRow\(row\.id, column\.id\)/);
+  assert.match(tablesPage, /aria-label="Group table"/);
+  assert.match(tablesPage, /groupBy: column\.id/);
+  assert.match(editor, /selectionStart/);
+  assert.match(editor, /onPaste=\{\(e\) => onPaste\(e, line\)\}/);
+  assert.match(editor, /wrapExternalText/);
+});
+
+test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {
+  assert.match(tablesPage, /Type an option and press Enter/);
+  assert.match(tablesPage, /text\/select-option/);
+  assert.match(tablesPage, /SELECT_COLORS\.map/);
+  assert.match(tablesPage, /Delete option/);
+  assert.match(tablesPage, /Save as macro pretext/);
+  assert.match(tablesPage, /AO_MACROS_KEY/);
+  assert.match(tablesPage, /setColumnOptions/);
+});
+
 test("all app popups support click-away dismissal", () => {
   assert.match(tablesPage, /document\.addEventListener\("pointerdown", dismissPopups\)/);
   assert.match(tablesPage, /setOpenPage\(null\)/);

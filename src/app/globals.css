@@ -275,11 +275,18 @@
 .ms-data-toolbar button { height: 31px; border: 0; border-radius: 4px; padding: 0 9px; background: transparent; color: var(--ms-text-bright); font: 13px var(--ms-font-sans); cursor: pointer; }
 .ms-data-toolbar button:hover { background: rgba(255,255,255,.06); }
 .ms-data-toolbar button.is-accent { color: #68aefb; }
+.ms-data-toolbar button.is-active { background: rgba(56, 120, 184, .18); color: #70b6ff; }
 .ms-data-toolbar i { width: 1px; height: 17px; margin: 0 5px; background: var(--ms-edge); }
 .ms-toolbar-end button { width: 32px; padding: 0; color: var(--ms-text); }
 .ms-table-search { position: absolute; z-index: 4; top: 46px; right: 66px; width: 240px; height: 36px; display: grid; grid-template-columns: 26px 1fr 28px; align-items: center; padding: 0 6px; border: 1px solid var(--ms-edge); border-radius: 5px; background: #171d24; box-shadow: 0 8px 22px rgba(0,0,0,.35); }
 .ms-table-search input { min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 12px var(--ms-font-sans); }
 .ms-table-search button { border: 0; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
+.ms-group-menu { position: absolute; z-index: 14; top: 46px; left: 186px; width: 230px; max-height: 340px; overflow-y: auto; padding: 7px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2026; box-shadow: 0 14px 38px rgba(0,0,0,.55); }
+.ms-group-menu p { margin: 4px 7px 6px; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); text-transform: uppercase; letter-spacing: .05em; }
+.ms-group-menu button { width: 100%; height: 32px; display: grid; grid-template-columns: 25px 1fr auto; align-items: center; border: 0; border-radius: 5px; padding: 0 7px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-group-menu button:first-of-type { grid-template-columns: 1fr auto; }
+.ms-group-menu button:hover, .ms-group-menu button.is-active { background: #30373f; color: var(--ms-text-bright); }
+.ms-group-menu em { color: var(--ms-accent); font-style: normal; }
 .ms-data-scroll { max-width: 100%; min-height: 230px; overflow: auto; border-radius: 0 0 8px 8px; }
 .ms-data-grid { min-width: 820px; width: 100%; table-layout: fixed; border-collapse: collapse; color: var(--ms-text); }
 .ms-data-grid th, .ms-data-grid td { height: 36px; border-right: 1px solid var(--ms-edge-soft); border-bottom: 1px solid var(--ms-edge-soft); padding: 0; text-align: left; }
@@ -288,15 +295,25 @@
 .ms-data-grid th:nth-child(2) { width: 175px; }
 .ms-data-grid .ms-row-number { width: 42px; text-align: center; color: var(--ms-text-bright); font: 11px var(--ms-font-mono); }
 .ms-grid-select { display: inline-block; width: 17px; height: 17px; border: 1px solid var(--ms-edge); border-radius: 4px; }
-.ms-data-grid th > input { width: calc(100% - 57px); height: 34px; border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 600 12px var(--ms-font-sans); }
+.ms-data-grid th > input { width: calc(100% - 75px); height: 34px; border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 600 12px var(--ms-font-sans); }
 .ms-column-type { width: 31px; display: inline-grid; place-items: center; color: var(--ms-text); }
 .ms-data-grid th > button { position: absolute; right: 5px; top: 5px; width: 27px; height: 27px; opacity: 0; border: 0; border-radius: 4px; background: var(--ms-bg-3); color: var(--ms-text); cursor: pointer; }
 .ms-data-grid th:hover > button { opacity: 1; }
+.ms-data-grid th > button.ms-column-drag { position: static; width: 17px; padding: 0; opacity: .45; background: transparent; font-size: 12px; cursor: grab; }
+.ms-data-grid th > button.ms-column-drag:active { cursor: grabbing; }
 .ms-data-grid .ms-add-column { width: auto; min-width: 48px; }
 .ms-data-grid .ms-add-column > button { position: static; opacity: 1; background: transparent; font-size: 18px; }
 .ms-data-grid td > input { width: 100%; height: 35px; padding: 0 9px; border: 0; outline: 0; background: transparent; color: var(--ms-text); font: 12px var(--ms-font-sans); }
 .ms-data-grid td > input:focus { box-shadow: inset 0 0 0 1px var(--ms-accent-soft); background: rgba(61,111,140,.07); }
 .ms-data-grid td > input::placeholder { color: #55606d; }
+.ms-group-row td { height: 31px; padding: 0 10px; background: #141a20; color: var(--ms-text); font: 11px var(--ms-font-sans); }
+.ms-group-row td span { margin-right: 7px; color: var(--ms-accent); }
+.ms-group-row td strong { font-weight: 600; }
+.ms-group-row td em { margin-left: 7px; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); font-style: normal; }
+.ms-select-cell { width: 100%; min-height: 35px; display: flex; align-items: center; gap: 4px; overflow: hidden; border: 0; padding: 4px 7px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-select-cell:hover, .ms-select-cell:focus { outline: 0; background: rgba(61,111,140,.09); box-shadow: inset 0 0 0 1px var(--ms-accent-soft); }
+.ms-select-cell span, .ms-option-choice span { min-width: 0; max-width: 100%; overflow: hidden; border: 1px solid color-mix(in srgb, var(--select-color) 70%, #a6c8e8); border-radius: 10px; padding: 1px 7px; background: color-mix(in srgb, var(--select-color) 26%, #111820); color: color-mix(in srgb, var(--select-color) 35%, #f3f7fa); text-overflow: ellipsis; white-space: nowrap; }
+.ms-select-cell em { color: #55606d; font-style: normal; }
 .ms-data-grid th.is-frozen, .ms-data-grid td.is-frozen { position: sticky; z-index: 3; background: #0e1318; box-shadow: 1px 0 var(--ms-edge); }
 .ms-data-grid td.is-frozen { z-index: 2; background: var(--ms-bg-1); }
 .ms-data-grid tfoot td { height: 32px; border-right: 1px solid var(--ms-edge-soft); border-top: 1px solid var(--ms-edge); padding: 0 8px; color: var(--ms-text-dim); background: #10151b; font: 10px var(--ms-font-mono); }
@@ -349,6 +366,30 @@
 .ms-action-submenu button { width: 100%; height: 31px; border: 0; border-radius: 5px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
 .ms-action-submenu button:hover { background: #31373e; color: var(--ms-text-bright); }
 
+.ms-select-popup { position: fixed; z-index: 180; width: 310px; max-height: min(420px, calc(100vh - 20px)); overflow: visible; border: 1px solid #33404b; border-radius: 8px; padding: 7px; background: #151b21; box-shadow: 0 18px 50px rgba(0,0,0,.65); }
+.ms-select-popup > label { height: 36px; display: grid; grid-template-columns: 27px 1fr; align-items: center; border-bottom: 1px solid var(--ms-edge); }
+.ms-select-popup > label span { display: grid; place-items: center; color: var(--ms-text-dim); }
+.ms-select-popup > label input { min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 12px var(--ms-font-sans); }
+.ms-select-options { max-height: 300px; overflow-y: auto; padding-top: 5px; }
+.ms-select-option { position: relative; min-height: 38px; display: grid; grid-template-columns: 27px 1fr 34px; align-items: center; border-radius: 7px; }
+.ms-select-option:hover, .ms-select-option.is-selected { background: #2d343b; }
+.ms-select-option > button { height: 32px; border: 0; background: transparent; color: var(--ms-text); cursor: pointer; }
+.ms-option-drag { opacity: .7; cursor: grab !important; }
+.ms-option-drag:active { cursor: grabbing !important; }
+.ms-option-choice { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 5px; text-align: left; }
+.ms-option-choice em { color: var(--ms-accent); font-style: normal; }
+.ms-option-more { opacity: .8; letter-spacing: 1px; }
+.ms-option-editor { position: absolute; z-index: 3; top: 34px; right: 5px; width: 280px; padding: 8px; border: 1px solid #36424d; border-radius: 7px; background: #1d2329; box-shadow: 0 14px 34px rgba(0,0,0,.6); }
+.ms-option-editor p { margin: 2px 3px 7px; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); text-transform: uppercase; }
+.ms-option-editor > div { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-bottom: 8px; }
+.ms-option-editor > div button { aspect-ratio: 1; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; cursor: pointer; }
+.ms-option-editor > div button.is-active { outline: 1px solid #6fb9ff; outline-offset: 2px; }
+.ms-option-editor > button { width: 100%; height: 32px; display: grid; grid-template-columns: 25px 1fr; align-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-option-editor > button:hover { background: #30373f; color: var(--ms-text-bright); }
+.ms-option-editor > button.is-danger:hover { color: #ef8175; }
+.ms-select-empty, .ms-select-notice { margin: 8px 7px; color: var(--ms-text-dim); font: 10px/1.4 var(--ms-font-mono); }
+.ms-select-notice { color: #72b9ff; }
+
 .ms-page-modal-backdrop { position: fixed; z-index: 300; inset: 0; display: grid; place-items: center; padding: 28px; background: rgba(3, 6, 9, .72); backdrop-filter: blur(3px); }
 .ms-page-modal { width: min(1100px, 94vw); height: min(820px, 90vh); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--ms-edge); border-radius: 10px; background: #0d1218; box-shadow: 0 28px 90px rgba(0,0,0,.72); }
 .ms-page-modal > header { min-height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 11px 20px; border-bottom: 1px solid var(--ms-edge-soft); background: #11171e; }
@@ -374,7 +415,7 @@
   .ms-tables-sidebar { display: none; }
   .ms-table-stage { padding: 9px; }
   .ms-column-picker { left: 10px; width: min(360px, calc(100vw - 90px)); }
-  .ms-toolbar-main button:nth-of-type(3), .ms-toolbar-main button:nth-of-type(4) { display: none; }
+  .ms-toolbar-main button:nth-of-type(3) { display: none; }
   .ms-toolbar-end { display: none; }
 }
 

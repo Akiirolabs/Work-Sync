@@ -1,7 +1,8 @@
 export type ColumnType = "text" | "number" | "percent" | "currency" | "single" | "multiple" | "date" | "people" | "files" | "checkbox" | "reaction" | "formula" | "relation" | "rollup" | "page" | "url" | "phone" | "email";
-export type Column = { id: string; name: string; type: ColumnType; hidden?: boolean };
+export type SelectOption = { id: string; label: string; color: string };
+export type Column = { id: string; name: string; type: ColumnType; hidden?: boolean; options?: SelectOption[] };
 export type Row = { id: string; cells: Record<string, string | boolean> };
-export type WorkTable = { id: string; name: string; icon: string; columns: Column[]; rows: Row[] };
+export type WorkTable = { id: string; name: string; icon: string; columns: Column[]; rows: Row[]; groupBy?: string };
 
 export const TABLE_ICON_GROUPS = [
   { label: "Office", icons: [
@@ -47,13 +48,21 @@ export function makeTable(number: number): WorkTable { return { id: id(), name: 
 export function addRow(table: WorkTable): WorkTable { return { ...table, rows: [...table.rows, { id: id(), cells: {} }] }; }
 export function updateCell(table: WorkTable, rowId: string, columnId: string, value: string | boolean): WorkTable { return { ...table, rows: table.rows.map((row) => row.id === rowId ? { ...row, cells: { ...row.cells, [columnId]: value } } : row) }; }
 export function addColumn(table: WorkTable, type: ColumnType): WorkTable { return { ...table, columns: [...table.columns, { id: id(), name: TYPE_INFO[type].label, type }] }; }
-export function changeColumnType(table: WorkTable, columnId: string, type: ColumnType): WorkTable { return { ...table, columns: table.columns.map((column) => column.id === columnId ? { ...column, type } : column) }; }
+export function changeColumnType(table: WorkTable, columnId: string, type: ColumnType): WorkTable { return { ...table, columns: table.columns.map((column) => column.id === columnId ? { ...column, type, options: type === "single" || type === "multiple" ? column.options ?? [] : undefined } : column) }; }
+export function moveColumn(table: WorkTable, columnId: string, targetId: string): WorkTable {
+  if (columnId === targetId) return table;
+  const from = table.columns.findIndex((column) => column.id === columnId); const to = table.columns.findIndex((column) => column.id === targetId);
+  if (from < 0 || to < 0) return table;
+  const columns = [...table.columns]; const [column] = columns.splice(from, 1); columns.splice(to, 0, column!);
+  return { ...table, columns };
+}
+export function setColumnOptions(table: WorkTable, columnId: string, options: SelectOption[]): WorkTable { return { ...table, columns: table.columns.map((column) => column.id === columnId ? { ...column, options } : column) }; }
 export function duplicateColumn(table: WorkTable, columnId: string): WorkTable { const source = table.columns.find((column) => column.id === columnId); if (!source) return table; const copy = { ...source, id: id(), name: `${source.name} copy` }; return { ...table, columns: [...table.columns, copy], rows: table.rows.map((row) => ({ ...row, cells: { ...row.cells, [copy.id]: row.cells[source.id] ?? "" } })) }; }
 export function insertColumn(table: WorkTable, columnId: string, side: "left" | "right"): WorkTable { const index = table.columns.findIndex((column) => column.id === columnId); if (index < 0) return table; const column: Column = { id: id(), name: "Text", type: "text" }; const columns = [...table.columns]; columns.splice(index + (side === "right" ? 1 : 0), 0, column); return { ...table, columns }; }
 export function hideColumn(table: WorkTable, columnId: string): WorkTable { if (table.columns.filter((column) => !column.hidden).length === 1) return table; return { ...table, columns: table.columns.map((column) => column.id === columnId ? { ...column, hidden: true } : column) }; }
 export function showColumn(table: WorkTable, columnId: string): WorkTable { return { ...table, columns: table.columns.map((column) => column.id === columnId ? { ...column, hidden: false } : column) }; }
-export function deleteColumn(table: WorkTable, columnId: string): WorkTable { if (table.columns.length === 1) return table; return { ...table, columns: table.columns.filter((column) => column.id !== columnId), rows: table.rows.map((row) => { const cells = { ...row.cells }; delete cells[columnId]; return { ...row, cells }; }) }; }
-export function duplicateTable(table: WorkTable, name: string): WorkTable { const columns = table.columns.map((column) => ({ ...column, id: id() })); const columnIds = new Map(table.columns.map((column, index) => [column.id, columns[index]!.id])); return { ...table, id: id(), name, columns, rows: table.rows.map((row) => ({ id: id(), cells: Object.fromEntries(Object.entries(row.cells).map(([key, value]) => [columnIds.get(key) ?? key, value])) })) }; }
+export function deleteColumn(table: WorkTable, columnId: string): WorkTable { if (table.columns.length === 1) return table; return { ...table, groupBy: table.groupBy === columnId ? undefined : table.groupBy, columns: table.columns.filter((column) => column.id !== columnId), rows: table.rows.map((row) => { const cells = { ...row.cells }; delete cells[columnId]; return { ...row, cells }; }) }; }
+export function duplicateTable(table: WorkTable, name: string): WorkTable { const columns = table.columns.map((column) => ({ ...column, id: id() })); const columnIds = new Map(table.columns.map((column, index) => [column.id, columns[index]!.id])); return { ...table, id: id(), name, columns, groupBy: table.groupBy ? columnIds.get(table.groupBy) : undefined, rows: table.rows.map((row) => ({ id: id(), cells: Object.fromEntries(Object.entries(row.cells).map(([key, value]) => [columnIds.get(key) ?? key, value])) })) }; }
 
 const PAGE_PREFIX = "__work_sync_page__:";
 export function decodePageCell(value: string | boolean | undefined): { title: string; body: string } {
