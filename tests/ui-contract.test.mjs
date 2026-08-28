@@ -54,9 +54,17 @@ test("table FTR-1001 interactions are implemented", () => {
   assert.match(tablesPage, /groupBy: column\.id/);
   assert.match(editor, /contentEditable/);
   assert.match(editor, /selectionOffsets/);
-  assert.match(editor, /previous\.text \+ line\.text/);
+  assert.match(editor, /previous\.text \+ liveLine\.text/);
   assert.match(editor, /onPaste=\{\(e\) => onPaste\(e, line\)\}/);
   assert.match(editor, /wrapExternalText/);
+});
+
+test("Workspace alone uses one native multiline control for cross-line selection", () => {
+  assert.match(workspacePage, /continuousSelection/);
+  assert.doesNotMatch(tablesPage, /continuousSelection/);
+  assert.match(editor, /className="ms-continuous-textarea"/);
+  assert.match(editor, /aria-label="Workspace editor"/);
+  assert.match(editor, /wrap="off"/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {
