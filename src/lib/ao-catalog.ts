@@ -1,4 +1,4 @@
-export type AOMacroCategory = "Workspace" | "Tables" | "Rows" | "Columns" | "Pages" | "Vault";
+export type AOMacroCategory = "Workspace" | "To Do" | "Tables" | "Rows" | "Columns" | "Pages" | "Vault";
 export type AOMacroFieldType = "text" | "textarea" | "number" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "destination";
 export type AOMacroField = { key: string; label: string; type: AOMacroFieldType; placeholder?: string; optional?: boolean };
 export type AOMacroDefinition = { id: string; label: string; description: string; category: AOMacroCategory; action: string; fields?: AOMacroField[]; value?: string };
@@ -22,6 +22,17 @@ const workspace: AOMacroDefinition[] = [
   { id: "workspace-prepend", label: "Prepend saved text", description: "Add Vault text to the start of the current note.", category: "Workspace", action: "workspace-prepend", fields: [preset] },
   { id: "workspace-section", label: "Add dated section", description: "Append a dated heading to the current note.", category: "Workspace", action: "workspace-section", fields: [text("title", "Section title", "Update")] },
   { id: "workspace-save-new", label: "Save and create another note", description: "Save the draft, then create a separate note.", category: "Workspace", action: "workspace-save-new", fields: [text("title", "New note title", "Untitled note")] },
+];
+
+const todo: AOMacroDefinition[] = [
+  { id: "todo-add", label: "Add task", description: "Add a task to the To Do page.", category: "To Do", action: "todo-add", fields: [text("title", "Task", "What needs to be done?")] },
+  { id: "todo-add-high", label: "Add high-priority task", description: "Add an important task to the To Do page.", category: "To Do", action: "todo-add-high", fields: [text("title", "Task", "Important task")] },
+  { id: "todo-add-today", label: "Add task due today", description: "Create a task with today's due date.", category: "To Do", action: "todo-add-today", fields: [text("title", "Task", "Task due today")] },
+  { id: "todo-add-due", label: "Add task with due date", description: "Create a task with a specific YYYY-MM-DD due date.", category: "To Do", action: "todo-add-due", fields: [text("title", "Task", "Scheduled task"), text("dueDate", "Due date", "YYYY-MM-DD")] },
+  { id: "todo-follow-up", label: "Add follow-up", description: "Create a clearly labeled follow-up task.", category: "To Do", action: "todo-follow-up", fields: [text("title", "Follow up with", "Client or teammate")] },
+  { id: "todo-review", label: "Add review task", description: "Create a task for reviewing work or a document.", category: "To Do", action: "todo-review", fields: [text("title", "Review", "Document or deliverable")] },
+  { id: "todo-complete-next", label: "Complete next task", description: "Mark the first open task complete.", category: "To Do", action: "todo-complete-next" },
+  { id: "todo-clear-completed", label: "Clear completed tasks", description: "Remove every completed task from To Do.", category: "To Do", action: "todo-clear-completed" },
 ];
 
 const tables: AOMacroDefinition[] = [
@@ -86,5 +97,5 @@ const vault: AOMacroDefinition[] = [
   { id: "vault-recent", label: "Recently used macros", description: "Show the latest runnable Vault entries.", category: "Vault", action: "vault-recent" },
 ];
 
-export const AO_MACRO_CATEGORIES: AOMacroCategory[] = ["Workspace", "Tables", "Rows", "Columns", "Pages", "Vault"];
-export const AO_MACRO_CATALOG: AOMacroDefinition[] = [...workspace, ...tables, ...rows, ...addColumns, ...columnActions, ...pages, ...vault];
+export const AO_MACRO_CATEGORIES: AOMacroCategory[] = ["Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Vault"];
+export const AO_MACRO_CATALOG: AOMacroDefinition[] = [...workspace, ...todo, ...tables, ...rows, ...addColumns, ...columnActions, ...pages, ...vault];

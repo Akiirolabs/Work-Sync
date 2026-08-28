@@ -8,6 +8,7 @@ import { AOMacroMenu } from "./AOMacroMenu";
 
 const NAV = [
   { id: "workspace", label: "Workspace", href: "/" },
+  { id: "todo", label: "To Do", href: "/todo" },
   { id: "tables", label: "Tables", href: "/tables" },
   { id: "sources", label: "Sources", href: "/sources" },
   { id: "verify", label: "Verify", href: "/verify" },

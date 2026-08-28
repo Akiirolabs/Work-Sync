@@ -11,6 +11,7 @@ const aoMenu = await readFile(new URL("../src/components/AOMacroMenu.tsx", impor
 const aoCss = await readFile(new URL("../src/components/AOMacroMenu.module.css", import.meta.url), "utf8");
 const workspacePage = await readFile(new URL("../src/app/(shell)/page.tsx", import.meta.url), "utf8");
 const nextConfig = await readFile(new URL("../next.config.ts", import.meta.url), "utf8");
+const todoPage = await readFile(new URL("../src/app/(shell)/todo/page.tsx", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -51,7 +52,9 @@ test("table FTR-1001 interactions are implemented", () => {
   assert.match(tablesPage, /moveToNextRow\(row\.id, column\.id\)/);
   assert.match(tablesPage, /aria-label="Group table"/);
   assert.match(tablesPage, /groupBy: column\.id/);
-  assert.match(editor, /selectionStart/);
+  assert.match(editor, /contentEditable/);
+  assert.match(editor, /selectionOffsets/);
+  assert.match(editor, /previous\.text \+ line\.text/);
   assert.match(editor, /onPaste=\{\(e\) => onPaste\(e, line\)\}/);
   assert.match(editor, /wrapExternalText/);
 });
@@ -140,6 +143,9 @@ test("Vault manages typed entries and a five-item draggable Main Macro row", () 
   assert.match(aoMenu, /isTextPreset\(preset\) \? "T" : "M"/);
   assert.match(aoMenu, /Add to Main Macro/);
   assert.match(aoMenu, /className=\{styles\.mainIconGrid\}/);
+  assert.match(aoMenu, /mainIconPrompt === menuPreset\.id/);
+  assert.match(aoMenu, /icon: undefined/);
+  assert.match(aoMenu, /VAULT_CATEGORIES/);
   assert.match(aoMenu, /dataTransfer\.setData\("text\/main-macro"/);
   assert.match(aoMenu, /reorderMainPreset\(source, preset\.id\)/);
   assert.match(aoMenu, /deleteVaultPreset\(menuPreset\)/);
@@ -153,4 +159,15 @@ test("AO commands are consumed once by their destination pages", () => {
   assert.match(tablesPage, /setFocusCell\(result\.focusCell\)/);
   assert.match(workspacePage, /localStorage\.removeItem\(AO_WORKSPACE_TEXT_KEY\)/);
   assert.match(workspacePage, /window\.addEventListener\(AO_WORKSPACE_TEXT_EVENT, consumeAOText\)/);
+  assert.match(todoPage, /localStorage\.removeItem\(AO_TODO_COMMAND_KEY\)/);
+  assert.match(todoPage, /window\.addEventListener\(AO_TODO_COMMAND_EVENT, consume\)/);
+});
+
+test("To Do is a functional left-panel destination with task macros", () => {
+  assert.match(appShell, /label: "To Do", href: "\/todo"/);
+  assert.match(todoPage, /createTodo\(title\)/);
+  assert.match(todoPage, /Complete \$\{item\.title\}/);
+  assert.match(todoPage, /Clear completed/);
+  assert.match(aoMenu, /selected\.category === "To Do"/);
+  assert.match(aoMenu, /sendTodoCommand/);
 });

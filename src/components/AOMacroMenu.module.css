@@ -86,6 +86,9 @@
 .mainMacros button span { font: 600 12px var(--ms-font-mono); color: #9fc6dc; }
 .mainMacros button small { width: calc(100% - 6px); overflow: hidden; color: #86919a; font: 8px var(--ms-font-sans); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .vault { padding: 1px 0 8px; }
+.vaultMainHeader { display: flex; align-items: center; justify-content: space-between; margin: 2px 9px 5px; color: #929da6; font: 9px var(--ms-font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.vaultMainHeader span { color: #6f7a84; }
+.mainEmpty { margin: 3px 9px 8px; padding: 9px; border: 1px dashed #333c44; border-radius: 6px; color: #78838c; font-size: 9px; text-align: center; }
 .createPreset { width: calc(100% - 16px); margin: 0 8px 8px; }
 .vaultItems { max-height: 371px; overflow-y: auto; scrollbar-width: thin; }
 .vaultItem { min-height: 48px; display: grid; grid-template-columns: 20px 1fr 49px; align-items: center; margin: 0 7px 5px; border-radius: 7px; padding: 3px 5px; background: #11161b; }

@@ -204,15 +204,16 @@
 .ms-line-toggle:hover, .ms-line-toggle.is-active { background: var(--ms-bg-3); border-color: var(--ms-edge); color: var(--ms-text-bright); }
 .ms-line-prefix { min-width: 0; color: var(--ms-text-dim); margin-right: 0; }
 .ms-line-bullets .ms-line-prefix, .ms-line-numbered .ms-line-prefix, .ms-line-todo .ms-line-prefix, .ms-line-quote .ms-line-prefix { min-width: 21px; margin-right: 3px; }
-.ms-editor-line input { flex: 1; min-width: 0; height: 27px; padding: 2px 4px; border: 0; outline: 0; background: transparent; color: var(--ms-text); font: inherit; }
-.ms-editor-line input::placeholder { color: var(--ms-text-dim); }
+.ms-editor-line > [contenteditable] { flex: 1; min-width: 0; min-height: 27px; box-sizing: border-box; padding: 4px; border: 0; outline: 0; background: transparent; color: var(--ms-text); font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+.ms-editor-line > [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--ms-text-dim); pointer-events: none; }
+.ms-line-toggle, .ms-line-prefix, .ms-comment-count { user-select: none; }
 .ms-line-h1 input { height: 38px; font-size: 25px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h2 input { height: 34px; font-size: 20px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h3 input { height: 31px; font-size: 17px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h4 input { font-size: 14px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-code input { font-family: var(--ms-font-mono); background: var(--ms-bg-1); color: #a8c9dc; }
 .ms-line-quote { border-left: 2px solid var(--ms-edge); padding-left: 5px; }
-.ms-editor-line.is-accent input, .ms-editor-line.is-accent .ms-line-prefix { color: var(--ms-accent); }
+.ms-editor-line.is-accent > [contenteditable], .ms-editor-line.is-accent .ms-line-prefix { color: var(--ms-accent); }
 .ms-comment-count { flex: 0 0 auto; border: 0; background: transparent; color: var(--ms-accent); font: 10px var(--ms-font-mono); cursor: pointer; }
 
 .ms-line-menu { position: absolute; z-index: 30; left: -18px; top: 25px; width: 258px; padding: 8px; border: 1px solid #303842; border-radius: 7px; background: #1d2228; color: #e5e9ed; box-shadow: 0 14px 38px rgba(0,0,0,.5); font-family: var(--ms-font-sans); font-size: 13px; }
@@ -236,6 +237,23 @@
 .ms-comment-box button { border: 0; border-radius: 3px; padding: 4px 6px; background: var(--ms-bg-3); color: var(--ms-text); cursor: pointer; font-size: 11px; }
 .ms-comment-box button.is-primary { color: var(--ms-text-bright); background: var(--ms-accent-soft); }
 .ms-menu-meta { margin: 4px 6px 2px; color: #626b75; font-size: 11px; }
+
+.ms-todo-panel { max-width: 780px; padding: 14px; }
+.ms-todo-add { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.ms-todo-add input { min-width: 0; height: 36px; box-sizing: border-box; border: 1px solid var(--ms-border); border-radius: 5px; outline: 0; padding: 0 10px; background: #10151a; color: var(--ms-text); font: inherit; }
+.ms-todo-add input:focus { border-color: var(--ms-accent-soft); }
+.ms-todo-filters { display: flex; gap: 5px; margin: 12px 0; }
+.ms-todo-filters button { border: 1px solid var(--ms-border); border-radius: 12px; padding: 4px 10px; background: transparent; color: var(--ms-text-dim); font: 10px var(--ms-font-sans); text-transform: capitalize; cursor: pointer; }
+.ms-todo-filters button.is-active { border-color: var(--ms-accent-soft); background: #24313a; color: var(--ms-text); }
+.ms-todo-list { display: flex; flex-direction: column; gap: 5px; }
+.ms-todo-item { min-height: 48px; display: grid; grid-template-columns: 24px 1fr 30px; align-items: center; gap: 7px; padding: 4px 7px; border: 1px solid var(--ms-border); border-radius: 6px; background: #11161b; }
+.ms-todo-item > span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ms-todo-item strong { font-size: 12px; font-weight: 500; }
+.ms-todo-item small { color: var(--ms-text-dim); font-size: 9px; }
+.ms-todo-item > button { width: 27px; height: 27px; border: 0; border-radius: 4px; background: transparent; color: var(--ms-text-dim); font-size: 17px; cursor: pointer; }
+.ms-todo-item > button:hover { background: #342429; color: #ef8175; }
+.ms-todo-item.is-done strong { color: var(--ms-text-dim); text-decoration: line-through; }
+.ms-todo-empty { padding: 25px 4px; text-align: center; }
 
 /* Tables workspace */
 .ms-tables-sidebar { min-height: 0; border-right: 1px solid var(--ms-edge-soft); background: rgba(9, 13, 18, .72); padding: 13px 9px; }

@@ -11,6 +11,7 @@ import {
   type AOCustomMacroStep, type AOMacroPreset, type AOTableCommand,
 } from "@/lib/ao-macro";
 import { decodePageCell, type WorkTable } from "@/lib/table-model";
+import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, type AOTodoCommand } from "@/lib/todo-model";
 import styles from "./AOMacroMenu.module.css";
 
 type View = "main" | "macro" | "route" | "turbo" | "vault" | "preferences";
@@ -23,7 +24,8 @@ const TABLES_KEY = "work-sync:tables";
 const MAIN_MACRO_LIMIT = 5;
 const MAIN_MACRO_ICONS = ["◇", "▦", "▤", "✓", "⌁", "⊙", "＋", "◉", "∆", "A", "T", "M"];
 
-const ROUTES = [["Workspace", "/", "⌂"], ["Tables", "/tables", "▦"], ["Sources", "/sources", "S"], ["Verify", "/verify", "✓"], ["History", "/history", "H"], ["Connect", "/connect", "C"]] as const;
+const ROUTES = [["Workspace", "/", "⌂"], ["To Do", "/todo", "□"], ["Tables", "/tables", "▦"], ["Sources", "/sources", "S"], ["Verify", "/verify", "✓"], ["History", "/history", "H"], ["Connect", "/connect", "C"]] as const;
+const VAULT_CATEGORIES = ["All", "Text", "Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Custom"] as const;
 const WORKSPACE_TEMPLATES: Record<string, string> = {
   meeting: "## Attendees\n\n## Agenda\n\n## Decisions\n\n## Follow-up",
   project: "## Objective\n\n## Owner\n\n## Milestones\n\n## Risks\n\n## Next actions",
@@ -41,6 +43,7 @@ export function AOMacroMenu() {
   const [selected, setSelected] = useState<AOMacroDefinition | null>(null); const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
   const [vaultQuery, setVaultQuery] = useState("");
+  const [vaultCategory, setVaultCategory] = useState<(typeof VAULT_CATEGORIES)[number]>("All");
   const [vaultRecent, setVaultRecent] = useState(false);
   const [macroMode, setMacroMode] = useState<MacroMode>("home");
   const [builderName, setBuilderName] = useState("");
@@ -48,9 +51,10 @@ export function AOMacroMenu() {
   const [builderSteps, setBuilderSteps] = useState<BuilderStep[]>([]);
   const [customToRun, setCustomToRun] = useState<AOMacroPreset | null>(null);
   const [vaultMenu, setVaultMenu] = useState<{ id: string; left: number; top: number } | null>(null);
+  const [mainIconPrompt, setMainIconPrompt] = useState<string | null>(null);
 
   function readLocalData() {
-    try { const parsed = JSON.parse(localStorage.getItem(AO_MACROS_KEY) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(parsed) ? parsed : []); } catch { setPresets([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(AO_MACROS_KEY) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(parsed) ? parsed.map((item) => item.main ? item : { ...item, icon: undefined }) : []); } catch { setPresets([]); }
     try { const parsed = JSON.parse(localStorage.getItem(TABLES_KEY) ?? "[]") as WorkTable[]; setTables(Array.isArray(parsed) ? parsed : []); } catch { setTables([]); }
   }
   useEffect(readLocalData, []);
@@ -62,7 +66,7 @@ export function AOMacroMenu() {
     }
     function escape(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
-      if (vaultMenu) setVaultMenu(null);
+      if (vaultMenu) { setVaultMenu(null); setMainIconPrompt(null); }
       else if (selected) setSelected(null);
       else if (customToRun) setCustomToRun(null);
       else if (view === "macro" && macroMode !== "home") setMacroMode("home");
@@ -73,8 +77,8 @@ export function AOMacroMenu() {
   }, [customToRun, macroMode, selected, vaultMenu, view]);
 
   async function refreshNotes() { try { setNotes(await api<Note[]>("/api/v1/notes")); } catch { setNotes([]); } }
-  function showView(next: View) { readLocalData(); setView(next); setSelected(null); setCustomToRun(null); setVaultMenu(null); setError(""); setNotice(""); if (next === "macro") setMacroMode("home"); if (next === "vault") setVaultRecent(false); if (next === "macro" || next === "vault") void refreshNotes(); }
-  function close() { setOpen(false); setView("main"); setSelected(null); setCustomToRun(null); setVaultMenu(null); setError(""); }
+  function showView(next: View) { readLocalData(); setView(next); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setError(""); setNotice(""); if (next === "macro") setMacroMode("home"); if (next === "vault") { setVaultRecent(false); setVaultCategory("All"); } if (next === "macro" || next === "vault") void refreshNotes(); }
+  function close() { setOpen(false); setView("main"); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setError(""); }
   function savePresets(next: AOMacroPreset[]) { setPresets(next); localStorage.setItem(AO_MACROS_KEY, JSON.stringify(next)); }
   function presetById(presetId?: string) { return presets.find((item) => item.id === presetId); }
   function touchPreset(presetId: string) { const next = presets.map((item) => item.id === presetId ? { ...item, lastUsedAt: new Date().toISOString() } : item); savePresets(next); return next.find((item) => item.id === presetId); }
@@ -85,13 +89,18 @@ export function AOMacroMenu() {
     else if (preset.macroId) { const macro = AO_MACRO_CATALOG.find((item) => item.id === preset.macroId); if (macro) { setView("macro"); setMacroMode("home"); beginMacro(macro); } }
     else { setView("macro"); setMacroMode("home"); beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-run")!, { presetId: preset.id }); }
   }
-  function setMainIcon(presetId: string, icon: string) { savePresets(presets.map((item) => item.id === presetId ? { ...item, icon } : item)); }
+  function chooseMainIcon(preset: AOMacroPreset, icon: string) {
+    const currentMain = presets.filter((item) => item.main); if (!preset.main && currentMain.length >= MAIN_MACRO_LIMIT) return;
+    const nextOrder = currentMain.reduce((highest, item) => Math.max(highest, item.mainOrder ?? 0), -1) + 1;
+    savePresets(presets.map((item) => item.id === preset.id ? { ...item, main: true, mainOrder: item.main ? item.mainOrder : nextOrder, icon } : item));
+    setNotice(`${preset.label} added to Main Macro.`); setMainIconPrompt(null); setVaultMenu(null);
+  }
   function toggleMainPreset(preset: AOMacroPreset) {
     const currentMain = presets.filter((item) => item.main);
     if (!preset.main && currentMain.length >= MAIN_MACRO_LIMIT) { setNotice(`Main Macro is limited to ${MAIN_MACRO_LIMIT} shortcuts.`); setVaultMenu(null); return; }
-    const nextOrder = currentMain.reduce((highest, item) => Math.max(highest, item.mainOrder ?? 0), -1) + 1;
-    savePresets(presets.map((item) => item.id === preset.id ? { ...item, main: !preset.main, mainOrder: preset.main ? undefined : nextOrder, icon: item.icon ?? (isTextPreset(item) ? "T" : "M") } : item));
-    setNotice(preset.main ? `${preset.label} removed from Main Macro.` : `${preset.label} added to Main Macro.`); setVaultMenu(null);
+    if (!preset.main) { setMainIconPrompt(preset.id); return; }
+    savePresets(presets.map((item) => item.id === preset.id ? { ...item, main: false, mainOrder: undefined, icon: undefined } : item));
+    setNotice(`${preset.label} removed from Main Macro.`); setVaultMenu(null); setMainIconPrompt(null);
   }
   function deleteVaultPreset(preset: AOMacroPreset) { savePresets(presets.filter((item) => item.id !== preset.id)); setNotice(`${preset.label} deleted.`); setVaultMenu(null); }
   function reorderMainPreset(sourceId: string, targetId: string) {
@@ -102,6 +111,11 @@ export function AOMacroMenu() {
   function sendTableCommand(command: AOTableCommand) {
     localStorage.setItem(AO_TABLE_COMMAND_KEY, JSON.stringify(command));
     if (pathname === "/tables") window.dispatchEvent(new Event(AO_TABLE_COMMAND_EVENT)); else router.push("/tables");
+    close();
+  }
+  function sendTodoCommand(command: AOTodoCommand) {
+    localStorage.setItem(AO_TODO_COMMAND_KEY, JSON.stringify(command));
+    if (pathname === "/todo") window.dispatchEvent(new Event(AO_TODO_COMMAND_EVENT)); else router.push("/todo");
     close();
   }
   function sendWorkspaceText(text: string) {
@@ -162,6 +176,9 @@ export function AOMacroMenu() {
     const get = (key: string) => context[key]?.trim() ?? ""; const chosen = presetById(get("presetId"));
     return { action: macro.action, tableId: get("tableId"), columnId: get("columnId"), rowId: get("rowId"), destinationRowId: get("destinationRowId"), name: get("name"), title: get("title"), text: chosen?.text ?? get("text"), type: macro.value ?? get("type"), template: macro.value, query: get("query"), count: Number(get("count")) || undefined, page: get("page") };
   }
+  function todoCommandFor(macro: AOMacroDefinition, context: Record<string, string>): AOTodoCommand {
+    return { action: macro.action, title: context.title?.trim(), dueDate: context.dueDate?.trim() };
+  }
   function saveBuiltIn(macro: AOMacroDefinition) {
     if (presets.some((item) => item.macroId === macro.id)) { setNotice(`${macro.label} is already saved.`); return; }
     savePresets([...presets, { id: crypto.randomUUID(), label: macro.label, text: "", macroId: macro.id, createdAt: new Date().toISOString() }]); setNotice(`${macro.label} saved to Vault.`);
@@ -176,10 +193,10 @@ export function AOMacroMenu() {
     setBuilderName(""); setBuilderSteps([]); setMacroMode("home"); setNotice("Custom macro saved to Vault.");
   }
   async function runCustomMacro(entry: AOMacroPreset) {
-    const commands: AOTableCommand[] = []; setBusy(true); setError("");
+    const commands: AOTableCommand[] = []; const todoCommands: AOTodoCommand[] = []; setBusy(true); setError("");
     try {
-      for (const step of entry.steps ?? []) { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId); if (!macro) continue; if (macro.category === "Workspace") await runWorkspace(macro, step.values); else if (macro.category !== "Vault") commands.push(tableCommandFor(macro, step.values)); }
-      touchPreset(entry.id); if (commands.length) sendTableCommand({ action: "batch", commands }); else close();
+      for (const step of entry.steps ?? []) { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId); if (!macro) continue; if (macro.category === "Workspace") await runWorkspace(macro, step.values); else if (macro.category === "To Do") todoCommands.push(todoCommandFor(macro, step.values)); else if (macro.category !== "Vault") commands.push(tableCommandFor(macro, step.values)); }
+      touchPreset(entry.id); if (todoCommands.length && !commands.length) sendTodoCommand({ action: "todo-batch", commands: todoCommands }); else if (commands.length) { if (todoCommands.length) localStorage.setItem(AO_TODO_COMMAND_KEY, JSON.stringify({ action: "todo-batch", commands: todoCommands })); sendTableCommand({ action: "batch", commands }); } else close();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Custom macro failed."); } finally { setBusy(false); }
   }
 
@@ -213,6 +230,7 @@ export function AOMacroMenu() {
     if (!selected || !requiredReady()) return; setBusy(true); setError("");
     try {
       if (selected.category === "Workspace") await runWorkspace(selected);
+      else if (selected.category === "To Do") sendTodoCommand(todoCommandFor(selected, values));
       else if (selected.category === "Vault") await runVault(selected);
       else { const chosen = presetById(valueFor("presetId")); if (chosen) touchPreset(chosen.id); sendTableCommand(tableCommandFor(selected, values)); }
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Macro failed."); } finally { setBusy(false); }
@@ -220,7 +238,8 @@ export function AOMacroMenu() {
 
   const filteredMacros = AO_MACRO_CATALOG.filter((item) => (!category || item.category === category) && (!query || `${item.label} ${item.description}`.toLowerCase().includes(query.toLowerCase())));
   const builderCatalog = AO_MACRO_CATALOG.filter((item) => item.category !== "Vault");
-  const vaultItems = [...presets].filter((item) => (!vaultRecent || item.lastUsedAt) && (!vaultQuery || `${item.label} ${item.text}`.toLowerCase().includes(vaultQuery.toLowerCase()))).sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || (b.lastUsedAt ?? b.createdAt ?? "").localeCompare(a.lastUsedAt ?? a.createdAt ?? ""));
+  function vaultType(item: AOMacroPreset) { if (isTextPreset(item)) return "Text"; if (item.steps?.length) return "Custom"; return AO_MACRO_CATALOG.find((macro) => macro.id === item.macroId)?.category ?? "Custom"; }
+  const vaultItems = [...presets].filter((item) => (!vaultRecent || item.lastUsedAt) && (vaultCategory === "All" || vaultType(item) === vaultCategory) && (!vaultQuery || `${item.label} ${item.text}`.toLowerCase().includes(vaultQuery.toLowerCase()))).sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || (b.lastUsedAt ?? b.createdAt ?? "").localeCompare(a.lastUsedAt ?? a.createdAt ?? ""));
   const mainItems = presets.filter((item) => item.main).sort((a, b) => (a.mainOrder ?? 0) - (b.mainOrder ?? 0)).slice(0, MAIN_MACRO_LIMIT);
   const menuPreset = vaultMenu ? presets.find((item) => item.id === vaultMenu.id) : undefined;
   const builderReady = Boolean(builderName.trim() && builderSteps.length && builderSteps.every((step) => { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId); return (macro?.fields ?? []).every((field) => field.optional || Boolean(step.values[field.key]?.trim())); }));
@@ -241,7 +260,6 @@ export function AOMacroMenu() {
         {notice && <p className={styles.notice}>{notice}</p>}
         <button type="button" onClick={() => setMacroMode("presets")}><span className={styles.infoMark} tabIndex={0} aria-label="Presets information" data-tip="Browse, configure and save built-in app shortcuts.">i</span><b>Presets</b><em>›</em></button>
         <button type="button" onClick={() => beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!)}><span className={styles.infoMark} tabIndex={0} aria-label="Text preset information" data-tip="Save reusable text in Vault for notes, pages and macros.">i</span><b>Create text preset</b><em>›</em></button>
-        {mainItems.length > 0 && <div className={styles.mainMacros} aria-label="Main Macro shortcuts">{mainItems.map((preset) => <button type="button" key={preset.id} draggable onDragStart={(event) => event.dataTransfer.setData("text/main-macro", preset.id)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/main-macro"); if (source) reorderMainPreset(source, preset.id); }} onClick={() => launchPreset(preset)} aria-label={`Run ${preset.label}`} title={`${preset.label} · drag to rearrange`}><span>{preset.icon ?? (isTextPreset(preset) ? "T" : "M")}</span><small>{preset.label}</small></button>)}</div>}
         <button type="button" onClick={() => { setBuilderName(""); setBuilderSteps([]); setMacroMode("builder"); }}><VaultIcon /><b>Create macro</b><em>›</em></button>
         <hr /><button type="button" onClick={() => showView("vault")}><VaultIcon /><b>Open Vault</b><em>›</em></button>
       </div>}
@@ -260,8 +278,20 @@ export function AOMacroMenu() {
       {view === "route" && <div className={styles.list}><p className={styles.hint}>Open a destination in this app.</p>{ROUTES.map(([label, href, icon]) => <button type="button" key={href} className={pathname === href ? styles.active : ""} onClick={() => { router.push(href); close(); }}><span>{icon}</span><b>{label}</b>{pathname === href && <em>Current</em>}</button>)}</div>}
       {view === "turbo" && <form className={styles.form} onSubmit={(event) => { event.preventDefault(); sendWorkspaceText(turboText); }}><label>Input prompt<textarea value={turboText} onChange={(event) => setTurboText(event.target.value)} placeholder="Write content for a destination…" autoFocus /></label><div className={styles.actions}><button type="submit" disabled={!turboText.trim()}>Write in Workspace</button><button type="button" disabled={!turboText.trim()} onClick={() => sendTableCommand({ action: "add-table", text: turboText })}>Make a new table</button></div></form>}
       {view === "vault" && customToRun && <div className={styles.customRun}><p>Run this saved sequence:</p><ol>{(customToRun.steps ?? []).map((step) => <li key={`${customToRun.id}-${step.macroId}`}>{AO_MACRO_CATALOG.find((item) => item.id === step.macroId)?.label ?? "Unavailable step"}</li>)}</ol>{error && <p className={styles.error}>{error}</p>}<button type="button" disabled={busy} onClick={() => void runCustomMacro(customToRun)}>{busy ? "Running…" : "Run custom macro"}</button></div>}
-      {view === "vault" && !customToRun && <div className={styles.vault}><label className={styles.search}><span>⌕</span><input aria-label="Search Vault" value={vaultQuery} onChange={(event) => setVaultQuery(event.target.value)} placeholder="Search saved macros…" /></label>{vaultRecent && <p className={styles.notice}>Recently used macros</p>}{notice && <p className={styles.notice}>{notice}</p>}<button type="button" className={styles.createPreset} onClick={() => { setView("macro"); setMacroMode("home"); beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!); }}>＋ Create text preset</button>{vaultItems.length ? <div className={styles.vaultItems}>{vaultItems.map((preset) => <div className={styles.vaultItem} key={preset.id}><span>{preset.pinned ? "◇" : ""}</span><button type="button" onClick={() => launchPreset(preset)}><strong>{preset.label}</strong><small>{preset.steps?.length ? `${preset.steps.length} step custom macro` : preset.macroId ? "Saved built-in preset" : preset.text}</small></button><div className={styles.vaultTail}><span title={isTextPreset(preset) ? "Text preset" : "Macro"}>{isTextPreset(preset) ? "T" : "M"}</span><button type="button" data-vault-chevron aria-label={`Options for ${preset.label}`} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const width = 218; setVaultMenu(vaultMenu?.id === preset.id ? null : { id: preset.id, left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)), top: Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 210)) }); }}>›</button></div></div>)}</div> : <p className={styles.empty}>{vaultRecent ? "No recently used macros." : "No saved macros yet."}</p>}</div>}
-      {menuPreset && vaultMenu && createPortal(<div className={styles.vaultActions} style={{ left: vaultMenu.left, top: vaultMenu.top }} role="menu" aria-label={`Manage ${menuPreset.label}`} data-vault-actions><p>Shortcut icon</p><div className={styles.mainIconGrid}>{MAIN_MACRO_ICONS.map((icon) => <button type="button" key={icon} className={(menuPreset.icon ?? (isTextPreset(menuPreset) ? "T" : "M")) === icon ? styles.active : ""} aria-label={`Use ${icon} for ${menuPreset.label}`} onClick={() => setMainIcon(menuPreset.id, icon)}>{icon}</button>)}</div><button type="button" onClick={() => toggleMainPreset(menuPreset)}><span>＋</span>{menuPreset.main ? "Remove from Main Macro" : "Add to Main Macro"}</button><hr /><button type="button" className={styles.danger} onClick={() => deleteVaultPreset(menuPreset)}><span>♜</span>Delete</button></div>, document.body)}
+      {view === "vault" && !customToRun && <div className={styles.vault}>
+        <label className={styles.search}><span>⌕</span><input aria-label="Search Vault" value={vaultQuery} onChange={(event) => setVaultQuery(event.target.value)} placeholder="Search saved macros…" /></label>
+        <div className={styles.vaultMainHeader}><strong>Main Macro</strong><span>{mainItems.length}/{MAIN_MACRO_LIMIT}</span></div>
+        {mainItems.length ? <div className={styles.mainMacros} aria-label="Main Macro shortcuts">{mainItems.map((preset) => <button type="button" key={preset.id} draggable onDragStart={(event) => event.dataTransfer.setData("text/main-macro", preset.id)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/main-macro"); if (source) reorderMainPreset(source, preset.id); }} onClick={() => launchPreset(preset)} aria-label={`Run ${preset.label}`} title={`${preset.label} · drag to rearrange`}><span>{preset.icon}</span><small>{preset.label}</small></button>)}</div> : <p className={styles.mainEmpty}>Choose up to five shortcuts from Vault.</p>}
+        <div className={styles.categories}>{VAULT_CATEGORIES.map((item) => <button type="button" key={item} className={vaultCategory === item ? styles.active : ""} onClick={() => setVaultCategory(item)}>{item}</button>)}</div>
+        {vaultRecent && <p className={styles.notice}>Recently used macros</p>}{notice && <p className={styles.notice}>{notice}</p>}
+        <button type="button" className={styles.createPreset} onClick={() => { setView("macro"); setMacroMode("home"); beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!); }}>＋ Create text preset</button>
+        {vaultItems.length ? <div className={styles.vaultItems}>{vaultItems.map((preset) => <div className={styles.vaultItem} key={preset.id}><span>{preset.pinned ? "◇" : ""}</span><button type="button" onClick={() => launchPreset(preset)}><strong>{preset.label}</strong><small>{preset.steps?.length ? `${preset.steps.length} step custom macro` : preset.macroId ? `Saved ${vaultType(preset)} preset` : preset.text}</small></button><div className={styles.vaultTail}><span title={isTextPreset(preset) ? "Text preset" : "Macro"}>{isTextPreset(preset) ? "T" : "M"}</span><button type="button" data-vault-chevron aria-label={`Options for ${preset.label}`} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const width = 218; setMainIconPrompt(null); setVaultMenu(vaultMenu?.id === preset.id ? null : { id: preset.id, left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)), top: Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 210)) }); }}>›</button></div></div>)}</div> : <p className={styles.empty}>{vaultRecent ? "No recently used macros." : "No saved macros match this category."}</p>}
+      </div>}
+      {menuPreset && vaultMenu && createPortal(<div className={styles.vaultActions} style={{ left: vaultMenu.left, top: vaultMenu.top }} role="menu" aria-label={`Manage ${menuPreset.label}`} data-vault-actions>
+        {mainIconPrompt === menuPreset.id && <><p>Choose a shortcut icon</p><div className={styles.mainIconGrid}>{MAIN_MACRO_ICONS.map((icon) => <button type="button" key={icon} aria-label={`Use ${icon} for ${menuPreset.label}`} onClick={() => chooseMainIcon(menuPreset, icon)}>{icon}</button>)}</div></>}
+        {mainIconPrompt !== menuPreset.id && <button type="button" onClick={() => toggleMainPreset(menuPreset)}><span>＋</span>{menuPreset.main ? "Remove from Main Macro" : "Add to Main Macro"}</button>}
+        <hr /><button type="button" className={styles.danger} onClick={() => deleteVaultPreset(menuPreset)}><span>♜</span>Delete</button>
+      </div>, document.body)}
       {view === "preferences" && <div className={styles.preferences}><p className={styles.hint}>Text presets are now created, searched and run inside Macro and Vault.</p><button type="button" className={styles.save} onClick={() => showView("vault")}>Open Vault</button></div>}
     </section>}
     <button type="button" className={styles.trigger} aria-label="Open AO macro key menu" aria-expanded={open} onClick={() => { setOpen((current) => !current); if (open) setView("main"); }}><AOLogo /></button>
