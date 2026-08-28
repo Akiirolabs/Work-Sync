@@ -20,3 +20,13 @@ test("runs useful task batches and clears completed work", () => {
   assert.equal(added[0].completed, true); assert.equal(added[1].completed, false);
   assert.deepEqual(applyTodoCommand(added, { action: "todo-clear-completed" }).map((item) => item.title), ["Review: Launch brief"]);
 });
+
+test("stores task and subtask descriptions and targets existing tasks", () => {
+  let items = applyTodoCommand([], { action: "todo-add-with-subtask", title: "Launch", description: "Ship the release", subtaskTitle: "QA", subtaskDescription: "Run the regression suite" });
+  assert.equal(items[0].description, "Ship the release");
+  assert.deepEqual(items[0].subtasks.map(({ title, description }) => ({ title, description })), [{ title: "QA", description: "Run the regression suite" }]);
+  items = applyTodoCommand(items, { action: "todo-add-subtask", taskTitle: "laun", subtaskTitle: "Announce", subtaskDescription: "Notify the team" });
+  assert.equal(items[0].subtasks.length, 2); assert.equal(items[0].subtasks[1].description, "Notify the team");
+  items = applyTodoCommand(items, { action: "todo-set-description", taskTitle: "Launch", description: "Updated launch plan" });
+  assert.equal(items[0].description, "Updated launch plan");
+});

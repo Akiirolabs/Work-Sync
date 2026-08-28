@@ -170,9 +170,15 @@ test("AO commands are consumed once by their destination pages", () => {
 
 test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(appShell, /label: "To Do", href: "\/todo"/);
-  assert.match(todoPage, /createTodo\(title\)/);
+  assert.match(todoPage, /createTodo\(title, "normal", undefined, description\)/);
   assert.match(todoPage, /Complete \$\{item\.title\}/);
   assert.match(todoPage, /Clear completed/);
   assert.match(aoMenu, /selected\.category === "To Do"/);
   assert.match(aoMenu, /sendTodoCommand/);
+  assert.match(todoPage, /aria-label=\{`Description for \$\{item\.title\}`\}/);
+  assert.match(todoPage, /aria-label=\{`New subtask for \$\{item\.title\}`\}/);
+  assert.match(todoPage, /aria-label=\{`Subtask description for \$\{item\.title\}`\}/);
+  assert.match(todoPage, /Complete subtask/);
+  assert.match(todoPage, /Delete subtask/);
+  assert.match(aoMenu, /subtaskDescription: context\.subtaskDescription/);
 });

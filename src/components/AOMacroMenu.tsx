@@ -177,7 +177,7 @@ export function AOMacroMenu() {
     return { action: macro.action, tableId: get("tableId"), columnId: get("columnId"), rowId: get("rowId"), destinationRowId: get("destinationRowId"), name: get("name"), title: get("title"), text: chosen?.text ?? get("text"), type: macro.value ?? get("type"), template: macro.value, query: get("query"), count: Number(get("count")) || undefined, page: get("page") };
   }
   function todoCommandFor(macro: AOMacroDefinition, context: Record<string, string>): AOTodoCommand {
-    return { action: macro.action, title: context.title?.trim(), dueDate: context.dueDate?.trim() };
+    return { action: macro.action, title: context.title?.trim(), taskTitle: context.taskTitle?.trim(), description: context.description?.trim(), subtaskTitle: context.subtaskTitle?.trim(), subtaskDescription: context.subtaskDescription?.trim(), dueDate: context.dueDate?.trim() };
   }
   function saveBuiltIn(macro: AOMacroDefinition) {
     if (presets.some((item) => item.macroId === macro.id)) { setNotice(`${macro.label} is already saved.`); return; }
