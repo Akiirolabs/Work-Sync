@@ -194,4 +194,11 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(todoPage, /Complete subtask/);
   assert.match(todoPage, /Delete subtask/);
   assert.match(aoMenu, /subtaskDescription: context\.subtaskDescription/);
+  assert.match(todoPage, /data-todo-menu-toggle/);
+  assert.match(todoPage, /className="ms-todo-menu"/);
+  assert.match(todoPage, /Edit title for/);
+  assert.match(todoPage, /type="date" aria-label=/);
+  assert.match(todoPage, /saveTaskEdit\(item\.id\)/);
+  assert.match(todoPage, /closest\("\[data-todo-menu\]"/);
+  assert.match(aoMenu, /field\.type === "date" \? "date"/);
 });

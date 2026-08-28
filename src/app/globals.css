@@ -258,12 +258,23 @@
 .ms-todo-filters button { border: 1px solid var(--ms-border); border-radius: 12px; padding: 4px 10px; background: transparent; color: var(--ms-text-dim); font: 10px var(--ms-font-sans); text-transform: capitalize; cursor: pointer; }
 .ms-todo-filters button.is-active { border-color: var(--ms-accent-soft); background: #24313a; color: var(--ms-text); }
 .ms-todo-list { display: flex; flex-direction: column; gap: 5px; }
-.ms-todo-item { min-height: 48px; display: grid; grid-template-columns: 24px 1fr 30px; align-items: center; gap: 7px; padding: 7px; border: 1px solid var(--ms-border); border-radius: 6px; background: #11161b; }
+.ms-todo-item { position: relative; min-height: 48px; display: grid; grid-template-columns: 24px 1fr 59px; align-items: center; gap: 7px; padding: 7px; border: 1px solid var(--ms-border); border-radius: 6px; background: #11161b; }
 .ms-todo-item > span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ms-todo-item strong { font-size: 12px; font-weight: 500; }
 .ms-todo-item small { color: var(--ms-text-dim); font-size: 9px; }
-.ms-todo-item > button { width: 27px; height: 27px; border: 0; border-radius: 4px; background: transparent; color: var(--ms-text-dim); font-size: 17px; cursor: pointer; }
-.ms-todo-item > button:hover { background: #342429; color: #ef8175; }
+.ms-todo-actions { display: flex; gap: 3px; }
+.ms-todo-actions > button { width: 27px; height: 27px; border: 0; border-radius: 4px; padding: 0; background: transparent; color: var(--ms-text-dim); font-size: 11px; cursor: pointer; }
+.ms-todo-actions > button:hover, .ms-todo-actions > button[aria-expanded="true"] { background: var(--ms-bg-3); color: var(--ms-text-bright); }
+.ms-todo-actions > button.ms-todo-delete { font-size: 17px; }
+.ms-todo-actions > button.ms-todo-delete:hover { background: #342429; color: #ef8175; }
+.ms-todo-menu { position: absolute; z-index: 30; top: 39px; right: 7px; width: 245px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 9px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2026; box-shadow: 0 14px 36px rgba(0,0,0,.62); }
+.ms-todo-menu label { display: flex; flex-direction: column; gap: 4px; color: var(--ms-text-dim); font: 9px var(--ms-font-sans); }
+.ms-todo-menu input { width: 100%; height: 32px; box-sizing: border-box; border: 1px solid var(--ms-edge); border-radius: 5px; outline: 0; padding: 0 7px; color-scheme: dark; background: #0d1217; color: var(--ms-text); font: 10px var(--ms-font-sans); }
+.ms-todo-menu input:focus { border-color: var(--ms-accent-soft); }
+.ms-todo-menu > div { display: flex; justify-content: flex-end; gap: 5px; }
+.ms-todo-menu button { height: 29px; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0 9px; background: var(--ms-bg-2); color: var(--ms-text); font: 9px var(--ms-font-sans); cursor: pointer; }
+.ms-todo-menu button[type="submit"] { border-color: #315574; color: #a9d7f1; }
+.ms-todo-menu button:disabled { opacity: .45; cursor: default; }
 .ms-todo-item.is-done strong { color: var(--ms-text-dim); text-decoration: line-through; }
 .ms-todo-detail { grid-column: 2 / 4; min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 3px 0 2px; }
 .ms-todo-detail > textarea { width: 100%; min-height: 34px; box-sizing: border-box; resize: vertical; border: 1px solid transparent; border-radius: 5px; outline: 0; padding: 7px 8px; background: #0d1217; color: var(--ms-text); font: 10px/1.4 var(--ms-font-sans); }

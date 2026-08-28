@@ -1,9 +1,10 @@
 export type AOMacroCategory = "Workspace" | "To Do" | "Tables" | "Rows" | "Columns" | "Pages" | "Vault";
-export type AOMacroFieldType = "text" | "textarea" | "number" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "destination";
+export type AOMacroFieldType = "text" | "textarea" | "number" | "date" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "destination";
 export type AOMacroField = { key: string; label: string; type: AOMacroFieldType; placeholder?: string; optional?: boolean };
 export type AOMacroDefinition = { id: string; label: string; description: string; category: AOMacroCategory; action: string; fields?: AOMacroField[]; value?: string };
 
 const text = (key: string, label: string, placeholder: string, optional = false): AOMacroField => ({ key, label, type: "text", placeholder, optional });
+const date = (key: string, label: string): AOMacroField => ({ key, label, type: "date" });
 const table: AOMacroField = { key: "tableId", label: "Table", type: "table" };
 const column: AOMacroField = { key: "columnId", label: "Column", type: "column" };
 const row: AOMacroField = { key: "rowId", label: "Row", type: "row" };
@@ -33,7 +34,7 @@ const todo: AOMacroDefinition[] = [
   { id: "todo-set-description", label: "Set task description", description: "Add or replace the description on an existing task.", category: "To Do", action: "todo-set-description", fields: [text("taskTitle", "Existing task", "Exact or partial task name"), { key: "description", label: "Description", type: "textarea", placeholder: "Task details" }] },
   { id: "todo-add-high", label: "Add high-priority task", description: "Add an important task to the To Do page.", category: "To Do", action: "todo-add-high", fields: [text("title", "Task", "Important task")] },
   { id: "todo-add-today", label: "Add task due today", description: "Create a task with today's due date.", category: "To Do", action: "todo-add-today", fields: [text("title", "Task", "Task due today")] },
-  { id: "todo-add-due", label: "Add task with due date", description: "Create a task with a specific YYYY-MM-DD due date.", category: "To Do", action: "todo-add-due", fields: [text("title", "Task", "Scheduled task"), text("dueDate", "Due date", "YYYY-MM-DD")] },
+  { id: "todo-add-due", label: "Add task with due date", description: "Create a task with a selected due date.", category: "To Do", action: "todo-add-due", fields: [text("title", "Task", "Scheduled task"), date("dueDate", "Due date")] },
   { id: "todo-follow-up", label: "Add follow-up", description: "Create a clearly labeled follow-up task.", category: "To Do", action: "todo-follow-up", fields: [text("title", "Follow up with", "Client or teammate")] },
   { id: "todo-review", label: "Add review task", description: "Create a task for reviewing work or a document.", category: "To Do", action: "todo-review", fields: [text("title", "Review", "Document or deliverable")] },
   { id: "todo-complete-next", label: "Complete next task", description: "Mark the first open task complete.", category: "To Do", action: "todo-complete-next" },
