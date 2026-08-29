@@ -20,6 +20,7 @@ const sourcesRoute = await readFile(new URL("../src/app/api/v1/sources/route.ts"
 const clientApi = await readFile(new URL("../src/lib/client-api.ts", import.meta.url), "utf8");
 const macroPanels = await readFile(new URL("../src/components/MacroPanels.tsx", import.meta.url), "utf8");
 const voiceAgent = await readFile(new URL("../src/components/VoiceAgentPanel.tsx", import.meta.url), "utf8");
+const voiceAgentCss = await readFile(new URL("../src/components/VoiceAgentPanel.module.css", import.meta.url), "utf8");
 const realtimeCall = await readFile(new URL("../src/app/api/v1/realtime/call/route.ts", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
@@ -268,5 +269,12 @@ test("voice Agent uses authenticated WebRTC Realtime calls with cleanup and tran
   assert.match(voiceAgent, /response\.cancel/);
   assert.match(voiceAgent, /output_audio_buffer\.clear/);
   assert.match(voiceAgent, /conversation\.item\.input_audio_transcription\.completed/);
+  assert.match(voiceAgent, /conversation\.item\.input_audio_transcription\.delta/);
+  assert.match(voiceAgent, /aria-label="Voice Agent side chat"/);
+  assert.match(voiceAgent, /aria-label="Voice conversation transcript"/);
+  assert.match(voiceAgent, /scrollIntoView/);
+  assert.match(voiceAgent, /gpt-realtime-2\.1-mini · live voice · no tools/);
+  assert.doesNotMatch(voiceAgent, /aria-modal="true"/);
+  assert.match(voiceAgentCss, /grid-column: 3/);
   assert.match(voiceAgent, /getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/);
 });

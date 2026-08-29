@@ -78,6 +78,10 @@ a:hover {
   color: var(--ms-text-dim);
 }
 .ms-shell:has(.ms-rail.is-collapsed) { grid-template-columns: 42px minmax(0, 1fr); }
+.ms-shell:has(.voice-agent-dock) { grid-template-columns: var(--ms-rail) minmax(0, 1fr) minmax(320px, 380px); }
+.ms-shell:has(.ms-rail.is-collapsed):has(.voice-agent-dock) { grid-template-columns: 42px minmax(0, 1fr) minmax(320px, 380px); }
+.ms-shell > .ms-rail { grid-column: 1; grid-row: 2; }
+.ms-shell > .ms-workspace, .ms-shell > .ms-tables-page { grid-column: 2; grid-row: 2; }
 
 .ms-shell-top-right {
   margin-left: auto;

@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [railCollapsed, setRailCollapsed] = useState(false);
 
   return (
-    <Shell statusContent={<MacroPanels onAgent={() => setAgentOpen(true)} />} topRight={<AccountSettings />}>
+    <Shell statusContent={<MacroPanels onAgent={() => setAgentOpen((value) => !value)} />} topRight={<AccountSettings />}>
       <AOMacroMenu />
       <VoiceAgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
       <Rail
