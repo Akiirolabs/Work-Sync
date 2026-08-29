@@ -19,9 +19,9 @@ const noteRoute = await readFile(new URL("../src/app/api/v1/notes/[noteId]/route
 const sourcesRoute = await readFile(new URL("../src/app/api/v1/sources/route.ts", import.meta.url), "utf8");
 const clientApi = await readFile(new URL("../src/lib/client-api.ts", import.meta.url), "utf8");
 const macroPanels = await readFile(new URL("../src/components/MacroPanels.tsx", import.meta.url), "utf8");
-const voiceAgent = await readFile(new URL("../src/components/VoiceAgentPanel.tsx", import.meta.url), "utf8");
-const voiceAgentCss = await readFile(new URL("../src/components/VoiceAgentPanel.module.css", import.meta.url), "utf8");
-const realtimeCall = await readFile(new URL("../src/app/api/v1/realtime/call/route.ts", import.meta.url), "utf8");
+const agentChat = await readFile(new URL("../src/components/AgentSideChat.tsx", import.meta.url), "utf8");
+const agentChatCss = await readFile(new URL("../src/components/AgentSideChat.module.css", import.meta.url), "utf8");
+const agentChatRoute = await readFile(new URL("../src/app/api/v1/agent/chat/route.ts", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -258,23 +258,18 @@ test("two Macro Panel entrances expose no more than six Vault shortcuts", () => 
   assert.match(macroPanels, /AO_RUN_MAIN_MACRO_EVENT/);
 });
 
-test("voice Agent uses authenticated WebRTC Realtime calls with cleanup and transcripts", () => {
-  assert.match(realtimeCall, /requestUserId\(req\)/);
-  assert.match(realtimeCall, /gpt-realtime-2\.1-mini/);
-  assert.match(realtimeCall, /type: "semantic_vad"/);
-  assert.match(realtimeCall, /tools: \[\]/);
-  assert.match(realtimeCall, /https:\/\/api\.openai\.com\/v1\/realtime\/calls/);
-  assert.match(voiceAgent, /new RTCPeerConnection\(\)/);
-  assert.match(voiceAgent, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(voiceAgent, /response\.cancel/);
-  assert.match(voiceAgent, /output_audio_buffer\.clear/);
-  assert.match(voiceAgent, /conversation\.item\.input_audio_transcription\.completed/);
-  assert.match(voiceAgent, /conversation\.item\.input_audio_transcription\.delta/);
-  assert.match(voiceAgent, /aria-label="Voice Agent side chat"/);
-  assert.match(voiceAgent, /aria-label="Voice conversation transcript"/);
-  assert.match(voiceAgent, /scrollIntoView/);
-  assert.match(voiceAgent, /gpt-realtime-2\.1-mini · live voice · no tools/);
-  assert.doesNotMatch(voiceAgent, /aria-modal="true"/);
-  assert.match(voiceAgentCss, /grid-column: 3/);
-  assert.match(voiceAgent, /getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/);
+test("Agent is a simple authenticated streaming text side chat", () => {
+  assert.match(agentChatRoute, /requestUserId\(req\)/);
+  assert.match(agentChatRoute, /model: "gpt-5-mini"/);
+  assert.match(agentChatRoute, /https:\/\/api\.openai\.com\/v1\/responses/);
+  assert.match(agentChatRoute, /tools: \[\]/);
+  assert.match(agentChatRoute, /stream: true/);
+  assert.match(agentChat, /aria-label="Agent side chat"/);
+  assert.match(agentChat, /aria-label="Agent conversation"/);
+  assert.match(agentChat, /aria-label="Message Agent"/);
+  assert.match(agentChat, /response\.output_text\.delta/);
+  assert.match(agentChat, /scrollIntoView/);
+  assert.match(agentChat, /gpt-5-mini · text chat · no tools/);
+  assert.doesNotMatch(agentChat, /getUserMedia|RTCPeerConnection|Start voice/);
+  assert.match(agentChatCss, /grid-column: 3/);
 });

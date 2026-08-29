@@ -6,7 +6,7 @@ import { useState, type ReactNode } from "react";
 import { AccountSettings } from "./AccountSettings";
 import { AOMacroMenu } from "./AOMacroMenu";
 import { MacroPanels } from "./MacroPanels";
-import { VoiceAgentPanel } from "./VoiceAgentPanel";
+import { AgentSideChat } from "./AgentSideChat";
 
 const NAV = [
   { id: "workspace", label: "Workspace", href: "/" },
@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <Shell statusContent={<MacroPanels onAgent={() => setAgentOpen((value) => !value)} />} topRight={<AccountSettings />}>
       <AOMacroMenu />
-      <VoiceAgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
+      <AgentSideChat open={agentOpen} onClose={() => setAgentOpen(false)} />
       <Rail
         label="Navigate"
         collapsed={railCollapsed}
