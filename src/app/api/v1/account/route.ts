@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { z } from "zod";
 import { getDb } from "@/lib/db/client";
 import { nowIso } from "@/lib/db/helpers";
+import { AccountCredentials } from "@/lib/security/account-credentials";
 
 const COOKIE = "work_sync_session";
-const Credentials = z.object({
-  mode: z.enum(["signin", "create"]),
-  name: z.string().trim().min(2).max(80).optional(),
-  email: z.string().trim().email().max(200).transform((v) => v.toLowerCase()),
-  password: z.string().min(8).max(200),
-});
 
 type UserRow = { id: string; name: string; email: string; password_hash: string };
 
@@ -43,7 +37,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const parsed = Credentials.safeParse(await req.json().catch(() => null));
+  const parsed = AccountCredentials.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid details" }, { status: 400 });
   }
@@ -53,7 +47,6 @@ export async function POST(req: Request) {
 
   if (mode === "create") {
     if (user) return NextResponse.json({ error: "An account already exists for that email" }, { status: 409 });
-    if (!parsed.data.name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
     user = { id: crypto.randomUUID(), name: parsed.data.name, email, password_hash: hashPassword(password) };
     db.prepare("INSERT INTO users (id, name, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)")
       .run(user.id, user.name, user.email, user.password_hash, nowIso());

@@ -48,6 +48,10 @@ test("page cells use the Workspace editor in a dismissible cell-scoped modal", (
   assert.match(tablesPage, /table-page:\$\{table\.id\}:\$\{pageRow\.id\}:\$\{pageColumn\.id\}/);
 });
 
+test("account login omits the create-only name field", () => {
+  assert.match(account, /\.\.\.\(mode === "create" \? \{ name: data\.get\("name"\) \} : \{\}\)/);
+});
+
 test("table FTR-1001 interactions are implemented", () => {
   assert.match(tablesPage, /moveColumn\(current, source, column\.id\)/);
   assert.match(tablesPage, /moveToNextRow\(row\.id, column\.id\)/);

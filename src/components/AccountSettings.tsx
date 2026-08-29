@@ -19,7 +19,13 @@ export function AccountSettings() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError("");
     const data = new FormData(event.currentTarget);
-    const res = await fetch("/api/v1/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode, name: data.get("name"), email: data.get("email"), password: data.get("password") }) });
+    const credentials = {
+      mode,
+      email: data.get("email"),
+      password: data.get("password"),
+      ...(mode === "create" ? { name: data.get("name") } : {}),
+    };
+    const res = await fetch("/api/v1/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(credentials) });
     const payload = await res.json(); setBusy(false);
     if (!res.ok) return setError(payload.error ?? "Unable to continue");
     setUser(payload.user); setOpen(false);
