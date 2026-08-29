@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { getDb } from "@/lib/db/client";
-import type { ApiKeyRow, RateLimitRow } from "@/lib/db/schema";
+import { getDb } from "../db/client.ts";
+import type { ApiKeyRow, RateLimitRow } from "../db/schema.ts";
 
 export function hashApiKey(key: string): string {
   return createHash("sha256").update(key, "utf8").digest("hex");
@@ -11,6 +11,40 @@ export function safeEqual(a: string, b: string): boolean {
   const bb = Buffer.from(b);
   if (ba.length !== bb.length) return false;
   return timingSafeEqual(ba, bb);
+}
+
+function requestCookie(req: Request, name: string): string | null {
+  const header = req.headers.get("cookie");
+  if (!header) return null;
+
+  for (const part of header.split(";")) {
+    const cookie = part.trim();
+    const separator = cookie.indexOf("=");
+    if (separator === -1 || cookie.slice(0, separator) !== name) continue;
+
+    try {
+      return decodeURIComponent(cookie.slice(separator + 1));
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+export function verifyUserSession(req: Request): boolean {
+  const token = requestCookie(req, "work_sync_session");
+  if (!token) return false;
+
+  const session = getDb()
+    .prepare(
+      `SELECT id FROM user_sessions
+       WHERE id = ? AND expires_at > ?
+       LIMIT 1`,
+    )
+    .get(token, new Date().toISOString());
+
+  return Boolean(session);
 }
 
 export function verifyApiKey(headerValue: string | null): boolean {
@@ -27,6 +61,28 @@ export function verifyApiKey(headerValue: string | null): boolean {
     )
     .get(hash) as ApiKeyRow | undefined;
   return Boolean(row);
+}
+
+export function hasApiAccess(req: Request): boolean {
+  if (verifyUserSession(req)) return true;
+
+  const key = req.headers.get("x-api-key");
+  if (verifyApiKey(key)) return true;
+
+  const host = req.headers.get("host") ?? "";
+  const isLocal =
+    host.startsWith("localhost") ||
+    host.startsWith("127.0.0.1") ||
+    host.startsWith("[::1]");
+  if (!isLocal || key) return false;
+
+  const referer = req.headers.get("referer") ?? "";
+  return (
+    !referer ||
+    referer.includes("localhost") ||
+    referer.includes("127.0.0.1") ||
+    referer.includes("[::1]")
+  );
 }
 
 export function checkRateLimit(
