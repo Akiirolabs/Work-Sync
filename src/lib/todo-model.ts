@@ -3,7 +3,7 @@ export const AO_TODO_COMMAND_KEY = "work-sync:ao-todo-command";
 export const AO_TODO_COMMAND_EVENT = "work-sync:ao-todo-command";
 
 export type TodoPriority = "normal" | "high";
-export type TodoSubtask = { id: string; title: string; description?: string; completed: boolean };
+export type TodoSubtask = { id: string; title: string; description?: string; completed: boolean; subtasks?: TodoSubtask[] };
 export type TodoItem = { id: string; title: string; description?: string; subtasks?: TodoSubtask[]; completed: boolean; priority: TodoPriority; dueDate?: string; createdAt: string };
 export type AOTodoCommand = { action: string; title?: string; taskTitle?: string; description?: string; subtaskTitle?: string; subtaskDescription?: string; dueDate?: string; commands?: AOTodoCommand[] };
 
@@ -18,6 +18,17 @@ export function createSubtask(title: string, description?: string): TodoSubtask 
 export function createTodo(title: string, priority: TodoPriority = "normal", dueDate?: string, description?: string, subtasks: TodoSubtask[] = []): TodoItem | null {
   const cleanTitle = title.trim(); if (!cleanTitle) return null;
   return { id: makeId(), title: cleanTitle, description: description?.trim() || undefined, subtasks, completed: false, priority, dueDate: dueDate?.trim() || undefined, createdAt: new Date().toISOString() };
+}
+
+function reorder<T extends { id: string }>(items: T[], sourceId: string, targetId: string): T[] {
+  const from = items.findIndex((item) => item.id === sourceId); const to = items.findIndex((item) => item.id === targetId);
+  if (from < 0 || to < 0 || from === to) return items;
+  const next = [...items]; const [moved] = next.splice(from, 1); next.splice(to, 0, moved!); return next;
+}
+
+export function moveTodo(items: TodoItem[], sourceId: string, targetId: string): TodoItem[] { return reorder(items, sourceId, targetId); }
+export function moveSubtask(items: TodoItem[], taskId: string, sourceId: string, targetId: string): TodoItem[] {
+  return items.map((item) => item.id === taskId ? { ...item, subtasks: reorder(item.subtasks ?? [], sourceId, targetId) } : item);
 }
 
 export function applyTodoCommand(items: TodoItem[], command: AOTodoCommand): TodoItem[] {

@@ -282,7 +282,8 @@
   scroll-padding-bottom: 16px;
 }
 .ms-todo-item { flex: 0 0 auto; }
-.ms-todo-item { position: relative; min-height: 48px; display: grid; grid-template-columns: 24px 1fr 59px; align-items: center; gap: 7px; padding: 7px; border: 1px solid var(--ms-border); border-radius: 6px; background: #11161b; }
+.ms-todo-item { position: relative; min-height: 48px; display: grid; grid-template-columns: 18px 24px 1fr 59px; align-items: center; gap: 7px; padding: 7px; border: 1px solid var(--ms-border); border-radius: 6px; background: #11161b; }
+.ms-todo-drag, .ms-subtask-drag { border: 0; padding: 0; background: transparent; color: var(--ms-text-dim); cursor: grab; }
 .ms-todo-item > span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ms-todo-item strong { font-size: 12px; font-weight: 500; }
 .ms-todo-item small { color: var(--ms-text-dim); font-size: 9px; }
@@ -300,16 +301,21 @@
 .ms-todo-menu button[type="submit"] { border-color: #315574; color: #a9d7f1; }
 .ms-todo-menu button:disabled { opacity: .45; cursor: default; }
 .ms-todo-item.is-done strong { color: var(--ms-text-dim); text-decoration: line-through; }
-.ms-todo-detail { grid-column: 2 / 4; min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 3px 0 2px; }
+.ms-todo-detail { grid-column: 3 / 5; min-width: 0; display: flex; flex-direction: column; gap: 5px; padding: 3px 0 2px; }
 .ms-todo-detail > textarea { width: 100%; min-height: 34px; box-sizing: border-box; resize: vertical; border: 1px solid transparent; border-radius: 5px; outline: 0; padding: 7px 8px; background: #0d1217; color: var(--ms-text); font: 10px/1.4 var(--ms-font-sans); }
 .ms-todo-detail > textarea:hover, .ms-todo-detail > textarea:focus { border-color: var(--ms-edge); }
-.ms-subtask { min-height: 35px; display: grid; grid-template-columns: 21px 1fr 27px; align-items: center; gap: 5px; padding: 3px 5px; border-left: 1px solid #35414b; background: #0f1419; }
+.ms-subtask-wrap { position: relative; }
+.ms-subtask { min-height: 35px; display: grid; grid-template-columns: 17px 21px 1fr 27px 27px; align-items: center; gap: 5px; padding: 3px 5px; border-left: 1px solid #35414b; background: #0f1419; }
 .ms-subtask > span { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ms-subtask strong { color: var(--ms-text); font-size: 10px; font-weight: 500; }
 .ms-subtask small { overflow-wrap: anywhere; color: var(--ms-text-dim); font-size: 9px; }
 .ms-subtask > button { width: 25px; height: 25px; border: 0; border-radius: 4px; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
 .ms-subtask > button:hover { background: #342429; color: #ef8175; }
 .ms-subtask.is-done strong { color: var(--ms-text-dim); text-decoration: line-through; }
+.ms-subtask-menu { top: 31px; right: 4px; }
+.ms-nested-subtask { min-height: 30px; margin-left: 36px; display: grid; grid-template-columns: 20px 1fr 25px; align-items: center; gap: 5px; padding: 2px 5px; border-left: 1px solid var(--ms-accent-soft); background: #0c1116; font-size: 9px; }
+.ms-nested-subtask button { border: 0; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
+.ms-nested-subtask.is-done span { color: var(--ms-text-dim); text-decoration: line-through; }
 .ms-subtask-add { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(150px, 1.3fr) auto; gap: 5px; margin-top: 2px; }
 .ms-subtask-add input { min-width: 0; height: 31px; box-sizing: border-box; border: 1px solid var(--ms-edge-soft); border-radius: 5px; outline: 0; padding: 0 7px; background: #0d1217; color: var(--ms-text); font: 9px var(--ms-font-sans); }
 .ms-subtask-add input:focus { border-color: var(--ms-accent-soft); }
@@ -320,9 +326,13 @@
 
 /* Tables workspace */
 .ms-tables-sidebar { min-height: 0; border-right: 1px solid var(--ms-edge-soft); background: rgba(9, 13, 18, .72); padding: 13px 9px; }
+.ms-tables-page.is-sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+.ms-tables-page.is-sidebar-collapsed .ms-tables-sidebar { overflow: hidden; width: 0; padding: 0; border: 0; }
 .ms-tables-side-head { height: 31px; display: flex; align-items: flex-start; justify-content: space-between; padding: 0 7px; }
 .ms-tables-side-head h1 { margin: 0; color: var(--ms-text-bright); font-size: 15px; font-weight: 600; }
-.ms-tables-side-head > span { color: var(--ms-text-dim); font-size: 17px; }
+.ms-tables-side-head > button { border: 0; background: transparent; color: var(--ms-text-dim); font-size: 17px; cursor: pointer; }
+.ms-table-stage { position: relative; }
+.ms-tables-expand { position: absolute; z-index: 8; left: 7px; top: 8px; width: 27px; height: 27px; border: 1px solid var(--ms-edge); border-radius: 4px; background: var(--ms-bg-2); color: var(--ms-text); cursor: pointer; }
 .ms-table-list { display: flex; flex-direction: column; gap: 3px; margin: 5px 0; }
 .ms-table-list-item { position: relative; width: 100%; min-height: 36px; display: grid; grid-template-columns: 30px 1fr 35px; align-items: center; border-radius: 7px; padding: 0 2px; color: var(--ms-text); cursor: pointer; }
 .ms-table-list-item:hover, .ms-table-list-item.is-active { background: var(--ms-bg-3); color: var(--ms-text-bright); }

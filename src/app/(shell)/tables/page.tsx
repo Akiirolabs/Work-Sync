@@ -94,6 +94,7 @@ export default function TablesPage() {
   const [focusCell, setFocusCell] = useState<{ rowId: string; columnId: string } | null>(null);
   const [selectPopup, setSelectPopup] = useState<{ rowId: string; columnId: string; left: number; top: number } | null>(null);
   const [selectNotice, setSelectNotice] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     try {
@@ -175,9 +176,9 @@ export default function TablesPage() {
   const pageDocument = decodePageCell(pageRow && pageColumn ? pageRow.cells[pageColumn.id] : "");
   function summaryFor(column: Column) { const kind = summaries[column.id]; if (!kind) return ""; const values = currentTable.rows.map((row) => row.cells[column.id]).filter((value) => value !== "" && value !== undefined && value !== false); if (kind === "count") return `${currentTable.rows.length} rows`; if (kind === "filled") return `${values.length} values`; return `${Math.round(((currentTable.rows.length - values.length) / Math.max(1, currentTable.rows.length)) * 100)}% empty`; }
 
-  return <main className="ms-tables-page">
+  return <main className={`ms-tables-page${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}>
     <aside className="ms-tables-sidebar">
-      <div className="ms-tables-side-head"><h1>Tables</h1><span>«</span></div>
+      <div className="ms-tables-side-head"><h1>Tables</h1><button type="button" aria-label="Collapse Tables panel" onClick={() => setSidebarCollapsed(true)}>«</button></div>
       <div className="ms-table-list">
         {tables.map((item) => <div key={item.id} className={`ms-table-list-item${item.id === table.id ? " is-active" : ""}`} onClick={() => setActiveId(item.id)}>
           <button type="button" className="ms-table-icon" aria-label={`Change icon for ${item.name}`} onClick={(e) => { e.stopPropagation(); setIconMenu(iconMenu === item.id ? null : item.id); setTableMenu(null); }}>{normalizeTableIcon(item.icon)}</button>
@@ -190,6 +191,7 @@ export default function TablesPage() {
       <button type="button" className="ms-add-table" onClick={addTable}><span>＋</span> Add <span>⌄</span></button>
     </aside>
     <section className="ms-table-stage">
+      {sidebarCollapsed && <button type="button" className="ms-tables-expand" aria-label="Expand Tables panel" onClick={() => setSidebarCollapsed(false)}>»</button>}
       <div className="ms-view-tabs"><button className="is-active"><span>▦</span> Grid <span>⋮</span></button><button className="ms-view-add" onClick={addTable}>＋</button></div>
       <div className="ms-data-frame">
         <div className="ms-data-toolbar">

@@ -6,10 +6,10 @@ export type RailItem = {
   onClick?: () => void;
 };
 
-export function Rail({ label, items }: { label?: string; items: RailItem[] }) {
+export function Rail({ label, items, collapsed = false, onToggle }: { label?: string; items: RailItem[]; collapsed?: boolean; onToggle?: () => void }) {
   return (
-    <nav className="ms-rail" aria-label={label ?? "Navigation"}>
-      {label ? <div className="ms-rail-label">{label}</div> : null}
+    <nav className={`ms-rail${collapsed ? " is-collapsed" : ""}`} aria-label={label ?? "Navigation"}>
+      <div className="ms-rail-head">{label ? <div className="ms-rail-label">{label}</div> : null}<button type="button" aria-label={collapsed ? "Expand navigation" : "Collapse navigation"} onClick={onToggle}>{collapsed ? "»" : "«"}</button></div>
       {items.map((item) => {
         const className = `ms-rail-item${item.active ? " is-active" : ""}`;
         if (item.href) {

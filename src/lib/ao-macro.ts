@@ -12,6 +12,9 @@ export const AO_WORKSPACE_OPEN_KEY = "work-sync:ao-workspace-open";
 export const AO_TABLE_COMMAND_EVENT = "work-sync:ao-table-command";
 export const AO_WORKSPACE_TEXT_EVENT = "work-sync:ao-workspace-text";
 export const AO_WORKSPACE_OPEN_EVENT = "work-sync:ao-workspace-open";
+export const AO_MACROS_CHANGED_EVENT = "work-sync:ao-macros-changed";
+export const AO_RUN_MAIN_MACRO_EVENT = "work-sync:run-main-macro";
+export const AO_OPEN_MACRO_MENU_EVENT = "work-sync:open-macro-menu";
 
 export type AOTableCommand = { action: string; tableId?: string; columnId?: string; rowId?: string; destinationRowId?: string; name?: string; title?: string; text?: string; type?: string; template?: string; query?: string; count?: number; page?: string; commands?: AOTableCommand[] };
 export type AOCustomMacroStep = { macroId: string; values: Record<string, string> };

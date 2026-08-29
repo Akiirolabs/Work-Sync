@@ -3,10 +3,12 @@ import { LiquidChromeOrb } from "./LiquidChromeOrb";
 
 export function Shell({
   statusText,
+  statusContent,
   topRight,
   children,
 }: {
   statusText?: string;
+  statusContent?: ReactNode;
   topRight?: ReactNode;
   children: ReactNode;
 }) {
@@ -15,7 +17,7 @@ export function Shell({
       <div className="ms-shell-status">
         <LiquidChromeOrb size={16} />
         <span className="ms-brand-word">Work Sync</span>
-        <span>{statusText ?? "work-sync"}</span>
+        {statusContent ?? <span>{statusText ?? "work-sync"}</span>}
         <div className="ms-shell-top-right">{topRight}</div>
       </div>
       {children}

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applyTodoCommand, createTodo } from "../src/lib/todo-model.ts";
+import { applyTodoCommand, createTodo, moveSubtask, moveTodo } from "../src/lib/todo-model.ts";
 
 test("creates, prioritizes and dates To Do tasks", () => {
   assert.equal(createTodo("   "), null);
@@ -29,4 +29,14 @@ test("stores task and subtask descriptions and targets existing tasks", () => {
   assert.equal(items[0].subtasks.length, 2); assert.equal(items[0].subtasks[1].description, "Notify the team");
   items = applyTodoCommand(items, { action: "todo-set-description", taskTitle: "Launch", description: "Updated launch plan" });
   assert.equal(items[0].description, "Updated launch plan");
+});
+
+test("reorders tasks and subtasks without losing their content", () => {
+  let items = applyTodoCommand([], { action: "todo-add-with-subtask", title: "First", subtaskTitle: "A" });
+  items = applyTodoCommand(items, { action: "todo-add-subtask", taskTitle: "First", subtaskTitle: "B" });
+  items = applyTodoCommand(items, { action: "todo-add", title: "Second" });
+  const movedTasks = moveTodo(items, items[1].id, items[0].id);
+  assert.deepEqual(movedTasks.map((item) => item.title), ["Second", "First"]);
+  const first = movedTasks[1]; const movedSubtasks = moveSubtask(movedTasks, first.id, first.subtasks[1].id, first.subtasks[0].id);
+  assert.deepEqual(movedSubtasks[1].subtasks.map((item) => item.title), ["B", "A"]);
 });

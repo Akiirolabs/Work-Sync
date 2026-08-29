@@ -2,9 +2,11 @@
 
 import { Shell, Rail } from "@/ui";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { AccountSettings } from "./AccountSettings";
 import { AOMacroMenu } from "./AOMacroMenu";
+import { MacroPanels } from "./MacroPanels";
+import { VoiceAgentPanel } from "./VoiceAgentPanel";
 
 const NAV = [
   { id: "workspace", label: "Workspace", href: "/" },
@@ -18,12 +20,17 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [agentOpen, setAgentOpen] = useState(false);
+  const [railCollapsed, setRailCollapsed] = useState(false);
 
   return (
-    <Shell statusText="local · work sync" topRight={<AccountSettings />}>
+    <Shell statusContent={<MacroPanels onAgent={() => setAgentOpen(true)} />} topRight={<AccountSettings />}>
       <AOMacroMenu />
+      <VoiceAgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
       <Rail
         label="Navigate"
+        collapsed={railCollapsed}
+        onToggle={() => setRailCollapsed((value) => !value)}
         items={NAV.map((item) => ({
           ...item,
           active:

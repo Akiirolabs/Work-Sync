@@ -77,6 +77,7 @@ a:hover {
   text-transform: uppercase;
   color: var(--ms-text-dim);
 }
+.ms-shell:has(.ms-rail.is-collapsed) { grid-template-columns: 42px minmax(0, 1fr); }
 
 .ms-shell-top-right {
   margin-left: auto;
@@ -170,6 +171,12 @@ a:hover {
 .ms-workspace:has(.ms-notes-layout) {
   overflow: hidden;
 }
+.ms-rail-head { display: flex; align-items: center; justify-content: space-between; min-height: 27px; }
+.ms-rail-head button { width: 24px; height: 24px; border: 0; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
+.ms-rail-head button:hover { color: var(--ms-text-bright); }
+.ms-rail.is-collapsed { padding-inline: 7px; }
+.ms-rail.is-collapsed .ms-rail-label, .ms-rail.is-collapsed .ms-rail-item { display: none; }
+.ms-rail.is-collapsed .ms-rail-head { justify-content: center; }
 
 .ms-tables-page {
   min-width: 0;

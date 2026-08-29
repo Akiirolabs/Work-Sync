@@ -101,9 +101,27 @@ function migrate(db: DatabaseSync): void {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS voice_conversations (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS voice_messages (
+      id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL REFERENCES voice_conversations(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT NOT NULL CHECK(role = 'user'),
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_history_source ON history_events(source_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_fixes_source ON fix_documents(source_id);
     CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_voice_conversations_user ON voice_conversations(user_id, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_voice_messages_conversation ON voice_messages(conversation_id, created_at);
   `);
 
   const sourceColumns = db.prepare("PRAGMA table_info(sources)").all() as Array<{ name: string }>;

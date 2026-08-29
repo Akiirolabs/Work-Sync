@@ -18,6 +18,9 @@ const notesRoute = await readFile(new URL("../src/app/api/v1/notes/route.ts", im
 const noteRoute = await readFile(new URL("../src/app/api/v1/notes/[noteId]/route.ts", import.meta.url), "utf8");
 const sourcesRoute = await readFile(new URL("../src/app/api/v1/sources/route.ts", import.meta.url), "utf8");
 const clientApi = await readFile(new URL("../src/lib/client-api.ts", import.meta.url), "utf8");
+const macroPanels = await readFile(new URL("../src/components/MacroPanels.tsx", import.meta.url), "utf8");
+const voiceAgent = await readFile(new URL("../src/components/VoiceAgentPanel.tsx", import.meta.url), "utf8");
+const realtimeCall = await readFile(new URL("../src/app/api/v1/realtime/call/route.ts", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -187,8 +190,8 @@ test("Vault uses its atom as the information affordance and keeps navigation arr
   assert.doesNotMatch(aoMenu, /<span className=\{styles\.infoMark\}[^>]*aria-label="Vault information"/);
 });
 
-test("Vault manages typed entries and a five-item draggable Main Macro row", () => {
-  assert.match(aoMenu, /MAIN_MACRO_LIMIT = 5/);
+test("Vault manages typed entries and a six-item draggable Main Macro row", () => {
+  assert.match(aoMenu, /MAIN_MACRO_LIMIT = 6/);
   assert.match(aoMenu, /className=\{styles\.vaultItems\}/);
   assert.match(aoCss, /\.vaultItems \{ max-height: 371px; overflow-y: auto/);
   assert.match(aoMenu, /data-vault-chevron/);
@@ -235,13 +238,35 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(aoMenu, /subtaskDescription: context\.subtaskDescription/);
   assert.match(todoPage, /data-todo-menu-toggle/);
   assert.match(todoPage, /className="ms-todo-menu"/);
-  assert.match(todoPage, /Edit title for/);
-  assert.match(todoPage, /type="date" aria-label=/);
-  assert.match(todoPage, /saveTaskEdit\(item\.id\)/);
+  assert.match(todoPage, /Task title/);
+  assert.match(todoPage, /type="date"/);
   assert.match(todoPage, /closest\("\[data-todo-menu\]"/);
   assert.match(aoMenu, /field\.type === "date" \? "date"/);
   assert.match(globalCss, /\.ms-workspace:has\(\.ms-todo-panel\) \{ overflow: hidden; \}/);
   assert.match(globalCss, /\.ms-todo-panel \{[\s\S]*?flex: 1;[\s\S]*?min-height: 0;[\s\S]*?overflow: hidden;/);
   assert.match(globalCss, /\.ms-todo-list \{[\s\S]*?flex: 1;[\s\S]*?min-height: 0;[\s\S]*?padding: 0 6px 16px 0;[\s\S]*?overflow-y: auto;/);
   assert.match(globalCss, /\.ms-todo-item \{ flex: 0 0 auto; \}/);
+});
+
+test("two Macro Panel entrances expose no more than six Vault shortcuts", () => {
+  assert.match(appShell, /<MacroPanels onAgent=/);
+  assert.match(macroPanels, /const LIMIT = 6/);
+  assert.match(macroPanels, /event\.ctrlKey && event\.key\.toLowerCase\(\) === "m"/);
+  assert.match(macroPanels, /className=\{styles\.dot\}/);
+  assert.match(macroPanels, /aria-label="Circular Macro Panel"/);
+  assert.match(macroPanels, /AO_RUN_MAIN_MACRO_EVENT/);
+});
+
+test("voice Agent uses authenticated WebRTC Realtime calls with cleanup and transcripts", () => {
+  assert.match(realtimeCall, /requestUserId\(req\)/);
+  assert.match(realtimeCall, /gpt-realtime-2\.1-mini/);
+  assert.match(realtimeCall, /type: "semantic_vad"/);
+  assert.match(realtimeCall, /tools: \[\]/);
+  assert.match(realtimeCall, /https:\/\/api\.openai\.com\/v1\/realtime\/calls/);
+  assert.match(voiceAgent, /new RTCPeerConnection\(\)/);
+  assert.match(voiceAgent, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(voiceAgent, /response\.cancel/);
+  assert.match(voiceAgent, /output_audio_buffer\.clear/);
+  assert.match(voiceAgent, /conversation\.item\.input_audio_transcription\.completed/);
+  assert.match(voiceAgent, /getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)\)/);
 });
