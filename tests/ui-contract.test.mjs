@@ -100,6 +100,12 @@ test("Workspace and table pages use one native multiline control for cross-line 
   assert.match(editor, /wrap="off"/);
   assert.match(editor, /setHoveredContinuousLine/);
   assert.match(editor, /hoveredContinuousLine === line\.id/);
+  assert.match(editor, /className="ms-line-display"/);
+  assert.match(editor, /index \* 27 - continuousScrollTop/);
+  assert.match(editor, /setContinuousScrollTop\(event\.currentTarget\.scrollTop\)/);
+  assert.match(globalCss, /\.ms-line-display \{/);
+  assert.match(globalCss, /\[contenteditable="true"\]/);
+  assert.doesNotMatch(globalCss, /> \[contenteditable\](?!\=)/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {

@@ -204,11 +204,11 @@
 
 .ms-line-editor { flex: 1; min-height: 100%; padding: 6px 4px 180px 25px; }
 .ms-line-editor.is-continuous { position: relative; }
-.ms-continuous-textarea { width: 100%; min-height: calc(100% - 6px); box-sizing: border-box; resize: none; overflow: auto; border: 0; outline: 0; padding: 4px; background: transparent; color: var(--ms-text); font: inherit; line-height: 27px; white-space: pre; tab-size: 2; }
+.ms-continuous-textarea { position: relative; z-index: 1; width: 100%; min-height: calc(100% - 6px); box-sizing: border-box; resize: none; overflow: auto; border: 0; outline: 0; padding: 4px; background: transparent; color: transparent; caret-color: var(--ms-text); font: inherit; line-height: 27px; white-space: pre; tab-size: 2; }
+.ms-continuous-textarea::selection { background: rgba(75, 143, 209, .42); color: transparent; }
 .ms-continuous-textarea::placeholder { color: var(--ms-text-dim); }
 .ms-line-editor.is-continuous > .ms-editor-line .ms-line-toggle, .ms-line-editor.is-continuous > .ms-editor-line .ms-comment-count, .ms-line-editor.is-continuous > .ms-editor-line .ms-line-menu { pointer-events: auto; }
-.ms-line-editor.is-continuous > .ms-editor-line .ms-line-prefix { visibility: hidden; }
-.ms-editor-line { min-height: 27px; display: flex; align-items: center; position: relative; border-radius: 3px; }
+.ms-editor-line { z-index: 2; min-height: 27px; display: flex; align-items: center; position: relative; border-radius: 3px; }
 .ms-editor-line:focus-within { background: rgba(26, 34, 44, .42); }
 .ms-line-toggle { position: absolute; left: -25px; width: 21px; height: 21px; padding: 0; opacity: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); letter-spacing: -3px; cursor: pointer; }
 .ms-editor-line:hover .ms-line-toggle, .ms-line-toggle:focus, .ms-line-toggle.is-active { opacity: 1; }
@@ -216,16 +216,17 @@
 .ms-line-toggle:hover, .ms-line-toggle.is-active { background: var(--ms-bg-3); border-color: var(--ms-edge); color: var(--ms-text-bright); }
 .ms-line-prefix { min-width: 0; color: var(--ms-text-dim); margin-right: 0; }
 .ms-line-bullets .ms-line-prefix, .ms-line-numbered .ms-line-prefix, .ms-line-todo .ms-line-prefix, .ms-line-quote .ms-line-prefix { min-width: 21px; margin-right: 3px; }
-.ms-editor-line > [contenteditable], .ms-editor-line > [data-line-content] { flex: 1; min-width: 0; min-height: 27px; box-sizing: border-box; padding: 4px; border: 0; outline: 0; background: transparent; color: var(--ms-text); font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
-.ms-editor-line > [contenteditable]:empty::before, .ms-editor-line > [data-line-content]:empty::before { content: attr(data-placeholder); color: var(--ms-text-dim); pointer-events: none; }
+.ms-editor-line > [contenteditable="true"], .ms-editor-line > [data-line-content] { flex: 1; min-width: 0; min-height: 27px; box-sizing: border-box; padding: 4px; border: 0; outline: 0; background: transparent; color: var(--ms-text); font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+.ms-line-display { flex: 1; min-width: 0; height: 27px; box-sizing: border-box; padding: 4px; color: var(--ms-text); font: inherit; line-height: 19px; white-space: pre; overflow: hidden; pointer-events: none; }
+.ms-editor-line > [contenteditable="true"]:empty::before, .ms-editor-line > [data-line-content]:empty::before { content: attr(data-placeholder); color: var(--ms-text-dim); pointer-events: none; }
 .ms-line-toggle, .ms-line-prefix, .ms-comment-count { user-select: none; }
-.ms-line-h1 input { min-height: 38px; font-size: 25px; font-weight: 600; color: var(--ms-text-bright); }
-.ms-line-h2 input { min-height: 34px; font-size: 20px; font-weight: 600; color: var(--ms-text-bright); }
-.ms-line-h3 input { min-height: 31px; font-size: 17px; font-weight: 600; color: var(--ms-text-bright); }
-.ms-line-h4 input { font-size: 14px; font-weight: 600; color: var(--ms-text-bright); }
-.ms-line-code input { font-family: var(--ms-font-mono); background: var(--ms-bg-1); color: #a8c9dc; }
+.ms-line-h1 > [contenteditable="true"], .ms-line-h1 .ms-line-display { font-size: 19px; font-weight: 600; color: var(--ms-text-bright); }
+.ms-line-h2 > [contenteditable="true"], .ms-line-h2 .ms-line-display { font-size: 17px; font-weight: 600; color: var(--ms-text-bright); }
+.ms-line-h3 > [contenteditable="true"], .ms-line-h3 .ms-line-display { font-size: 15px; font-weight: 600; color: var(--ms-text-bright); }
+.ms-line-h4 > [contenteditable="true"], .ms-line-h4 .ms-line-display { font-size: 14px; font-weight: 600; color: var(--ms-text-bright); }
+.ms-line-code > [contenteditable="true"], .ms-line-code .ms-line-display { font-family: var(--ms-font-mono); background: var(--ms-bg-1); color: #a8c9dc; }
 .ms-line-quote { border-left: 2px solid var(--ms-edge); padding-left: 5px; }
-.ms-editor-line.is-accent > [contenteditable], .ms-editor-line.is-accent > [data-line-content], .ms-editor-line.is-accent .ms-line-prefix { color: var(--ms-accent); }
+.ms-editor-line.is-accent > [contenteditable="true"], .ms-editor-line.is-accent > [data-line-content], .ms-editor-line.is-accent .ms-line-display, .ms-editor-line.is-accent .ms-line-prefix { color: var(--ms-accent); }
 .ms-comment-count { flex: 0 0 auto; border: 0; background: transparent; color: var(--ms-accent); font: 10px var(--ms-font-mono); cursor: pointer; }
 
 .ms-line-menu { position: absolute; z-index: 30; left: -18px; top: 25px; width: 258px; padding: 8px; border: 1px solid #303842; border-radius: 7px; background: #1d2228; color: #e5e9ed; box-shadow: 0 14px 38px rgba(0,0,0,.5); font-family: var(--ms-font-sans); font-size: 13px; }
