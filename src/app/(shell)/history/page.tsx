@@ -3,6 +3,7 @@
 import { DataTable, Workspace } from "@/ui";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
+import { userStorageKey } from "@/lib/user-storage";
 
 type Source = { id: string; name: string };
 type Event = {
@@ -42,7 +43,7 @@ export default function HistoryPage() {
       try {
         const list = await api<Source[]>("/api/v1/sources");
         setSources(list);
-        const stored = localStorage.getItem("knowledge:active-source");
+        const stored = localStorage.getItem(userStorageKey("knowledge:active-source"));
         const id =
           stored && list.some((r) => r.id === stored) ? stored : list[0]?.id ?? "";
         setSourceId(id);
@@ -55,7 +56,7 @@ export default function HistoryPage() {
 
   async function onSelectSource(id: string) {
     setSourceId(id);
-    localStorage.setItem("knowledge:active-source", id);
+    localStorage.setItem(userStorageKey("knowledge:active-source"), id);
     setError(null);
     try {
       await load(id);

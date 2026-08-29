@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { jsonError, requireApiKey } from "@/lib/api/guard";
+import { jsonError, requireApiKey, requireSourceOwner } from "@/lib/api/guard";
 import { getDb } from "@/lib/db/client";
 import { appendEvent, nowIso } from "@/lib/db/helpers";
 import type { FixDocumentRow, SourceRow, VerificationRow } from "@/lib/db/schema";
@@ -19,6 +19,8 @@ export async function GET(req: Request, ctx: Ctx) {
   const denied = requireApiKey(req);
   if (denied) return denied;
   const { sourceId } = await ctx.params;
+  const wrongOwner = requireSourceOwner(req, sourceId);
+  if (wrongOwner) return wrongOwner;
   const db = getDb();
   const rows = db
     .prepare(
@@ -47,6 +49,8 @@ export async function POST(req: Request, ctx: Ctx) {
   if (denied) return denied;
 
   const { sourceId } = await ctx.params;
+  const wrongOwner = requireSourceOwner(req, sourceId);
+  if (wrongOwner) return wrongOwner;
   const db = getDb();
   const source = db.prepare(`SELECT id FROM sources WHERE id = ?`).get(sourceId) as
     | Pick<SourceRow, "id">

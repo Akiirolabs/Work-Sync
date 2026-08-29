@@ -3,6 +3,7 @@
 import { Workspace } from "@/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/client-api";
+import { userStorageKey } from "@/lib/user-storage";
 
 type Source = { id: string; name: string; topicTag: string; status: string };
 
@@ -42,7 +43,7 @@ export default function VerifyPage() {
   const loadSources = useCallback(async () => {
     const list = await api<Source[]>("/api/v1/sources");
     setSources(list);
-    const stored = localStorage.getItem("knowledge:active-source");
+    const stored = localStorage.getItem(userStorageKey("knowledge:active-source"));
     if (stored && list.some((r) => r.id === stored)) {
       setSourceId(stored);
     } else if (list[0]) {
@@ -55,7 +56,7 @@ export default function VerifyPage() {
   }, [loadSources]);
 
   useEffect(() => {
-    if (sourceId) localStorage.setItem("knowledge:active-source", sourceId);
+    if (sourceId) localStorage.setItem(userStorageKey("knowledge:active-source"), sourceId);
   }, [sourceId]);
 
   const activeSource = useMemo(

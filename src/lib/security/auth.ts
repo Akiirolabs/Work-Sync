@@ -32,19 +32,23 @@ function requestCookie(req: Request, name: string): string | null {
   return null;
 }
 
-export function verifyUserSession(req: Request): boolean {
+export function requestUserId(req: Request): string | null {
   const token = requestCookie(req, "work_sync_session");
-  if (!token) return false;
+  if (!token) return null;
 
   const session = getDb()
     .prepare(
-      `SELECT id FROM user_sessions
+      `SELECT user_id FROM user_sessions
        WHERE id = ? AND expires_at > ?
        LIMIT 1`,
     )
-    .get(token, new Date().toISOString());
+    .get(token, new Date().toISOString()) as { user_id: string } | undefined;
 
-  return Boolean(session);
+  return session?.user_id ?? null;
+}
+
+export function verifyUserSession(req: Request): boolean {
+  return requestUserId(req) !== null;
 }
 
 export function verifyApiKey(headerValue: string | null): boolean {

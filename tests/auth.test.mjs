@@ -9,7 +9,7 @@ process.env.KNOWLEDGE_DB_PATH = join(testDirectory, "auth.db");
 process.env.KNOWLEDGE_API_KEY = "integration-api-key";
 
 const { getDb } = await import("../src/lib/db/client.ts");
-const { hasApiAccess } = await import("../src/lib/security/auth.ts");
+const { hasApiAccess, requestUserId } = await import("../src/lib/security/auth.ts");
 
 const db = getDb();
 const now = new Date().toISOString();
@@ -43,10 +43,10 @@ function productionRequest(headers = {}) {
 }
 
 test("production API accepts a valid logged-in user session", () => {
-  const allowed = hasApiAccess(
-    productionRequest({ cookie: "theme=dark; work_sync_session=valid-session" }),
-  );
+  const request = productionRequest({ cookie: "theme=dark; work_sync_session=valid-session" });
+  const allowed = hasApiAccess(request);
   assert.equal(allowed, true);
+  assert.equal(requestUserId(request), "auth-user");
 });
 
 test("production API rejects invalid and expired user sessions", () => {
@@ -59,6 +59,21 @@ test("production API rejects invalid and expired user sessions", () => {
 
   assert.equal(invalid, false);
   assert.equal(expired, false);
+  assert.equal(requestUserId(productionRequest({ cookie: "work_sync_session=invalid-session" })), null);
+});
+
+test("user-owned rows are supported by the migrated schema", () => {
+  db.prepare(
+    `INSERT INTO workspace_notes (id, user_id, title, body, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  ).run("owned-note", "auth-user", "Owned", "Private", now, now);
+  db.prepare(
+    `INSERT INTO sources (id, user_id, name, topic_tag, notes, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run("owned-source", "auth-user", "Owned", "private", "Private", "draft", now, now);
+
+  assert.equal(db.prepare("SELECT user_id FROM workspace_notes WHERE id = ?").get("owned-note").user_id, "auth-user");
+  assert.equal(db.prepare("SELECT user_id FROM sources WHERE id = ?").get("owned-source").user_id, "auth-user");
 });
 
 test("production API still accepts external API keys", () => {

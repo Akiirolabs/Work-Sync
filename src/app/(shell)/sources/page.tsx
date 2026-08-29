@@ -3,6 +3,7 @@
 import { DataTable, Workspace } from "@/ui";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
+import { userStorageKey } from "@/lib/user-storage";
 
 type Source = {
   id: string;
@@ -127,7 +128,7 @@ export default function SourcesPage() {
                     type="button"
                     className="ms-btn"
                     onClick={() => {
-                      localStorage.setItem("knowledge:active-source", r.id);
+                      localStorage.setItem(userStorageKey("knowledge:active-source"), r.id);
                       window.location.href = "/verify";
                     }}
                   >

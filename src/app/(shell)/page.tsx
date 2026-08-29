@@ -2,7 +2,8 @@
 
 import { Workspace } from "@/ui";
 import { useCallback, useEffect, useState } from "react";
-import { api } from "@/lib/client-api";
+import { api, ApiError } from "@/lib/client-api";
+import { userStorageKey } from "@/lib/user-storage";
 import { LineEditor } from "@/components/LineEditor";
 import { AO_WORKSPACE_OPEN_EVENT, AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY } from "@/lib/ao-macro";
 
@@ -33,10 +34,10 @@ export default function WorkspacePage() {
       try {
         await load();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load");
+        if (!(e instanceof ApiError && e.status === 401)) setError(e instanceof Error ? e.message : "Failed to load");
       }
       try {
-        const raw = localStorage.getItem(DRAFT_KEY);
+        const raw = localStorage.getItem(userStorageKey(DRAFT_KEY));
         if (raw) {
           const draft = JSON.parse(raw) as { body?: string; activeId?: string | null };
           setBody(draft.body ?? "");
@@ -51,15 +52,15 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ body, activeId }));
+    localStorage.setItem(userStorageKey(DRAFT_KEY), JSON.stringify({ body, activeId }));
   }, [body, activeId, ready]);
 
   useEffect(() => {
     if (!ready) return;
     function consumeAOText() {
-      const text = localStorage.getItem(AO_WORKSPACE_TEXT_KEY)?.trim();
+      const text = localStorage.getItem(userStorageKey(AO_WORKSPACE_TEXT_KEY))?.trim();
       if (!text) return;
-      localStorage.removeItem(AO_WORKSPACE_TEXT_KEY);
+      localStorage.removeItem(userStorageKey(AO_WORKSPACE_TEXT_KEY));
       setActiveId(null);
       setBody((current) => current.trim() ? `${current.trimEnd()}\n${text}` : text);
     }
@@ -71,9 +72,9 @@ export default function WorkspacePage() {
   useEffect(() => {
     if (!ready) return;
     function consumeAOOpen() {
-      const raw = localStorage.getItem(AO_WORKSPACE_OPEN_KEY);
+      const raw = localStorage.getItem(userStorageKey(AO_WORKSPACE_OPEN_KEY));
       if (!raw) return;
-      localStorage.removeItem(AO_WORKSPACE_OPEN_KEY);
+      localStorage.removeItem(userStorageKey(AO_WORKSPACE_OPEN_KEY));
       try {
         const note = JSON.parse(raw) as { id?: unknown; body?: unknown };
         if (typeof note.id !== "string" || typeof note.body !== "string") return;
@@ -115,13 +116,13 @@ export default function WorkspacePage() {
           method: "POST",
           body: JSON.stringify({ body }),
         });
-        const draftMeta = localStorage.getItem("work-sync:line-meta:draft");
-        if (draftMeta) localStorage.setItem(`work-sync:line-meta:${created.id}`, draftMeta);
+        const draftMeta = localStorage.getItem(userStorageKey("work-sync:line-meta:draft"));
+        if (draftMeta) localStorage.setItem(userStorageKey(`work-sync:line-meta:${created.id}`), draftMeta);
         setSaved((prev) => [created, ...prev]);
         setActiveId(created.id);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed");
+      setError(e instanceof ApiError && e.status === 401 ? "Sign in to save notes." : e instanceof Error ? e.message : "Save failed");
     } finally {
       setBusy(false);
     }

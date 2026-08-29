@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { jsonError, requireApiKey } from "@/lib/api/guard";
+import { jsonError, requireApiKey, requireSourceOwner } from "@/lib/api/guard";
 import { getDb } from "@/lib/db/client";
 import type { HistoryEventRow, SourceRow } from "@/lib/db/schema";
 
@@ -10,6 +10,8 @@ export async function GET(req: Request, ctx: Ctx) {
   if (denied) return denied;
 
   const { sourceId } = await ctx.params;
+  const wrongOwner = requireSourceOwner(req, sourceId);
+  if (wrongOwner) return wrongOwner;
   const db = getDb();
   const source = db.prepare(`SELECT id FROM sources WHERE id = ?`).get(sourceId) as
     | Pick<SourceRow, "id">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { LiquidChromeOrb } from "@/ui";
 import { wrapExternalText } from "@/lib/text-layout";
+import { userStorageKey } from "@/lib/user-storage";
 
 type BlockKind = "text" | "h1" | "h2" | "h3" | "h4" | "bullets" | "numbered" | "todo" | "code" | "quote";
 type Line = { id: string; text: string; kind: BlockKind; comments: string[]; accent: boolean; align: "left" | "center" | "right" };
@@ -26,7 +27,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   useEffect(() => {
     const base = value.split("\n").map(makeLine);
     try {
-      const saved = JSON.parse(localStorage.getItem(`work-sync:line-meta:${storageKey}`) ?? "[]") as Partial<Line>[];
+      const saved = JSON.parse(localStorage.getItem(userStorageKey(`work-sync:line-meta:${storageKey}`)) ?? "[]") as Partial<Line>[];
       const restored = base.map((line, i) => ({ ...line, kind: saved[i]?.kind ?? line.kind, comments: Array.isArray(saved[i]?.comments) ? saved[i]!.comments! : [], accent: saved[i]?.accent ?? false, align: saved[i]?.align ?? "left" })); linesRef.current = restored; setLines(restored);
     } catch { linesRef.current = base; setLines(base); }
     setLoadedKey(storageKey); setActive(null);
@@ -47,7 +48,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   }, [value, joined, lines, loadedKey, storageKey, onChange, continuousSelection]);
 
   useEffect(() => {
-    if (loadedKey === storageKey) localStorage.setItem(`work-sync:line-meta:${storageKey}`, JSON.stringify(lines.map(({ kind, comments, accent, align }) => ({ kind, comments, accent, align }))));
+    if (loadedKey === storageKey) localStorage.setItem(userStorageKey(`work-sync:line-meta:${storageKey}`), JSON.stringify(lines.map(({ kind, comments, accent, align }) => ({ kind, comments, accent, align }))));
   }, [lines, loadedKey, storageKey]);
   useEffect(() => {
     if (!active) return;

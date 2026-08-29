@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Workspace } from "@/ui";
 import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, TODO_STORAGE_KEY, applyTodoCommand, createSubtask, createTodo, type AOTodoCommand, type TodoItem } from "@/lib/todo-model";
+import { userStorageKey } from "@/lib/user-storage";
 
 type Filter = "all" | "open" | "done";
 
@@ -11,11 +12,11 @@ export default function TodoPage() {
   const [subtaskDrafts, setSubtaskDrafts] = useState<Record<string, { title: string; description: string }>>({});
   const [taskMenu, setTaskMenu] = useState<string | null>(null);
   const [taskEdit, setTaskEdit] = useState({ title: "", dueDate: "" });
-  useEffect(() => { try { const parsed = JSON.parse(localStorage.getItem(TODO_STORAGE_KEY) ?? "[]") as TodoItem[]; setItems(Array.isArray(parsed) ? parsed : []); } catch { setItems([]); } setReady(true); }, []);
-  useEffect(() => { if (ready) localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(items)); }, [items, ready]);
+  useEffect(() => { try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(TODO_STORAGE_KEY)) ?? "[]") as TodoItem[]; setItems(Array.isArray(parsed) ? parsed : []); } catch { setItems([]); } setReady(true); }, []);
+  useEffect(() => { if (ready) localStorage.setItem(userStorageKey(TODO_STORAGE_KEY), JSON.stringify(items)); }, [items, ready]);
   useEffect(() => {
     if (!ready) return;
-    function consume() { const raw = localStorage.getItem(AO_TODO_COMMAND_KEY); if (!raw) return; localStorage.removeItem(AO_TODO_COMMAND_KEY); try { setItems((current) => applyTodoCommand(current, JSON.parse(raw) as AOTodoCommand)); } catch { /* ignore malformed command */ } }
+    function consume() { const raw = localStorage.getItem(userStorageKey(AO_TODO_COMMAND_KEY)); if (!raw) return; localStorage.removeItem(userStorageKey(AO_TODO_COMMAND_KEY)); try { setItems((current) => applyTodoCommand(current, JSON.parse(raw) as AOTodoCommand)); } catch { /* ignore malformed command */ } }
     consume(); window.addEventListener(AO_TODO_COMMAND_EVENT, consume); return () => window.removeEventListener(AO_TODO_COMMAND_EVENT, consume);
   }, [ready]);
   useEffect(() => {

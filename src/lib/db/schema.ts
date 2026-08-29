@@ -1,5 +1,6 @@
 export type SourceRow = {
   id: string;
+  user_id: string | null;
   name: string;
   topic_tag: string;
   notes: string;
@@ -58,6 +59,7 @@ export type RateLimitRow = {
 
 export type WorkspaceNoteRow = {
   id: string;
+  user_id: string | null;
   title: string;
   body: string;
   created_at: string;

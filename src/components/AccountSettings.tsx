@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LiquidChromeOrb } from "@/ui";
+import { setActiveStorageUser } from "@/lib/user-storage";
 
 type User = { id: string; name: string; email: string };
 
@@ -13,7 +14,14 @@ export function AccountSettings() {
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => { void fetch("/api/v1/account").then((r) => r.json()).then((d) => setUser(d.user)); }, []);
+  useEffect(() => {
+    void fetch("/api/v1/account").then((r) => r.json()).then((d) => {
+      const nextUser = (d.user ?? null) as User | null;
+      const storageUserChanged = setActiveStorageUser(nextUser?.id ?? null);
+      setUser(nextUser);
+      if (storageUserChanged) window.location.reload();
+    });
+  }, []);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -28,11 +36,13 @@ export function AccountSettings() {
     const res = await fetch("/api/v1/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(credentials) });
     const payload = await res.json(); setBusy(false);
     if (!res.ok) return setError(payload.error ?? "Unable to continue");
-    setUser(payload.user); setOpen(false);
+    setActiveStorageUser(payload.user.id); window.location.reload();
   }
 
   async function signOut() {
-    await fetch("/api/v1/account", { method: "DELETE" }); setUser(null); setOpen(false);
+    await fetch("/api/v1/account", { method: "DELETE" });
+    setActiveStorageUser(null);
+    window.location.reload();
   }
 
   return <>

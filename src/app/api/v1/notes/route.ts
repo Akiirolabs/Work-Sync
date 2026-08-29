@@ -4,6 +4,7 @@ import { jsonError, requireApiKey } from "@/lib/api/guard";
 import { getDb } from "@/lib/db/client";
 import { nowIso } from "@/lib/db/helpers";
 import type { WorkspaceNoteRow } from "@/lib/db/schema";
+import { requestUserId } from "@/lib/security/auth";
 
 const CreateNoteSchema = z.object({
   title: z.string().max(200).optional(),
@@ -30,14 +31,15 @@ function toJson(row: WorkspaceNoteRow) {
 export async function GET(req: Request) {
   const denied = requireApiKey(req);
   if (denied) return denied;
+  const userId = requestUserId(req);
 
   const db = getDb();
   const rows = db
     .prepare(
-      `SELECT id, title, body, created_at, updated_at
-       FROM workspace_notes ORDER BY updated_at DESC`,
+      `SELECT id, user_id, title, body, created_at, updated_at
+       FROM workspace_notes WHERE user_id IS ? ORDER BY updated_at DESC`,
     )
-    .all() as WorkspaceNoteRow[];
+    .all(userId) as WorkspaceNoteRow[];
 
   return NextResponse.json(rows.map(toJson));
 }
@@ -45,6 +47,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const denied = requireApiKey(req);
   if (denied) return denied;
+  const userId = requestUserId(req);
 
   let body: unknown;
   try {
@@ -63,9 +66,9 @@ export async function POST(req: Request) {
   const title = titleFromBody(parsed.data.body, parsed.data.title);
   const db = getDb();
   db.prepare(
-    `INSERT INTO workspace_notes (id, title, body, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?)`,
-  ).run(id, title, parsed.data.body, ts, ts);
+    `INSERT INTO workspace_notes (id, user_id, title, body, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  ).run(id, userId, title, parsed.data.body, ts, ts);
 
   return NextResponse.json(
     { id, title, body: parsed.data.body, createdAt: ts, updatedAt: ts },

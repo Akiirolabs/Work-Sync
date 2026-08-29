@@ -4,6 +4,7 @@ import { jsonError, requireApiKey } from "@/lib/api/guard";
 import { getDb } from "@/lib/db/client";
 import { appendEvent, nowIso } from "@/lib/db/helpers";
 import type { SourceRow } from "@/lib/db/schema";
+import { requestUserId } from "@/lib/security/auth";
 
 const CreateSourceSchema = z.object({
   name: z.string().min(1).max(200),
@@ -14,14 +15,15 @@ const CreateSourceSchema = z.object({
 export async function GET(req: Request) {
   const denied = requireApiKey(req);
   if (denied) return denied;
+  const userId = requestUserId(req);
 
   const db = getDb();
   const rows = db
     .prepare(
-      `SELECT id, name, topic_tag, notes, status, created_at, updated_at
-       FROM sources ORDER BY updated_at DESC`,
+      `SELECT id, user_id, name, topic_tag, notes, status, created_at, updated_at
+       FROM sources WHERE user_id IS ? ORDER BY updated_at DESC`,
     )
-    .all() as SourceRow[];
+    .all(userId) as SourceRow[];
 
   return NextResponse.json(
     rows.map((r) => ({
@@ -39,6 +41,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const denied = requireApiKey(req);
   if (denied) return denied;
+  const userId = requestUserId(req);
 
   let body: unknown;
   try {
@@ -56,9 +59,9 @@ export async function POST(req: Request) {
   const ts = nowIso();
   const db = getDb();
   db.prepare(
-    `INSERT INTO sources (id, name, topic_tag, notes, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'draft', ?, ?)`,
-  ).run(id, parsed.data.name, parsed.data.topicTag, parsed.data.notes ?? "", ts, ts);
+    `INSERT INTO sources (id, user_id, name, topic_tag, notes, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)`,
+  ).run(id, userId, parsed.data.name, parsed.data.topicTag, parsed.data.notes ?? "", ts, ts);
 
   appendEvent(id, "source_created", `Source created: ${parsed.data.name}`, {
     topicTag: parsed.data.topicTag,

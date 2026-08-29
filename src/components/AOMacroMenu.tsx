@@ -12,6 +12,7 @@ import {
 } from "@/lib/ao-macro";
 import { decodePageCell, type WorkTable } from "@/lib/table-model";
 import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, type AOTodoCommand } from "@/lib/todo-model";
+import { userStorageKey } from "@/lib/user-storage";
 import styles from "./AOMacroMenu.module.css";
 
 type View = "main" | "macro" | "route" | "turbo" | "vault" | "preferences";
@@ -55,8 +56,8 @@ export function AOMacroMenu() {
   const [mainTooltip, setMainTooltip] = useState<{ label: string; left: number; top: number } | null>(null);
 
   function readLocalData() {
-    try { const parsed = JSON.parse(localStorage.getItem(AO_MACROS_KEY) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(parsed) ? parsed.map((item) => item.main ? item : { ...item, icon: undefined }) : []); } catch { setPresets([]); }
-    try { const parsed = JSON.parse(localStorage.getItem(TABLES_KEY) ?? "[]") as WorkTable[]; setTables(Array.isArray(parsed) ? parsed : []); } catch { setTables([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(AO_MACROS_KEY)) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(parsed) ? parsed.map((item) => item.main ? item : { ...item, icon: undefined }) : []); } catch { setPresets([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(TABLES_KEY)) ?? "[]") as WorkTable[]; setTables(Array.isArray(parsed) ? parsed : []); } catch { setTables([]); }
   }
   useEffect(readLocalData, []);
   useEffect(() => {
@@ -81,7 +82,7 @@ export function AOMacroMenu() {
   function showView(next: View) { readLocalData(); setView(next); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setMainTooltip(null); setError(""); setNotice(""); if (next === "macro") setMacroMode("home"); if (next === "vault") { setVaultRecent(false); setVaultCategory("All"); } if (next === "macro" || next === "vault") void refreshNotes(); }
   function close() { setOpen(false); setView("main"); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainIconPrompt(null); setMainTooltip(null); setError(""); }
   function showMainTooltip(button: HTMLButtonElement, label: string) { const rect = button.getBoundingClientRect(); const width = Math.min(190, Math.max(72, label.length * 6 + 16)); setMainTooltip({ label, left: Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8)), top: Math.max(8, rect.top - 31) }); }
-  function savePresets(next: AOMacroPreset[]) { setPresets(next); localStorage.setItem(AO_MACROS_KEY, JSON.stringify(next)); }
+  function savePresets(next: AOMacroPreset[]) { setPresets(next); localStorage.setItem(userStorageKey(AO_MACROS_KEY), JSON.stringify(next)); }
   function presetById(presetId?: string) { return presets.find((item) => item.id === presetId); }
   function touchPreset(presetId: string) { const next = presets.map((item) => item.id === presetId ? { ...item, lastUsedAt: new Date().toISOString() } : item); savePresets(next); return next.find((item) => item.id === presetId); }
   function isTextPreset(preset: AOMacroPreset) { return !preset.macroId && !preset.steps?.length; }
@@ -111,24 +112,24 @@ export function AOMacroMenu() {
   }
 
   function sendTableCommand(command: AOTableCommand) {
-    localStorage.setItem(AO_TABLE_COMMAND_KEY, JSON.stringify(command));
+    localStorage.setItem(userStorageKey(AO_TABLE_COMMAND_KEY), JSON.stringify(command));
     if (pathname === "/tables") window.dispatchEvent(new Event(AO_TABLE_COMMAND_EVENT)); else router.push("/tables");
     close();
   }
   function sendTodoCommand(command: AOTodoCommand) {
-    localStorage.setItem(AO_TODO_COMMAND_KEY, JSON.stringify(command));
+    localStorage.setItem(userStorageKey(AO_TODO_COMMAND_KEY), JSON.stringify(command));
     if (pathname === "/todo") window.dispatchEvent(new Event(AO_TODO_COMMAND_EVENT)); else router.push("/todo");
     close();
   }
   function sendWorkspaceText(text: string) {
     const value = text.trim(); if (!value) return;
-    localStorage.setItem(AO_WORKSPACE_TEXT_KEY, value);
+    localStorage.setItem(userStorageKey(AO_WORKSPACE_TEXT_KEY), value);
     if (pathname === "/") window.dispatchEvent(new Event(AO_WORKSPACE_TEXT_EVENT)); else router.push("/");
     close();
   }
   function openWorkspaceNote(note: Note) {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ body: note.body, activeId: note.id }));
-    localStorage.setItem(AO_WORKSPACE_OPEN_KEY, JSON.stringify({ id: note.id, body: note.body }));
+    localStorage.setItem(userStorageKey(DRAFT_KEY), JSON.stringify({ body: note.body, activeId: note.id }));
+    localStorage.setItem(userStorageKey(AO_WORKSPACE_OPEN_KEY), JSON.stringify({ id: note.id, body: note.body }));
     if (pathname === "/") window.dispatchEvent(new Event(AO_WORKSPACE_OPEN_EVENT)); else router.push("/");
     close();
   }
@@ -136,7 +137,7 @@ export function AOMacroMenu() {
     const cleanTitle = title.trim() || "Untitled note"; const body = content.trim() ? `${cleanTitle}\n${content.trim()}` : cleanTitle;
     const note = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ title: cleanTitle, body }) }); openWorkspaceNote(note);
   }
-  function currentDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "{}") as { body?: string; activeId?: string | null }; } catch { return {}; } }
+  function currentDraft() { try { return JSON.parse(localStorage.getItem(userStorageKey(DRAFT_KEY)) ?? "{}") as { body?: string; activeId?: string | null }; } catch { return {}; } }
   async function updateCurrent(transform: (body: string) => string) {
     const draft = currentDraft(); const body = transform(draft.body ?? "");
     if (draft.activeId) { const note = await api<Note>(`/api/v1/notes/${draft.activeId}`, { method: "PATCH", body: JSON.stringify({ body }) }); openWorkspaceNote(note); }
@@ -198,7 +199,7 @@ export function AOMacroMenu() {
     const commands: AOTableCommand[] = []; const todoCommands: AOTodoCommand[] = []; setBusy(true); setError("");
     try {
       for (const step of entry.steps ?? []) { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId); if (!macro) continue; if (macro.category === "Workspace") await runWorkspace(macro, step.values); else if (macro.category === "To Do") todoCommands.push(todoCommandFor(macro, step.values)); else if (macro.category !== "Vault") commands.push(tableCommandFor(macro, step.values)); }
-      touchPreset(entry.id); if (todoCommands.length && !commands.length) sendTodoCommand({ action: "todo-batch", commands: todoCommands }); else if (commands.length) { if (todoCommands.length) localStorage.setItem(AO_TODO_COMMAND_KEY, JSON.stringify({ action: "todo-batch", commands: todoCommands })); sendTableCommand({ action: "batch", commands }); } else close();
+      touchPreset(entry.id); if (todoCommands.length && !commands.length) sendTodoCommand({ action: "todo-batch", commands: todoCommands }); else if (commands.length) { if (todoCommands.length) localStorage.setItem(userStorageKey(AO_TODO_COMMAND_KEY), JSON.stringify({ action: "todo-batch", commands: todoCommands })); sendTableCommand({ action: "batch", commands }); } else close();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Custom macro failed."); } finally { setBusy(false); }
   }
 

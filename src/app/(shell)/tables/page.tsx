@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { TABLE_ICON_GROUPS, TYPE_INFO, addColumn as addColumnModel, addRow as addRowModel, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, moveColumn, normalizeTableIcon, setColumnOptions, showColumn, updateCell as updateCellModel, type Column, type ColumnType, type Row, type SelectOption, type WorkTable } from "@/lib/table-model";
 import { LineEditor } from "@/components/LineEditor";
 import { AO_MACROS_KEY, AO_TABLE_COMMAND_EVENT, AO_TABLE_COMMAND_KEY, applyTableMacro, saveMacroPretext, type AOMacroPreset, type AOTableCommand } from "@/lib/ao-macro";
+import { userStorageKey } from "@/lib/user-storage";
 const STORAGE_KEY = "work-sync:tables";
 const SELECT_COLORS = ["#285fba", "#795b0a", "#087443", "#a62f24", "#59349c", "#247c82", "#a74c1f", "#941f59", "#334155", "#25755f", "#8a3d68", "#7c641e", "#b33a31", "#216fa8", "#3d895d", "#a35e22", "#514773", "#5d6066"];
 
@@ -96,18 +97,18 @@ export default function TablesPage() {
 
   useEffect(() => {
     try {
-      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as WorkTable[];
+      const parsed = JSON.parse(localStorage.getItem(userStorageKey(STORAGE_KEY)) ?? "[]") as WorkTable[];
       const initial = parsed.length ? parsed.map((table) => ({ ...table, icon: normalizeTableIcon(table.icon), columns: table.columns.map((column) => ({ ...column, options: Array.isArray(column.options) ? column.options : undefined })) })) : [makeTable(1)]; setTables(initial); setActiveId(initial[0]!.id);
     } catch { const initial = makeTable(1); setTables([initial]); setActiveId(initial.id); }
     setReady(true);
   }, []);
-  useEffect(() => { if (ready) localStorage.setItem(STORAGE_KEY, JSON.stringify(tables)); }, [tables, ready]);
+  useEffect(() => { if (ready) localStorage.setItem(userStorageKey(STORAGE_KEY), JSON.stringify(tables)); }, [tables, ready]);
   useEffect(() => {
     if (!ready) return;
     function consumeAOCommand() {
-      const raw = localStorage.getItem(AO_TABLE_COMMAND_KEY);
+      const raw = localStorage.getItem(userStorageKey(AO_TABLE_COMMAND_KEY));
       if (!raw) return;
-      localStorage.removeItem(AO_TABLE_COMMAND_KEY);
+      localStorage.removeItem(userStorageKey(AO_TABLE_COMMAND_KEY));
       try {
         const command = JSON.parse(raw) as AOTableCommand;
         if (!command || typeof command.action !== "string") return;
@@ -153,7 +154,7 @@ export default function TablesPage() {
   function moveToNextRow(rowId: string, columnId: string) { const at = visibleRows.findIndex((row) => row.id === rowId); const next = visibleRows[at + 1]; if (next) setFocusCell({ rowId: next.id, columnId }); }
   function openSelect(rowId: string, columnId: string, target: HTMLButtonElement) { const rect = target.getBoundingClientRect(); const width = 310; setSelectNotice(""); setSelectPopup({ rowId, columnId, left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)), top: Math.max(8, Math.min(rect.bottom + 5, window.innerHeight - 430)) }); }
   function updateSelectOptions(columnId: string, transform: (options: SelectOption[]) => SelectOption[]) { changeTable((current) => { const column = current.columns.find((item) => item.id === columnId); return setColumnOptions(current, columnId, transform(column?.options ?? [])); }); }
-  function saveOptionMacro(option: SelectOption) { let entries: AOMacroPreset[] = []; try { const parsed = JSON.parse(localStorage.getItem(AO_MACROS_KEY) ?? "[]") as AOMacroPreset[]; if (Array.isArray(parsed)) entries = parsed; } catch { /* start a clean Vault list */ } localStorage.setItem(AO_MACROS_KEY, JSON.stringify(saveMacroPretext(entries, option.label))); setSelectNotice(`${option.label} saved to Vault.`); }
+  function saveOptionMacro(option: SelectOption) { let entries: AOMacroPreset[] = []; try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(AO_MACROS_KEY)) ?? "[]") as AOMacroPreset[]; if (Array.isArray(parsed)) entries = parsed; } catch { /* start a clean Vault list */ } localStorage.setItem(userStorageKey(AO_MACROS_KEY), JSON.stringify(saveMacroPretext(entries, option.label))); setSelectNotice(`${option.label} saved to Vault.`); }
   function addColumn(type: ColumnType) {
     changeTable((current) => addColumnModel(current, type)); setPicker(null); setTypeSearch("");
   }

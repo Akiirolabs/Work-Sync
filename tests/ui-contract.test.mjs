@@ -13,6 +13,11 @@ const workspacePage = await readFile(new URL("../src/app/(shell)/page.tsx", impo
 const nextConfig = await readFile(new URL("../next.config.ts", import.meta.url), "utf8");
 const todoPage = await readFile(new URL("../src/app/(shell)/todo/page.tsx", import.meta.url), "utf8");
 const globalCss = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
+const userStorage = await readFile(new URL("../src/lib/user-storage.ts", import.meta.url), "utf8");
+const notesRoute = await readFile(new URL("../src/app/api/v1/notes/route.ts", import.meta.url), "utf8");
+const noteRoute = await readFile(new URL("../src/app/api/v1/notes/[noteId]/route.ts", import.meta.url), "utf8");
+const sourcesRoute = await readFile(new URL("../src/app/api/v1/sources/route.ts", import.meta.url), "utf8");
+const clientApi = await readFile(new URL("../src/lib/client-api.ts", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -50,6 +55,29 @@ test("page cells use the Workspace editor in a dismissible cell-scoped modal", (
 
 test("account login omits the create-only name field", () => {
   assert.match(account, /\.\.\.\(mode === "create" \? \{ name: data\.get\("name"\) \} : \{\}\)/);
+});
+
+test("logout changes storage identity and user data is scoped", () => {
+  assert.match(account, /setActiveStorageUser\(null\)/);
+  assert.match(account, /window\.location\.reload\(\)/);
+  assert.match(userStorage, /active-user/);
+  assert.match(userStorage, /:user:\$\{userId \?\? "signed-out"\}/);
+  for (const client of [workspacePage, tablesPage, todoPage, aoMenu, editor]) assert.match(client, /userStorageKey\(/);
+});
+
+test("Workspace notes and sources are constrained to their database owner", () => {
+  assert.match(notesRoute, /WHERE user_id IS \?/);
+  assert.match(notesRoute, /INSERT INTO workspace_notes \(id, user_id/);
+  assert.match(noteRoute, /WHERE id = \? AND user_id IS \?/);
+  assert.match(sourcesRoute, /WHERE user_id IS \?/);
+  assert.match(sourcesRoute, /INSERT INTO sources \(id, user_id/);
+});
+
+test("signed-out Workspace suppresses the raw Unauthorized error", () => {
+  assert.match(workspacePage, /e instanceof ApiError && e\.status === 401/);
+  assert.match(workspacePage, /Sign in to save notes\./);
+  assert.match(clientApi, /res\.status === 401/);
+  assert.match(clientApi, /Sign in to continue\./);
 });
 
 test("table FTR-1001 interactions are implemented", () => {
@@ -176,13 +204,13 @@ test("Vault manages typed entries and a five-item draggable Main Macro row", () 
 });
 
 test("AO commands are consumed once by their destination pages", () => {
-  assert.match(tablesPage, /localStorage\.removeItem\(AO_TABLE_COMMAND_KEY\)/);
+  assert.match(tablesPage, /localStorage\.removeItem\(userStorageKey\(AO_TABLE_COMMAND_KEY\)\)/);
   assert.match(tablesPage, /applyTableMacro\(current, activeId, command\)/);
   assert.match(tablesPage, /data-ao-cell/);
   assert.match(tablesPage, /setFocusCell\(result\.focusCell\)/);
-  assert.match(workspacePage, /localStorage\.removeItem\(AO_WORKSPACE_TEXT_KEY\)/);
+  assert.match(workspacePage, /localStorage\.removeItem\(userStorageKey\(AO_WORKSPACE_TEXT_KEY\)\)/);
   assert.match(workspacePage, /window\.addEventListener\(AO_WORKSPACE_TEXT_EVENT, consumeAOText\)/);
-  assert.match(todoPage, /localStorage\.removeItem\(AO_TODO_COMMAND_KEY\)/);
+  assert.match(todoPage, /localStorage\.removeItem\(userStorageKey\(AO_TODO_COMMAND_KEY\)\)/);
   assert.match(todoPage, /window\.addEventListener\(AO_TODO_COMMAND_EVENT, consume\)/);
 });
 

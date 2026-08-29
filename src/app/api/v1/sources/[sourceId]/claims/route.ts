@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { jsonError, requireApiKey } from "@/lib/api/guard";
+import { jsonError, requireApiKey, requireSourceOwner } from "@/lib/api/guard";
 import { getDb } from "@/lib/db/client";
 import { appendEvent, touchSource } from "@/lib/db/helpers";
 import type { ClaimsRow, SourceRow } from "@/lib/db/schema";
@@ -18,6 +18,8 @@ export async function GET(req: Request, ctx: Ctx) {
   if (denied) return denied;
 
   const { sourceId } = await ctx.params;
+  const wrongOwner = requireSourceOwner(req, sourceId);
+  if (wrongOwner) return wrongOwner;
   const db = getDb();
   const row = db
     .prepare(`SELECT source_id, series_json, source, ingested_at FROM claims WHERE source_id = ?`)
@@ -37,6 +39,8 @@ export async function POST(req: Request, ctx: Ctx) {
   if (denied) return denied;
 
   const { sourceId } = await ctx.params;
+  const wrongOwner = requireSourceOwner(req, sourceId);
+  if (wrongOwner) return wrongOwner;
   const db = getDb();
   const source = db.prepare(`SELECT id FROM sources WHERE id = ?`).get(sourceId) as
     | Pick<SourceRow, "id">

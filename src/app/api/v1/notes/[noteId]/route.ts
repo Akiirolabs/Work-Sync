@@ -4,6 +4,7 @@ import { jsonError, requireApiKey } from "@/lib/api/guard";
 import { getDb } from "@/lib/db/client";
 import { nowIso } from "@/lib/db/helpers";
 import type { WorkspaceNoteRow } from "@/lib/db/schema";
+import { requestUserId } from "@/lib/security/auth";
 
 const UpdateNoteSchema = z.object({
   title: z.string().max(200).optional(),
@@ -23,6 +24,7 @@ export async function PATCH(
 ) {
   const denied = requireApiKey(req);
   if (denied) return denied;
+  const userId = requestUserId(req);
 
   const { noteId } = await params;
   let body: unknown;
@@ -40,16 +42,16 @@ export async function PATCH(
   const db = getDb();
   const existing = db
     .prepare(
-      `SELECT id, title, body, created_at, updated_at FROM workspace_notes WHERE id = ?`,
+      `SELECT id, user_id, title, body, created_at, updated_at FROM workspace_notes WHERE id = ? AND user_id IS ?`,
     )
-    .get(noteId) as WorkspaceNoteRow | undefined;
+    .get(noteId, userId) as WorkspaceNoteRow | undefined;
   if (!existing) return jsonError("Not found", 404);
 
   const ts = nowIso();
   const title = titleFromBody(parsed.data.body, parsed.data.title);
   db.prepare(
-    `UPDATE workspace_notes SET title = ?, body = ?, updated_at = ? WHERE id = ?`,
-  ).run(title, parsed.data.body, ts, noteId);
+    `UPDATE workspace_notes SET title = ?, body = ?, updated_at = ? WHERE id = ? AND user_id IS ?`,
+  ).run(title, parsed.data.body, ts, noteId, userId);
 
   return NextResponse.json({
     id: noteId,
@@ -66,10 +68,11 @@ export async function DELETE(
 ) {
   const denied = requireApiKey(req);
   if (denied) return denied;
+  const userId = requestUserId(req);
 
   const { noteId } = await params;
   const db = getDb();
-  const result = db.prepare(`DELETE FROM workspace_notes WHERE id = ?`).run(noteId);
+  const result = db.prepare(`DELETE FROM workspace_notes WHERE id = ? AND user_id IS ?`).run(noteId, userId);
   if (!result.changes) return jsonError("Not found", 404);
   return NextResponse.json({ ok: true });
 }
