@@ -74,6 +74,11 @@ test("user-owned rows are supported by the migrated schema", () => {
 
   assert.equal(db.prepare("SELECT user_id FROM workspace_notes WHERE id = ?").get("owned-note").user_id, "auth-user");
   assert.equal(db.prepare("SELECT user_id FROM sources WHERE id = ?").get("owned-source").user_id, "auth-user");
+
+  db.prepare(
+    `INSERT INTO user_state (user_id, state_json, updated_at) VALUES (?, ?, ?)`,
+  ).run("auth-user", '{"work-sync:todos":"[]"}', now);
+  assert.equal(db.prepare("SELECT user_id FROM user_state WHERE user_id = ?").get("auth-user").user_id, "auth-user");
 });
 
 test("production API still accepts external API keys", () => {

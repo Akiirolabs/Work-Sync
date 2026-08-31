@@ -101,6 +101,12 @@ function migrate(db: DatabaseSync): void {
       created_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS user_state (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      state_json TEXT NOT NULL DEFAULT '{}',
+      updated_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_history_source ON history_events(source_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_fixes_source ON fix_documents(source_id);
     CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id);

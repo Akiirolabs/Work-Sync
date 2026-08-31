@@ -2,15 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "./AgentSideChat.module.css";
+import { userStorageKey } from "@/lib/user-storage";
 
 type Message = { id: string; role: "user" | "agent"; text: string; final: boolean };
 type TextStreamEvent = { type?: string; delta?: string; error?: { message?: string } };
+const AGENT_CHAT_STORAGE_KEY = "work-sync:agent-conversation";
 
 export function AgentSideChat({ open, onClose }: { open: boolean; onClose: () => void }) {
   const chatEnd = useRef<HTMLDivElement | null>(null);
   const [messages, setMessages] = useState<Message[]>([]); const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
 
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(userStorageKey(AGENT_CHAT_STORAGE_KEY)) ?? "[]") as Message[];
+      if (Array.isArray(stored)) setMessages(stored.filter((item) => item && (item.role === "user" || item.role === "agent") && typeof item.text === "string").map((item) => ({ ...item, final: true })).slice(-80));
+    } catch { /* ignore invalid saved chat */ }
+    setReady(true);
+  }, []);
+  useEffect(() => { if (ready) localStorage.setItem(userStorageKey(AGENT_CHAT_STORAGE_KEY), JSON.stringify(messages.filter((item) => item.final).slice(-80))); }, [messages, ready]);
   useEffect(() => { chatEnd.current?.scrollIntoView({ block: "end", behavior: "smooth" }); }, [messages]);
   function appendReply(id: string, delta: string) { setMessages((current) => current.map((item) => item.id === id ? { ...item, text: item.text + delta } : item)); }
   function finishReply(id: string) { setMessages((current) => current.map((item) => item.id === id ? { ...item, final: true } : item)); }

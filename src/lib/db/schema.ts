@@ -65,3 +65,9 @@ export type WorkspaceNoteRow = {
   created_at: string;
   updated_at: string;
 };
+
+export type UserStateRow = {
+  user_id: string;
+  state_json: string;
+  updated_at: string;
+};

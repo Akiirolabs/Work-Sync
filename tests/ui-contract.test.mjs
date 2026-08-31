@@ -22,6 +22,7 @@ const macroPanels = await readFile(new URL("../src/components/MacroPanels.tsx", 
 const agentChat = await readFile(new URL("../src/components/AgentSideChat.tsx", import.meta.url), "utf8");
 const agentChatCss = await readFile(new URL("../src/components/AgentSideChat.module.css", import.meta.url), "utf8");
 const agentChatRoute = await readFile(new URL("../src/app/api/v1/agent/chat/route.ts", import.meta.url), "utf8");
+const userStateRoute = await readFile(new URL("../src/app/api/v1/user-state/route.ts", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -69,6 +70,17 @@ test("logout changes storage identity and user data is scoped", () => {
   for (const client of [workspacePage, tablesPage, todoPage, aoMenu, editor]) assert.match(client, /userStorageKey\(/);
 });
 
+test("device-local account data is synchronized through an owned server record", () => {
+  assert.match(account, /hydrateUserStorage/);
+  assert.match(account, /startUserStorageSync/);
+  assert.match(userStorage, /\/api\/v1\/user-state/);
+  assert.match(userStorage, /TRANSIENT_KEYS/);
+  assert.match(userStateRoute, /requestUserId\(req\)/);
+  assert.match(userStateRoute, /WHERE user_id = \?/);
+  assert.match(userStateRoute, /ON CONFLICT\(user_id\)/);
+  assert.match(agentChat, /AGENT_CHAT_STORAGE_KEY/);
+});
+
 test("Workspace notes and sources are constrained to their database owner", () => {
   assert.match(notesRoute, /WHERE user_id IS \?/);
   assert.match(notesRoute, /INSERT INTO workspace_notes \(id, user_id/);
@@ -82,6 +94,12 @@ test("signed-out Workspace suppresses the raw Unauthorized error", () => {
   assert.match(workspacePage, /Sign in to save notes\./);
   assert.match(clientApi, /res\.status === 401/);
   assert.match(clientApi, /Sign in to continue\./);
+});
+
+test("save-and-create macro persists both existing and unsaved Workspace drafts", () => {
+  assert.match(aoMenu, /if \(draft\.activeId\) await api<Note>\(`\/api\/v1\/notes\/\$\{draft\.activeId\}`/);
+  assert.match(aoMenu, /else await api<Note>\("\/api\/v1\/notes"/);
+  assert.match(aoMenu, /return createWorkspaceNote\(get\("title"\)\)/);
 });
 
 test("table FTR-1001 interactions are implemented", () => {

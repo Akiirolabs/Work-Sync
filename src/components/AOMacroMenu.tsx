@@ -227,7 +227,14 @@ export function AOMacroMenu() {
     if (macro.action === "workspace-append") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return updateCurrent((body) => body.trim() ? `${body.trimEnd()}\n${chosenPreset.text}` : chosenPreset.text); }
     if (macro.action === "workspace-prepend") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return updateCurrent((body) => body.trim() ? `${chosenPreset.text}\n${body.trimStart()}` : chosenPreset.text); }
     if (macro.action === "workspace-section") return updateCurrent((body) => `${body.trimEnd()}\n\n## ${get("title")} · ${new Date().toLocaleDateString()}`.trim());
-    if (macro.action === "workspace-save-new") { const draft = currentDraft(); if (!draft.activeId && draft.body?.trim()) await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body: draft.body }) }); return createWorkspaceNote(get("title")); }
+    if (macro.action === "workspace-save-new") {
+      const draft = currentDraft();
+      if (draft.body?.trim()) {
+        if (draft.activeId) await api<Note>(`/api/v1/notes/${draft.activeId}`, { method: "PATCH", body: JSON.stringify({ body: draft.body }) });
+        else await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body: draft.body }) });
+      }
+      return createWorkspaceNote(get("title"));
+    }
   }
 
   async function runVault(macro: AOMacroDefinition) {

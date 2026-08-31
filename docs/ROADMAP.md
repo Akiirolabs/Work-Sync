@@ -13,13 +13,15 @@ This roadmap separates completed behavior from proposed work. Proposed items are
 - [x] Compact and circular Macro Panels, including `Ctrl+M`.
 - [x] Streaming, text-only Agent side chat using a server-held API key and no tools.
 - [x] Manual VPS deployment through systemd, Nginx, and Cloudflare.
+- [x] Cross-device account synchronization for Tables, To Dos, Vault/macros, drafts, editor metadata, and Agent history.
 
 ## Priority 0: durable account data
 
-- [ ] Move Tables from browser storage to user-owned SQLite records.
-- [ ] Move To Dos and nested subtasks to user-owned SQLite records.
-- [ ] Move Vault presets, custom macros, and Main Macro ordering to SQLite.
-- [ ] Persist Agent conversations and allow users to reopen or delete them.
+- [x] Persist Tables in user-owned SQLite-backed account state.
+- [x] Persist To Dos and nested subtasks in user-owned SQLite-backed account state.
+- [x] Persist Vault presets, custom macros, and Main Macro ordering in user-owned SQLite-backed account state.
+- [x] Persist Agent conversation history across devices.
+- [ ] Add explicit conversation selection and deletion controls.
 - [ ] Define versioned schema migrations instead of relying only on startup table checks.
 - [ ] Add export and account-data deletion workflows.
 

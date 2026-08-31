@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LiquidChromeOrb } from "@/ui";
-import { setActiveStorageUser } from "@/lib/user-storage";
+import { hydrateUserStorage, setActiveStorageUser, startUserStorageSync } from "@/lib/user-storage";
 
 type User = { id: string; name: string; email: string };
 
@@ -15,12 +15,16 @@ export function AccountSettings() {
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    void fetch("/api/v1/account").then((r) => r.json()).then((d) => {
+    let stopSync: (() => void) | undefined;
+    void fetch("/api/v1/account").then((r) => r.json()).then(async (d) => {
       const nextUser = (d.user ?? null) as User | null;
       const storageUserChanged = setActiveStorageUser(nextUser?.id ?? null);
+      const hydratedStorageChanged = nextUser ? await hydrateUserStorage(nextUser.id, storageUserChanged) : false;
       setUser(nextUser);
-      if (storageUserChanged) window.location.reload();
+      if (storageUserChanged || hydratedStorageChanged) window.location.reload();
+      else if (nextUser) stopSync = startUserStorageSync(nextUser.id);
     });
+    return () => stopSync?.();
   }, []);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
 
@@ -36,7 +40,9 @@ export function AccountSettings() {
     const res = await fetch("/api/v1/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(credentials) });
     const payload = await res.json(); setBusy(false);
     if (!res.ok) return setError(payload.error ?? "Unable to continue");
-    setActiveStorageUser(payload.user.id); window.location.reload();
+    const storageUserChanged = setActiveStorageUser(payload.user.id);
+    await hydrateUserStorage(payload.user.id, storageUserChanged);
+    window.location.reload();
   }
 
   async function signOut() {

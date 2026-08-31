@@ -12,7 +12,7 @@ class MemoryStorage {
 }
 
 globalThis.localStorage = new MemoryStorage();
-const { ACTIVE_STORAGE_USER_KEY, setActiveStorageUser, userStorageKey } = await import("../src/lib/user-storage.ts");
+const { ACTIVE_STORAGE_USER_KEY, collectUserStorage, setActiveStorageUser, userStorageKey } = await import("../src/lib/user-storage.ts");
 
 test.beforeEach(() => localStorage.clear());
 
@@ -34,4 +34,16 @@ test("a login transfers signed-out data once without exposing another user", () 
   setActiveStorageUser("user-2");
   assert.equal(localStorage.getItem("work-sync:workspace-draft:user:user-2"), null);
   assert.equal(localStorage.getItem(ACTIVE_STORAGE_USER_KEY), "user-2");
+});
+
+test("account sync collects durable user data and excludes one-shot commands", () => {
+  localStorage.setItem("work-sync:tables:user:user-1", '[{"name":"Shared"}]');
+  localStorage.setItem("work-sync:todos:user:user-1", '[{"title":"Follow up"}]');
+  localStorage.setItem("work-sync:ao-table-command:user:user-1", '{"action":"add-row"}');
+  localStorage.setItem("work-sync:tables:user:user-2", '[{"name":"Private"}]');
+
+  assert.deepEqual(collectUserStorage("user-1"), {
+    "work-sync:tables": '[{"name":"Shared"}]',
+    "work-sync:todos": '[{"title":"Follow up"}]',
+  });
 });

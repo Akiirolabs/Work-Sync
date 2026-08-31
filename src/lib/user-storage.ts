@@ -2,6 +2,101 @@
 
 export const ACTIVE_STORAGE_USER_KEY = "work-sync:active-user";
 
+const TRANSIENT_KEYS = new Set([
+  "work-sync:ao-table-command",
+  "work-sync:ao-todo-command",
+  "work-sync:ao-workspace-text",
+  "work-sync:ao-workspace-open",
+]);
+
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let lastUploaded = "";
+let lastUploadedUser = "";
+
+export function collectUserStorage(userId: string): Record<string, string> {
+  const suffix = `:user:${userId}`;
+  const entries: Record<string, string> = {};
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (!key?.endsWith(suffix)) continue;
+    const baseKey = key.slice(0, -suffix.length);
+    if (TRANSIENT_KEYS.has(baseKey)) continue;
+    const value = localStorage.getItem(key);
+    if (value !== null) entries[baseKey] = value;
+  }
+  return entries;
+}
+
+function applyUserStorage(userId: string, entries: Record<string, string>): void {
+  const suffix = `:user:${userId}`;
+  for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+    const key = localStorage.key(index);
+    if (!key?.endsWith(suffix)) continue;
+    const baseKey = key.slice(0, -suffix.length);
+    if (!TRANSIENT_KEYS.has(baseKey)) localStorage.removeItem(key);
+  }
+  for (const [baseKey, value] of Object.entries(entries)) {
+    if (!TRANSIENT_KEYS.has(baseKey)) localStorage.setItem(`${baseKey}${suffix}`, value);
+  }
+}
+
+async function uploadUserStorage(userId: string): Promise<void> {
+  const entries = collectUserStorage(userId);
+  const serialized = JSON.stringify(entries);
+  if (userId === lastUploadedUser && serialized === lastUploaded) return;
+  const response = await fetch("/api/v1/user-state", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ entries }),
+    keepalive: true,
+  });
+  if (response.ok) {
+    lastUploadedUser = userId;
+    lastUploaded = serialized;
+  }
+}
+
+export async function hydrateUserStorage(userId: string, preserveLocalOnly = false): Promise<boolean> {
+  const response = await fetch("/api/v1/user-state", { cache: "no-store" });
+  if (!response.ok) return false;
+  const payload = await response.json() as { entries?: Record<string, string>; updatedAt?: string | null };
+  const remote = payload.entries && typeof payload.entries === "object" ? payload.entries : {};
+  if (payload.updatedAt || Object.keys(remote).length) {
+    const local = collectUserStorage(userId);
+    const before = JSON.stringify(local);
+    applyUserStorage(userId, preserveLocalOnly ? { ...local, ...remote } : remote);
+    const hydrated = JSON.stringify(collectUserStorage(userId));
+    if (preserveLocalOnly && hydrated !== JSON.stringify(remote)) {
+      lastUploadedUser = "";
+      await uploadUserStorage(userId);
+    } else {
+      lastUploadedUser = userId;
+      lastUploaded = hydrated;
+    }
+    return before !== hydrated;
+  } else {
+    await uploadUserStorage(userId);
+    return false;
+  }
+}
+
+export function startUserStorageSync(userId: string): () => void {
+  let stopped = false;
+  const schedule = () => {
+    if (stopped) return;
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => { void uploadUserStorage(userId).finally(schedule); }, 1_500);
+  };
+  schedule();
+  const flush = () => { void uploadUserStorage(userId); };
+  window.addEventListener("pagehide", flush);
+  return () => {
+    stopped = true;
+    if (syncTimer) clearTimeout(syncTimer);
+    window.removeEventListener("pagehide", flush);
+  };
+}
+
 export function setActiveStorageUser(userId: string | null): boolean {
   const previous = localStorage.getItem(ACTIVE_STORAGE_USER_KEY);
   if (userId && previous !== userId) {

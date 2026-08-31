@@ -22,10 +22,9 @@ The application is built with Next.js 15, React 19, TypeScript, Node.js 22, and 
 | Users and sessions | SQLite | Yes |
 | Workspace notes | SQLite | Yes |
 | Sources and verification records | SQLite | Yes |
-| Tables, To Dos, macros, and drafts | Browser `localStorage` | Yes, by local user namespace |
-| Open Agent conversation | React session state | Only for the open browser session |
+| Tables, To Dos, macros, drafts, editor metadata, and Agent history | SQLite-backed account sync with a browser cache | Yes |
 
-Browser-stored data does not automatically follow a user to another device. See [Architecture](docs/ARCHITECTURE.md) and [Roadmap](docs/ROADMAP.md) for planned durability work.
+Signed-in account data is hydrated from the server and follows the user between devices. Browser storage remains a responsive local cache and signed-out work stays local until it is transferred at login.
 
 ## Quick start
 

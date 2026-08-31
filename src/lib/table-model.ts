@@ -8,7 +8,7 @@ export const TABLE_ICON_GROUPS = [
   { label: "Office", icons: [
     { symbol: "▤", label: "Document" }, { symbol: "▦", label: "Spreadsheet" }, { symbol: "▥", label: "Ledger" }, { symbol: "▣", label: "Notebook" },
     { symbol: "▧", label: "Binder" }, { symbol: "□", label: "Form" }, { symbol: "▱", label: "Folder" }, { symbol: "⌑", label: "Archive" },
-    { symbol: "☷", label: "List" }, { symbol: "≡", label: "Notes" }, { symbol: "¶", label: "Writing" }, { symbol: "§", label: "Policy" },
+    { symbol: "≣", label: "List" }, { symbol: "≡", label: "Notes" }, { symbol: "¶", label: "Writing" }, { symbol: "§", label: "Policy" },
     { symbol: "A", label: "Text" }, { symbol: "№", label: "Numbered" }, { symbol: "@", label: "Contact" }, { symbol: "⌂", label: "Office" },
     { symbol: "⌇", label: "Timeline" }, { symbol: "[x]", label: "Tasks" }, { symbol: "//", label: "Draft" }, { symbol: "⊞", label: "Calendar" },
     { symbol: "->", label: "Link" }, { symbol: "∷", label: "Index" }, { symbol: "¤", label: "Finance" }, { symbol: "◫", label: "Layout" },

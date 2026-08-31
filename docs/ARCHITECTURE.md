@@ -7,7 +7,7 @@ Work Sync is a single Next.js application with React client interfaces, Node.js 
 ```text
 Browser
   ├─ App shell, Workspace, To Do, Tables, Sources, Verify, History
-  ├─ User-scoped localStorage for device-local features
+  ├─ User-scoped localStorage cache for responsive editing
   └─ Same-origin API requests with work_sync_session cookie
          │
          ▼
@@ -70,9 +70,9 @@ Production browser API requests are authorized through that session. External AP
 
 Workspace notes and Sources include `user_id` ownership. Ownership checks prevent one logged-in user from loading another user's records.
 
-### Device-local browser data
+### Synchronized browser data
 
-Tables, To Dos, saved macros, Main Macro selections, Workspace drafts, and editor metadata are currently stored in browser `localStorage`.
+Tables, To Dos, saved macros, Main Macro selections, Workspace drafts, editor metadata, and Agent conversation history use browser `localStorage` as a responsive cache. For signed-in users, the durable copy is stored in the SQLite `user_state` record and synchronized through `/api/v1/user-state`.
 
 `src/lib/user-storage.ts` namespaces these keys as:
 
@@ -80,11 +80,13 @@ Tables, To Dos, saved macros, Main Macro selections, Workspace drafts, and edito
 <feature-key>:user:<user-id>
 ```
 
-Signed-out data uses the `signed-out` namespace. On the first login, signed-out data can be transferred into that user's namespace. This prevents display across local accounts, but it does not synchronize browser data between devices.
+Signed-out data uses the `signed-out` namespace. On login, signed-out data is transferred into that user's namespace and merged with existing remote state without replacing remote values. One-shot AO routing commands are intentionally excluded from synchronization so an action cannot replay on another device.
+
+The server hydrates the cache before the signed-in interface is reloaded. Subsequent changes are uploaded after a short debounce. The current conflict policy is last writer wins, so simultaneous edits of the same feature on two devices are not merged field by field.
 
 ### Agent conversation state
 
-The Agent conversation is held in React state while the application remains mounted. Up to 40 validated messages are sent to the server for context. Closing or refreshing the browser can discard that conversation because it is not yet stored in SQLite.
+The Agent conversation is held in React state while mounted and cached with the rest of the synchronized account state. Up to 40 validated messages are sent to the server for response context, while up to 80 completed messages are retained for reopening.
 
 ## Agent request flow
 
