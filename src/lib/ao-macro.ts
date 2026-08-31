@@ -9,14 +9,17 @@ export const AO_MACROS_KEY = "work-sync:ao-macros";
 export const AO_TABLE_COMMAND_KEY = "work-sync:ao-table-command";
 export const AO_WORKSPACE_TEXT_KEY = "work-sync:ao-workspace-text";
 export const AO_WORKSPACE_OPEN_KEY = "work-sync:ao-workspace-open";
+export const AO_WORKSPACE_LINE_COMMAND_KEY = "work-sync:ao-workspace-line-command";
 export const AO_TABLE_COMMAND_EVENT = "work-sync:ao-table-command";
 export const AO_WORKSPACE_TEXT_EVENT = "work-sync:ao-workspace-text";
 export const AO_WORKSPACE_OPEN_EVENT = "work-sync:ao-workspace-open";
+export const AO_WORKSPACE_LINE_COMMAND_EVENT = "work-sync:ao-workspace-line-command";
 export const AO_MACROS_CHANGED_EVENT = "work-sync:ao-macros-changed";
 export const AO_RUN_MAIN_MACRO_EVENT = "work-sync:run-main-macro";
 export const AO_OPEN_MACRO_MENU_EVENT = "work-sync:open-macro-menu";
 
 export type AOTableCommand = { action: string; tableId?: string; columnId?: string; rowId?: string; destinationRowId?: string; name?: string; title?: string; text?: string; type?: string; template?: string; query?: string; count?: number; page?: string; commands?: AOTableCommand[] };
+export type AOWorkspaceLineCommand = { action: "add-text" | "add-comment" | "add-heading" | "add-code"; text: string; kind?: "h1" | "h2" | "h3" | "h4" };
 export type AOCustomMacroStep = { macroId: string; values: Record<string, string> };
 export type AOMacroPreset = { id: string; label: string; text: string; macroId?: string; steps?: AOCustomMacroStep[]; pinned?: boolean; createdAt?: string; lastUsedAt?: string; main?: boolean; mainOrder?: number; icon?: string };
 export type AOTableMacroResult = { tables: WorkTable[]; activeId: string; openPage?: { rowId: string; columnId: string }; openColumn?: string; focusCell?: { rowId: string; columnId: string }; filter?: { columnId: string; query: string }; summary?: string };

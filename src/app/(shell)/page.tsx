@@ -1,7 +1,7 @@
 "use client";
 
 import { Workspace } from "@/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
 import { userStorageKey } from "@/lib/user-storage";
 import { LineEditor } from "@/components/LineEditor";
@@ -22,7 +22,7 @@ export default function WorkspacePage() {
   const [saved, setSaved] = useState<Note[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false); const creating = useRef(false);
   const [ready, setReady] = useState(false);
 
   const load = useCallback(async () => {
@@ -101,32 +101,18 @@ export default function WorkspacePage() {
     setError(null);
   }
 
-  async function saveNote() {
-    setBusy(true);
-    setError(null);
-    try {
-      if (activeId) {
-        const updated = await api<Note>(`/api/v1/notes/${activeId}`, {
-          method: "PATCH",
-          body: JSON.stringify({ body }),
-        });
-        setSaved((prev) => [updated, ...prev.filter((n) => n.id !== updated.id)]);
-      } else {
-        const created = await api<Note>("/api/v1/notes", {
-          method: "POST",
-          body: JSON.stringify({ body }),
-        });
-        const draftMeta = localStorage.getItem(userStorageKey("work-sync:line-meta:draft"));
-        if (draftMeta) localStorage.setItem(userStorageKey(`work-sync:line-meta:${created.id}`), draftMeta);
-        setSaved((prev) => [created, ...prev]);
-        setActiveId(created.id);
-      }
-    } catch (e) {
-      setError(e instanceof ApiError && e.status === 401 ? "Sign in to save notes." : e instanceof Error ? e.message : "Save failed");
-    } finally {
-      setBusy(false);
-    }
-  }
+  useEffect(() => {
+    if (!ready || !body.trim()) return;
+    const timer = window.setTimeout(async () => {
+      if (creating.current) return; setBusy(true); setError(null);
+      try {
+        if (activeId) { const updated = await api<Note>(`/api/v1/notes/${activeId}`, { method: "PATCH", body: JSON.stringify({ body }) }); setSaved((prev) => [updated, ...prev.filter((note) => note.id !== updated.id)]); }
+        else { creating.current = true; const created = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body }) }); const draftMeta = localStorage.getItem(userStorageKey("work-sync:line-meta:draft")); if (draftMeta) localStorage.setItem(userStorageKey(`work-sync:line-meta:${created.id}`), draftMeta); setSaved((prev) => [created, ...prev]); setActiveId(created.id); }
+      } catch (e) { setError(e instanceof ApiError && e.status === 401 ? "Sign in to save notes." : e instanceof Error ? e.message : "Auto-save failed"); }
+      finally { creating.current = false; setBusy(false); }
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [activeId, body, ready]);
 
   async function deleteNote() {
     if (!activeId) return;
@@ -157,14 +143,7 @@ export default function WorkspacePage() {
               Delete
             </button>
           ) : null}
-          <button
-            type="button"
-            className="ms-btn ms-btn-primary"
-            onClick={() => void saveNote()}
-            disabled={busy}
-          >
-            {busy ? "Saving…" : "Save"}
-          </button>
+          <span className="ms-muted">{busy ? "Saving…" : "Saved automatically"}</span>
         </div>
       }
     >

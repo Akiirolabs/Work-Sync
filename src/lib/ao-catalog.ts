@@ -1,5 +1,5 @@
 export type AOMacroCategory = "Workspace" | "To Do" | "Tables" | "Rows" | "Columns" | "Pages" | "Vault";
-export type AOMacroFieldType = "text" | "textarea" | "number" | "date" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "destination";
+export type AOMacroFieldType = "text" | "textarea" | "number" | "date" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "note" | "todo" | "heading" | "destination";
 export type AOMacroField = { key: string; label: string; type: AOMacroFieldType; placeholder?: string; optional?: boolean };
 export type AOMacroDefinition = { id: string; label: string; description: string; category: AOMacroCategory; action: string; fields?: AOMacroField[]; value?: string };
 
@@ -11,18 +11,23 @@ const row: AOMacroField = { key: "rowId", label: "Row", type: "row" };
 const pageColumn: AOMacroField = { key: "columnId", label: "Page column", type: "page-column" };
 const page: AOMacroField = { key: "page", label: "Page", type: "page" };
 const preset: AOMacroField = { key: "presetId", label: "Saved preset", type: "preset" };
+const note: AOMacroField = { key: "noteId", label: "Saved note", type: "note" };
 
 const workspace: AOMacroDefinition[] = [
   { id: "workspace-new", label: "New blank note", description: "Create and open a separate Workspace note.", category: "Workspace", action: "workspace-new", fields: [text("title", "Note title", "Untitled note")] },
   { id: "workspace-new-preset", label: "New note from text preset", description: "Create a separate note using saved Vault text.", category: "Workspace", action: "workspace-new-preset", fields: [text("title", "Note title", "Untitled note"), preset] },
   { id: "workspace-meeting", label: "New meeting note", description: "Create a structured meeting note.", category: "Workspace", action: "workspace-template", value: "meeting", fields: [text("title", "Meeting title", "Weekly meeting")] },
   { id: "workspace-project", label: "New project note", description: "Create a structured project outline.", category: "Workspace", action: "workspace-template", value: "project", fields: [text("title", "Project name", "Project name")] },
-  { id: "workspace-open", label: "Open saved note", description: "Find and open an existing Workspace note.", category: "Workspace", action: "workspace-open", fields: [{ key: "noteId", label: "Saved note", type: "text", placeholder: "Search by exact title" }] },
-  { id: "workspace-duplicate", label: "Duplicate current note", description: "Create a separate copy of the current note.", category: "Workspace", action: "workspace-duplicate", fields: [text("title", "Copy title", "Copy of current note")] },
+  { id: "workspace-open", label: "Open Saved Note", description: "Select and open an existing Workspace note by exact title.", category: "Workspace", action: "workspace-open", fields: [note] },
+  { id: "workspace-duplicate", label: "Duplicate Current Note", description: "Create a separate duplicate of the current note.", category: "Workspace", action: "workspace-duplicate", fields: [text("title", "Duplicate title", "Duplicated note")] },
   { id: "workspace-append", label: "Append saved text", description: "Add Vault text to the end of the current note.", category: "Workspace", action: "workspace-append", fields: [preset] },
-  { id: "workspace-prepend", label: "Prepend saved text", description: "Add Vault text to the start of the current note.", category: "Workspace", action: "workspace-prepend", fields: [preset] },
-  { id: "workspace-section", label: "Add dated section", description: "Append a dated heading to the current note.", category: "Workspace", action: "workspace-section", fields: [text("title", "Section title", "Update")] },
+  { id: "workspace-prepend", label: "Add Saved Text to Current Note", description: "Add selected Vault text to the start of the current note.", category: "Workspace", action: "workspace-prepend", fields: [preset] },
+  { id: "workspace-section", label: "Add Title with Current Date to Current Note", description: "Append a dated title to the current note.", category: "Workspace", action: "workspace-section", fields: [text("title", "Title", "Update")] },
   { id: "workspace-save-new", label: "Save and create another note", description: "Save the draft, then create a separate note.", category: "Workspace", action: "workspace-save-new", fields: [text("title", "New note title", "Untitled note")] },
+  { id: "workspace-add-text", label: "Add Text to Workspace", description: "Append supplied text to the current Workspace note.", category: "Workspace", action: "workspace-add-text", fields: [{ key: "text", label: "Text", type: "textarea", placeholder: "Text to add" }] },
+  { id: "workspace-add-comment", label: "Add Comment to Current Workspace", description: "Attach a comment to the current Workspace content.", category: "Workspace", action: "workspace-add-comment", fields: [{ key: "comment", label: "Comment", type: "textarea", placeholder: "Comment text" }] },
+  { id: "workspace-add-heading", label: "Add Text with Heading to Workspace", description: "Insert supplied text using a selected Workspace heading level.", category: "Workspace", action: "workspace-add-heading", fields: [{ key: "heading", label: "Heading level", type: "heading" }, { key: "text", label: "Heading text", type: "textarea", placeholder: "Heading text" }] },
+  { id: "workspace-add-code", label: "Add Code to Workspace", description: "Insert supplied text using Workspace code formatting.", category: "Workspace", action: "workspace-add-code", fields: [{ key: "text", label: "Code", type: "textarea", placeholder: "Code or command" }] },
 ];
 
 const todo: AOMacroDefinition[] = [
@@ -35,8 +40,9 @@ const todo: AOMacroDefinition[] = [
   { id: "todo-add-high", label: "Add high-priority task", description: "Add an important task to the To Do page.", category: "To Do", action: "todo-add-high", fields: [text("title", "Task", "Important task")] },
   { id: "todo-add-today", label: "Add task due today", description: "Create a task with today's due date.", category: "To Do", action: "todo-add-today", fields: [text("title", "Task", "Task due today")] },
   { id: "todo-add-due", label: "Add task with due date", description: "Create a task with a selected due date.", category: "To Do", action: "todo-add-due", fields: [text("title", "Task", "Scheduled task"), date("dueDate", "Due date")] },
-  { id: "todo-follow-up", label: "Add follow-up", description: "Create a clearly labeled follow-up task.", category: "To Do", action: "todo-follow-up", fields: [text("title", "Follow up with", "Client or teammate")] },
-  { id: "todo-review", label: "Add review task", description: "Create a task for reviewing work or a document.", category: "To Do", action: "todo-review", fields: [text("title", "Review", "Document or deliverable")] },
+  { id: "todo-open", label: "Open Saved To-Do", description: "Select an existing To-Do item by exact title.", category: "To Do", action: "todo-open", fields: [{ key: "taskId", label: "Saved To-Do", type: "todo" }] },
+  { id: "todo-from-note", label: "Create To-Do From Saved Note", description: "Create a To-Do using a saved note title.", category: "To Do", action: "todo-from-note", fields: [note] },
+  { id: "todo-from-note-content", label: "Add To-Do From Saved Note With Content", description: "Create a To-Do from a note and turn each content line into a subtask.", category: "To Do", action: "todo-from-note-content", fields: [note] },
   { id: "todo-complete-next", label: "Complete next task", description: "Mark the first open task complete.", category: "To Do", action: "todo-complete-next" },
   { id: "todo-clear-completed", label: "Clear completed tasks", description: "Remove every completed task from To Do.", category: "To Do", action: "todo-clear-completed" },
 ];

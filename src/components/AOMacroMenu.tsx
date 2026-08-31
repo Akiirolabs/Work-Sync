@@ -7,11 +7,11 @@ import { api } from "@/lib/client-api";
 import { AO_MACRO_CATALOG, AO_MACRO_CATEGORIES, type AOMacroDefinition, type AOMacroField } from "@/lib/ao-catalog";
 import {
   AO_MACROS_KEY, AO_MACROS_CHANGED_EVENT, AO_OPEN_MACRO_MENU_EVENT, AO_RUN_MAIN_MACRO_EVENT, AO_TABLE_COMMAND_EVENT, AO_TABLE_COMMAND_KEY, AO_WORKSPACE_OPEN_EVENT,
-  AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY,
-  type AOCustomMacroStep, type AOMacroPreset, type AOTableCommand,
+  AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY, AO_WORKSPACE_LINE_COMMAND_EVENT, AO_WORKSPACE_LINE_COMMAND_KEY,
+  type AOCustomMacroStep, type AOMacroPreset, type AOTableCommand, type AOWorkspaceLineCommand,
 } from "@/lib/ao-macro";
 import { decodePageCell, type WorkTable } from "@/lib/table-model";
-import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, type AOTodoCommand } from "@/lib/todo-model";
+import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, TODO_STORAGE_KEY, type AOTodoCommand, type TodoItem } from "@/lib/todo-model";
 import { userStorageKey } from "@/lib/user-storage";
 import styles from "./AOMacroMenu.module.css";
 
@@ -28,8 +28,8 @@ const MAIN_MACRO_ICONS = ["◇", "▦", "▤", "✓", "⌁", "⊙", "＋", "◉"
 const ROUTES = [["Workspace", "/", "⌂"], ["To Do", "/todo", "□"], ["Tables", "/tables", "▦"], ["Sources", "/sources", "S"], ["Verify", "/verify", "✓"], ["History", "/history", "H"], ["Connect", "/connect", "C"]] as const;
 const VAULT_CATEGORIES = ["All", "Text", "Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Custom"] as const;
 const WORKSPACE_TEMPLATES: Record<string, string> = {
-  meeting: "## Attendees\n\n## Agenda\n\n## Decisions\n\n## Follow-up",
-  project: "## Objective\n\n## Owner\n\n## Milestones\n\n## Risks\n\n## Next actions",
+  meeting: "| Attendees | Agenda | Decisions | Follow-Up |\n| --- | --- | --- | --- |\n|  |  |  |  |",
+  project: "| Objective | Owner | Milestones | Risks | Next Action |\n| --- | --- | --- | --- | --- |\n|  |  |  |  |  |",
 };
 
 function AOLogo() { return <span className={styles.logo} aria-hidden><svg viewBox="0 0 32 32" focusable="false"><path d="M3.75 22.5 9.25 8.75l5.5 13.75M5.9 17h6.7" /><rect x="18" y="8.75" width="10" height="13.75" rx="5" /></svg></span>; }
@@ -39,7 +39,7 @@ export function AOMacroMenu() {
   const router = useRouter(); const pathname = usePathname(); const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false); const [view, setView] = useState<View>("main");
   const [turboText, setTurboText] = useState(""); const [presets, setPresets] = useState<AOMacroPreset[]>([]);
-  const [tables, setTables] = useState<WorkTable[]>([]); const [notes, setNotes] = useState<Note[]>([]);
+  const [tables, setTables] = useState<WorkTable[]>([]); const [notes, setNotes] = useState<Note[]>([]); const [todos, setTodos] = useState<TodoItem[]>([]);
   const [query, setQuery] = useState(""); const [category, setCategory] = useState("Workspace");
   const [selected, setSelected] = useState<AOMacroDefinition | null>(null); const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
@@ -58,6 +58,7 @@ export function AOMacroMenu() {
   function readLocalData() {
     try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(AO_MACROS_KEY)) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(parsed) ? parsed.map((item) => item.main ? item : { ...item, icon: undefined }) : []); } catch { setPresets([]); }
     try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(TABLES_KEY)) ?? "[]") as WorkTable[]; setTables(Array.isArray(parsed) ? parsed : []); } catch { setTables([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(TODO_STORAGE_KEY)) ?? "[]") as TodoItem[]; setTodos(Array.isArray(parsed) ? parsed : []); } catch { setTodos([]); }
   }
   useEffect(readLocalData, []);
   useEffect(() => {
@@ -141,6 +142,11 @@ export function AOMacroMenu() {
     if (pathname === "/") window.dispatchEvent(new Event(AO_WORKSPACE_TEXT_EVENT)); else router.push("/");
     close();
   }
+  function sendWorkspaceLineCommand(command: AOWorkspaceLineCommand) {
+    localStorage.setItem(userStorageKey(AO_WORKSPACE_LINE_COMMAND_KEY), JSON.stringify(command));
+    if (pathname === "/") window.dispatchEvent(new Event(AO_WORKSPACE_LINE_COMMAND_EVENT)); else router.push("/");
+    close();
+  }
   function openWorkspaceNote(note: Note) {
     localStorage.setItem(userStorageKey(DRAFT_KEY), JSON.stringify({ body: note.body, activeId: note.id }));
     localStorage.setItem(userStorageKey(AO_WORKSPACE_OPEN_KEY), JSON.stringify({ id: note.id, body: note.body }));
@@ -162,6 +168,9 @@ export function AOMacroMenu() {
     const pageTableId = context.page?.split(":")[0];
     const selectedTable = tables.find((item) => item.id === (context.tableId || pageTableId)) ?? tables[0];
     if (field.type === "table") return tables.map((item) => ({ value: item.id, label: item.name }));
+    if (field.type === "note") return notes.map((item) => ({ value: item.id, label: item.title }));
+    if (field.type === "todo") return todos.map((item) => ({ value: item.id, label: item.title }));
+    if (field.type === "heading") return [1, 2, 3, 4].map((level) => ({ value: `h${level}`, label: `H${level}` }));
     if (field.type === "column") return (selectedTable?.columns ?? []).filter((item) => macro?.action === "column-show" ? item.hidden : macro?.action === "column-hide" ? !item.hidden : true).map((item) => ({ value: item.id, label: `${item.name} · ${item.type}` }));
     if (field.type === "column-type") return ([ ["text", "Text"], ["number", "Number"], ["percent", "Percent"], ["currency", "Currency"], ["single", "Single Select"], ["multiple", "Multiple Select"], ["date", "Date"], ["people", "People"], ["files", "Image & Files"], ["checkbox", "Checkbox"], ["reaction", "Reaction"], ["formula", "Formula"], ["relation", "Relation"], ["rollup", "Rollup"], ["page", "Page"], ["url", "URL"], ["phone", "Phone"], ["email", "Email"] ] as Array<[string, string]>).map(([value, label]) => ({ value, label }));
     if (field.type === "page-column") return [...(selectedTable?.columns ?? []).filter((item) => item.type === "page").map((item) => ({ value: item.id, label: item.name })), { value: "__new_page__", label: "＋ Create Page column" }];
@@ -194,7 +203,8 @@ export function AOMacroMenu() {
     return { action: macro.action, tableId: get("tableId"), columnId: get("columnId"), rowId: get("rowId"), destinationRowId: get("destinationRowId"), name: get("name"), title: get("title"), text: chosen?.text ?? get("text"), type: macro.value ?? get("type"), template: macro.value, query: get("query"), count: Number(get("count")) || undefined, page: get("page") };
   }
   function todoCommandFor(macro: AOMacroDefinition, context: Record<string, string>): AOTodoCommand {
-    return { action: macro.action, title: context.title?.trim(), taskTitle: context.taskTitle?.trim(), description: context.description?.trim(), subtaskTitle: context.subtaskTitle?.trim(), subtaskDescription: context.subtaskDescription?.trim(), dueDate: context.dueDate?.trim() };
+    const note = notes.find((item) => item.id === context.noteId); const noteLines = note?.body.split("\n").slice(1).map((line) => line.trim()).filter(Boolean) ?? [];
+    return { action: macro.action, title: note?.title ?? context.title?.trim(), taskId: context.taskId?.trim(), taskTitle: context.taskTitle?.trim(), description: context.description?.trim(), subtaskTitle: context.subtaskTitle?.trim(), subtaskDescription: context.subtaskDescription?.trim(), subtasks: macro.action === "todo-from-note-content" ? noteLines : undefined, dueDate: context.dueDate?.trim() };
   }
   function saveBuiltIn(macro: AOMacroDefinition) {
     if (presets.some((item) => item.macroId === macro.id)) { setNotice(`${macro.label} is already saved.`); return; }
@@ -222,11 +232,15 @@ export function AOMacroMenu() {
     if (macro.action === "workspace-new") return createWorkspaceNote(get("title"));
     if (macro.action === "workspace-new-preset") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return createWorkspaceNote(get("title"), chosenPreset.text); }
     if (macro.action === "workspace-template") return createWorkspaceNote(get("title"), WORKSPACE_TEMPLATES[macro.value ?? ""] ?? "");
-    if (macro.action === "workspace-open") { const found = notes.find((item) => item.title.toLowerCase() === get("noteId").toLowerCase()) ?? notes.find((item) => item.title.toLowerCase().includes(get("noteId").toLowerCase())); if (!found) throw new Error("No saved note matches that title."); return openWorkspaceNote(found); }
+    if (macro.action === "workspace-open") { const found = notes.find((item) => item.id === get("noteId")); if (!found) throw new Error("Choose a saved note."); return openWorkspaceNote(found); }
     if (macro.action === "workspace-duplicate") { const draft = currentDraft(); return createWorkspaceNote(get("title"), draft.body ?? ""); }
     if (macro.action === "workspace-append") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return updateCurrent((body) => body.trim() ? `${body.trimEnd()}\n${chosenPreset.text}` : chosenPreset.text); }
     if (macro.action === "workspace-prepend") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return updateCurrent((body) => body.trim() ? `${chosenPreset.text}\n${body.trimStart()}` : chosenPreset.text); }
     if (macro.action === "workspace-section") return updateCurrent((body) => `${body.trimEnd()}\n\n## ${get("title")} · ${new Date().toLocaleDateString()}`.trim());
+    if (macro.action === "workspace-add-text") return sendWorkspaceLineCommand({ action: "add-text", text: get("text") });
+    if (macro.action === "workspace-add-comment") return sendWorkspaceLineCommand({ action: "add-comment", text: get("comment") });
+    if (macro.action === "workspace-add-heading") return sendWorkspaceLineCommand({ action: "add-heading", text: get("text"), kind: get("heading") as "h1" | "h2" | "h3" | "h4" });
+    if (macro.action === "workspace-add-code") return sendWorkspaceLineCommand({ action: "add-code", text: get("text") });
     if (macro.action === "workspace-save-new") {
       const draft = currentDraft();
       if (draft.body?.trim()) {
@@ -295,10 +309,10 @@ export function AOMacroMenu() {
       {view === "macro" && !selected && macroMode === "builder" && <div className={styles.builder}>
         <label>Macro name<input value={builderName} onChange={(event) => setBuilderName(event.target.value)} placeholder="My workflow" /></label>
         <div className={styles.builderAdd}><select aria-label="Preset element" value={builderChoice} onChange={(event) => setBuilderChoice(event.target.value)}>{AO_MACRO_CATEGORIES.filter((item) => item !== "Vault").map((item) => <optgroup key={item} label={item}>{builderCatalog.filter((macro) => macro.category === item).map((macro) => <option key={macro.id} value={macro.id}>{macro.label}</option>)}</optgroup>)}</select><button type="button" onClick={addBuilderStep}>Add step</button></div>
-        <div className={styles.builderSteps}>{builderSteps.length ? builderSteps.map((step, index) => { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId)!; return <section key={step.id}><header><span>{index + 1}</span><strong>{macro.label}</strong><button type="button" aria-label={`Remove ${macro.label}`} onClick={() => setBuilderSteps((current) => current.filter((item) => item.id !== step.id))}>×</button></header>{(macro.fields ?? []).map((field) => { const options = optionsFor(field, step.values, macro); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination"].includes(field.type); const update = (value: string) => setBuilderSteps((current) => current.map((item) => item.id === step.id ? { ...item, values: { ...item.values, [field.key]: value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) } } : item)); return <label key={`${step.id}-${field.key}`}>{field.label}{isSelect ? <select value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} />}</label>; })}</section>; }) : <p>Add built-in preset elements to create a reusable sequence.</p>}</div>
+        <div className={styles.builderSteps}>{builderSteps.length ? builderSteps.map((step, index) => { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId)!; return <section key={step.id}><header><span>{index + 1}</span><strong>{macro.label}</strong><button type="button" aria-label={`Remove ${macro.label}`} onClick={() => setBuilderSteps((current) => current.filter((item) => item.id !== step.id))}>×</button></header>{(macro.fields ?? []).map((field) => { const options = optionsFor(field, step.values, macro); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination", "note", "todo", "heading"].includes(field.type); const update = (value: string) => setBuilderSteps((current) => current.map((item) => item.id === step.id ? { ...item, values: { ...item.values, [field.key]: value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) } } : item)); return <label key={`${step.id}-${field.key}`}>{field.label}{isSelect ? <select value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} />}</label>; })}</section>; }) : <p>Add built-in preset elements to create a reusable sequence.</p>}</div>
         {error && <p className={styles.error}>{error}</p>}<button type="button" className={styles.builderSave} disabled={!builderReady} onClick={saveCustomMacro}>Save macro to Vault</button>
       </div>}
-      {view === "macro" && selected && <form className={styles.runner} onSubmit={(event) => { event.preventDefault(); void runSelected(); }}><p>{selected.description}</p>{(selected.fields ?? []).map((field) => { const options = optionsFor(field); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination"].includes(field.type); return <label key={`${field.key}-${field.type}`}>{field.label}{isSelect ? <select value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) }))}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} min={field.type === "number" ? 1 : undefined} max={field.type === "number" ? 100 : undefined} value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} />}</label>; })}{selected.action === "vault-run" && valueFor("destination") === "page" && <label>Page<select value={values.page ?? ""} onChange={(event) => setValues((current) => ({ ...current, page: event.target.value }))}><option value="">Choose…</option>{optionsFor({ key: "page", label: "Page", type: "page" }).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>}{error && <p className={styles.error}>{error}</p>}<button type="submit" disabled={busy || !requiredReady()}>{busy ? "Running…" : "Run macro"}</button></form>}
+      {view === "macro" && selected && <form className={styles.runner} onSubmit={(event) => { event.preventDefault(); void runSelected(); }}><p>{selected.description}</p>{(selected.fields ?? []).map((field) => { const options = optionsFor(field); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination", "note", "todo", "heading"].includes(field.type); return <label key={`${field.key}-${field.type}`}>{field.label}{isSelect ? <select value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) }))}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} min={field.type === "number" ? 1 : undefined} max={field.type === "number" ? 100 : undefined} value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} />}</label>; })}{selected.action === "vault-run" && valueFor("destination") === "page" && <label>Page<select value={values.page ?? ""} onChange={(event) => setValues((current) => ({ ...current, page: event.target.value }))}><option value="">Choose…</option>{optionsFor({ key: "page", label: "Page", type: "page" }).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>}{error && <p className={styles.error}>{error}</p>}<button type="submit" disabled={busy || !requiredReady()}>{busy ? "Running…" : selected.action === "vault-create" ? "Save Macro" : "Run macro"}</button></form>}
       {view === "route" && <div className={styles.list}><p className={styles.hint}>Open a destination in this app.</p>{ROUTES.map(([label, href, icon]) => <button type="button" key={href} className={pathname === href ? styles.active : ""} onClick={() => { router.push(href); close(); }}><span>{icon}</span><b>{label}</b>{pathname === href && <em>Current</em>}</button>)}</div>}
       {view === "turbo" && <form className={styles.form} onSubmit={(event) => { event.preventDefault(); sendWorkspaceText(turboText); }}><label>Input prompt<textarea value={turboText} onChange={(event) => setTurboText(event.target.value)} placeholder="Write content for a destination…" autoFocus /></label><div className={styles.actions}><button type="submit" disabled={!turboText.trim()}>Write in Workspace</button><button type="button" disabled={!turboText.trim()} onClick={() => sendTableCommand({ action: "add-table", text: turboText })}>Make a new table</button></div></form>}
       {view === "vault" && customToRun && <div className={styles.customRun}><p>Run this saved sequence:</p><ol>{(customToRun.steps ?? []).map((step) => <li key={`${customToRun.id}-${step.macroId}`}>{AO_MACRO_CATALOG.find((item) => item.id === step.macroId)?.label ?? "Unavailable step"}</li>)}</ol>{error && <p className={styles.error}>{error}</p>}<button type="button" disabled={busy} onClick={() => void runCustomMacro(customToRun)}>{busy ? "Running…" : "Run custom macro"}</button></div>}

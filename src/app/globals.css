@@ -224,7 +224,12 @@
 .ms-line-h2 > [contenteditable="true"], .ms-line-h2 .ms-line-display { font-size: 17px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h3 > [contenteditable="true"], .ms-line-h3 .ms-line-display { font-size: 15px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h4 > [contenteditable="true"], .ms-line-h4 .ms-line-display { font-size: 14px; font-weight: 600; color: var(--ms-text-bright); }
-.ms-line-code > [contenteditable="true"], .ms-line-code .ms-line-display { font-family: var(--ms-font-mono); background: var(--ms-bg-1); color: #a8c9dc; }
+.ms-line-code > [contenteditable="true"], .ms-line-code .ms-line-display { display: inline-block; width: auto; max-width: calc(100% - 34px); padding: 3px 8px; border-radius: 6px; font-family: var(--ms-font-mono); background: #30343b; color: #fff; }
+.ms-markdown-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(100px, 1fr); width: 100%; border: 1px solid var(--ms-border); border-radius: 4px; overflow: hidden; }
+.ms-markdown-row > span { min-width: 0; padding: 2px 8px; border-right: 1px solid var(--ms-border); }
+.ms-markdown-row > span:last-child { border-right: 0; }
+.ms-markdown-row.is-divider { height: 2px; border-width: 0 1px; border-radius: 0; }
+.ms-markdown-row.is-divider > span { padding: 0; font-size: 0; }
 .ms-line-quote { border-left: 2px solid var(--ms-edge); padding-left: 5px; }
 .ms-editor-line.is-accent > [contenteditable="true"], .ms-editor-line.is-accent > [data-line-content], .ms-editor-line.is-accent .ms-line-display, .ms-editor-line.is-accent .ms-line-prefix { color: var(--ms-accent); }
 .ms-comment-count { flex: 0 0 auto; border: 0; background: transparent; color: var(--ms-accent); font: 10px var(--ms-font-mono); cursor: pointer; }
@@ -284,6 +289,10 @@
 .ms-todo-item { flex: 0 0 auto; }
 .ms-todo-item { position: relative; min-height: 48px; display: grid; grid-template-columns: 18px 24px 1fr 59px; align-items: center; gap: 7px; padding: 7px; border: 1px solid var(--ms-border); border-radius: 6px; background: #11161b; }
 .ms-todo-drag, .ms-subtask-drag { border: 0; padding: 0; background: transparent; color: var(--ms-text-dim); cursor: grab; }
+.ms-todo-item.is-drop-before::before, .ms-todo-item.is-drop-after::after { content: ""; position: absolute; left: 8px; right: 8px; height: 2px; border-radius: 2px; background: #2f8cff; box-shadow: 0 0 8px rgba(47,140,255,.7); z-index: 4; }
+.ms-todo-item.is-drop-before::before { top: -5px; }
+.ms-todo-item.is-drop-after::after { bottom: -5px; }
+.ms-todo-item.is-macro-target { outline: 2px solid #2f8cff; outline-offset: 2px; }
 .ms-todo-item > span { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .ms-todo-item strong { font-size: 12px; font-weight: 500; }
 .ms-todo-item small { color: var(--ms-text-dim); font-size: 9px; }
@@ -313,6 +322,7 @@
 .ms-subtask > button:hover { background: #342429; color: #ef8175; }
 .ms-subtask.is-done strong { color: var(--ms-text-dim); text-decoration: line-through; }
 .ms-subtask-menu { top: 31px; right: 4px; }
+.ms-subtask-menu textarea { min-height: 64px; resize: vertical; }
 .ms-nested-subtask { min-height: 30px; margin-left: 36px; display: grid; grid-template-columns: 20px 1fr 25px; align-items: center; gap: 5px; padding: 2px 5px; border-left: 1px solid var(--ms-accent-soft); background: #0c1116; font-size: 9px; }
 .ms-nested-subtask button { border: 0; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
 .ms-nested-subtask.is-done span { color: var(--ms-text-dim); text-decoration: line-through; }

@@ -5,7 +5,7 @@ export const AO_TODO_COMMAND_EVENT = "work-sync:ao-todo-command";
 export type TodoPriority = "normal" | "high";
 export type TodoSubtask = { id: string; title: string; description?: string; completed: boolean; subtasks?: TodoSubtask[] };
 export type TodoItem = { id: string; title: string; description?: string; subtasks?: TodoSubtask[]; completed: boolean; priority: TodoPriority; dueDate?: string; createdAt: string };
-export type AOTodoCommand = { action: string; title?: string; taskTitle?: string; description?: string; subtaskTitle?: string; subtaskDescription?: string; dueDate?: string; commands?: AOTodoCommand[] };
+export type AOTodoCommand = { action: string; title?: string; taskId?: string; taskTitle?: string; description?: string; subtaskTitle?: string; subtaskDescription?: string; subtasks?: string[]; dueDate?: string; commands?: AOTodoCommand[] };
 
 const makeId = () => crypto.randomUUID();
 const today = () => new Date().toISOString().slice(0, 10);
@@ -26,7 +26,11 @@ function reorder<T extends { id: string }>(items: T[], sourceId: string, targetI
   const next = [...items]; const [moved] = next.splice(from, 1); next.splice(to, 0, moved!); return next;
 }
 
-export function moveTodo(items: TodoItem[], sourceId: string, targetId: string): TodoItem[] { return reorder(items, sourceId, targetId); }
+export function moveTodo(items: TodoItem[], sourceId: string, targetId: string, position: "before" | "after" = "before"): TodoItem[] {
+  const from = items.findIndex((item) => item.id === sourceId); const target = items.findIndex((item) => item.id === targetId);
+  if (from < 0 || target < 0 || from === target) return items;
+  const next = [...items]; const [moved] = next.splice(from, 1); let to = next.findIndex((item) => item.id === targetId); if (position === "after") to += 1; next.splice(to, 0, moved!); return next;
+}
 export function moveSubtask(items: TodoItem[], taskId: string, sourceId: string, targetId: string): TodoItem[] {
   return items.map((item) => item.id === taskId ? { ...item, subtasks: reorder(item.subtasks ?? [], sourceId, targetId) } : item);
 }
@@ -43,13 +47,13 @@ export function applyTodoCommand(items: TodoItem[], command: AOTodoCommand): Tod
     if (command.action === "todo-set-description") return items.map((item) => item.id === match.id ? { ...item, description: command.description?.trim() || undefined } : item);
     const subtask = createSubtask(command.subtaskTitle ?? "", command.subtaskDescription); return subtask ? items.map((item) => item.id === match.id ? { ...item, subtasks: [...(item.subtasks ?? []), subtask] } : item) : items;
   }
-  const templates: Record<string, string> = { "todo-follow-up": "Follow up: ", "todo-review": "Review: " };
-  const prefix = templates[command.action] ?? "";
   const priority: TodoPriority = command.action === "todo-add-high" ? "high" : "normal";
   const dueDate = command.action === "todo-add-today" ? today() : command.dueDate;
-  if (["todo-add", "todo-add-high", "todo-add-today", "todo-add-due", "todo-follow-up", "todo-review", "todo-add-detailed", "todo-add-with-subtask", "todo-add-high-with-subtask"].includes(command.action)) {
+  if (command.action === "todo-follow-up" || command.action === "todo-review") { const item = createTodo(`${command.action === "todo-follow-up" ? "Follow up: " : "Review: "}${command.title ?? ""}`); return item ? [...items, item] : items; }
+  if (["todo-add", "todo-add-high", "todo-add-today", "todo-add-due", "todo-add-detailed", "todo-add-with-subtask", "todo-add-high-with-subtask", "todo-from-note", "todo-from-note-content"].includes(command.action)) {
     const firstSubtask = createSubtask(command.subtaskTitle ?? "", command.subtaskDescription);
-    const item = createTodo(`${prefix}${command.title ?? ""}`, command.action === "todo-add-high-with-subtask" ? "high" : priority, dueDate, command.description, firstSubtask ? [firstSubtask] : []); return item ? [...items, item] : items;
+    const noteSubtasks = (command.subtasks ?? []).map((title) => createSubtask(title)).filter((item): item is TodoSubtask => Boolean(item));
+    const item = createTodo(command.title ?? "", command.action === "todo-add-high-with-subtask" ? "high" : priority, dueDate, command.description, firstSubtask ? [firstSubtask, ...noteSubtasks] : noteSubtasks); return item ? [...items, item] : items;
   }
   return items;
 }

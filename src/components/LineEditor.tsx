@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type Keyboar
 import { LiquidChromeOrb } from "@/ui";
 import { wrapExternalText } from "@/lib/text-layout";
 import { userStorageKey } from "@/lib/user-storage";
+import { AO_WORKSPACE_LINE_COMMAND_EVENT, AO_WORKSPACE_LINE_COMMAND_KEY, type AOWorkspaceLineCommand } from "@/lib/ao-macro";
 
 type BlockKind = "text" | "h1" | "h2" | "h3" | "h4" | "bullets" | "numbered" | "todo" | "code" | "quote";
 type Line = { id: string; text: string; kind: BlockKind; comments: string[]; accent: boolean; align: "left" | "center" | "right" };
@@ -51,6 +52,14 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   useEffect(() => {
     if (loadedKey === storageKey) localStorage.setItem(userStorageKey(`work-sync:line-meta:${storageKey}`), JSON.stringify(lines.map(({ kind, comments, accent, align }) => ({ kind, comments, accent, align }))));
   }, [lines, loadedKey, storageKey]);
+  useEffect(() => {
+    function consume() {
+      const raw = localStorage.getItem(userStorageKey(AO_WORKSPACE_LINE_COMMAND_KEY)); if (!raw) return;
+      localStorage.removeItem(userStorageKey(AO_WORKSPACE_LINE_COMMAND_KEY));
+      try { const command = JSON.parse(raw) as AOWorkspaceLineCommand; const text = command.text.trim(); if (!text) return; const current = linesRef.current; if (command.action === "add-comment") { let at = 0; for (let index = current.length - 1; index >= 0; index -= 1) if (current[index]!.text.trim()) { at = index; break; } commit(current.map((line, index) => index === at ? { ...line, comments: [...line.comments, text] } : line)); return; } const kind: BlockKind = command.action === "add-code" ? "code" : command.action === "add-heading" ? command.kind ?? "h2" : "text"; commit([...current, ...text.split("\n").map((part) => ({ ...makeLine(part), kind }))]); } catch { /* ignore invalid macro input */ }
+    }
+    consume(); window.addEventListener(AO_WORKSPACE_LINE_COMMAND_EVENT, consume); return () => window.removeEventListener(AO_WORKSPACE_LINE_COMMAND_EVENT, consume);
+  }, []);
   useEffect(() => {
     if (!active) return;
     function dismissLineMenu(event: PointerEvent) {
@@ -120,7 +129,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     {lines.map((line, index) => <div className={`ms-editor-line ms-line-${line.kind}${line.accent ? " is-accent" : ""}${continuousSelection && hoveredContinuousLine === line.id ? " is-hovered" : ""}`} style={continuousSelection ? { position: "absolute", top: 6 + index * 27 - continuousScrollTop, left: 25, right: 4, pointerEvents: "none" } : undefined} key={line.id}>
       <button type="button" contentEditable={false} className={`ms-line-toggle${active === line.id ? " is-active" : ""}`} onClick={() => { setActive(active === line.id ? null : line.id); setCommenting(false); }} aria-label={`Actions for line ${index + 1}`}>⋮⋮</button>
       <span className="ms-line-prefix" contentEditable={false} aria-hidden>{line.kind === "bullets" ? "•" : line.kind === "numbered" ? `${index + 1}.` : line.kind === "todo" ? "□" : line.kind === "quote" ? "❞" : ""}</span>
-      {continuousSelection && <span className="ms-line-display" style={{ textAlign: line.align }} aria-hidden>{line.text}</span>}
+      {continuousSelection && <span className="ms-line-display" style={{ textAlign: line.align }} aria-hidden>{line.text.startsWith("|") && line.text.endsWith("|") ? <span className={`ms-markdown-row${/^\|(?:\s*---\s*\|)+$/.test(line.text) ? " is-divider" : ""}`}>{line.text.slice(1, -1).split("|").map((cell, cellIndex) => <span key={cellIndex}>{cell.trim()}</span>)}</span> : line.text}</span>}
       {!continuousSelection && <div ref={(el) => { editors.current[line.id] = el; }} contentEditable suppressContentEditableWarning data-placeholder={index === 0 ? "Write a note…" : ""} onInput={(e) => update(line.id, { text: e.currentTarget.textContent ?? "" })} onKeyDown={(e) => onKey(e, line)} onPaste={(e) => onPaste(e, line)} style={{ textAlign: line.align }} aria-label={`Line ${index + 1}`}>{line.text}</div>}
       {line.comments.length > 0 && <button className="ms-comment-count" contentEditable={false} type="button" onClick={() => { setActive(line.id); setCommenting(true); }} title={line.comments.join("\n")}>▱ {line.comments.length}</button>}
       {active === line.id && <div className="ms-line-menu" contentEditable={false} role="menu">
