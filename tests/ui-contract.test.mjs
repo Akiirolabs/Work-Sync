@@ -220,15 +220,11 @@ test("FTR 1011 selects existing objects and keeps mobile rail labels visible", (
   assert.match(globalCss, /\.ms-rail-item \{ display: block; overflow: hidden; padding: 8px 4px; font-size: 9px;/);
 });
 
-test("FTR 1012.2 renders ordinary Markdown in Workspace without removing editing", () => {
-  assert.match(workspacePage, /MarkdownPreview/);
-  assert.match(workspacePage, /Preview Markdown/);
-  assert.match(workspacePage, /Edit Markdown/);
-  assert.match(workspacePage, /aria-label="Markdown preview"/);
+test("FTR 1012.3 turns pasted Markdown into editable Workspace structure", () => {
+  assert.doesNotMatch(workspacePage, /MarkdownPreview|Preview Markdown|Edit Markdown/);
   assert.match(workspacePage, /<LineEditor value=\{body\}/);
-  for (const structure of ["tableDivider", "ms-markdown-tasks", "ms-markdown-code", "blockquote"]) assert.match(markdownPreview, new RegExp(structure));
-  assert.match(globalCss, /\.ms-workspace-markdown/);
-  assert.match(globalCss, /\.ms-markdown-table/);
+  for (const structure of ["markdownLines", "hasMarkdownStructure", "kind: \"bullets\"", "kind: \"numbered\"", "kind: \"todo\"", "kind: \"code\""]) assert.match(editor, new RegExp(structure));
+  assert.match(editor, /pasteMarkdown\(nextValue/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {

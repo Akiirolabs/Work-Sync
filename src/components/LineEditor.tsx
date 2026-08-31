@@ -11,10 +11,33 @@ type Line = { id: string; text: string; kind: BlockKind; comments: string[]; acc
 
 const makeLine = (text = ""): Line => ({ id: crypto.randomUUID(), text, kind: "text", comments: [], accent: false, align: "left" });
 
+function markdownLines(value: string): Line[] {
+  let inCodeBlock = false;
+  const lines: Line[] = [];
+  for (const raw of value.replace(/\r/g, "").split("\n")) {
+    if (/^```/.test(raw.trim())) { inCodeBlock = !inCodeBlock; continue; }
+    if (inCodeBlock) { lines.push({ ...makeLine(raw), kind: "code" }); continue; }
+    const heading = raw.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) { lines.push({ ...makeLine(heading[2]!), kind: `h${heading[1]!.length}` as BlockKind }); continue; }
+    const todo = raw.match(/^- \[([ xX])\]\s+(.+)$/);
+    if (todo) { lines.push({ ...makeLine(todo[2]!), kind: "todo" }); continue; }
+    const bullet = raw.match(/^[-*]\s+(.+)$/);
+    if (bullet) { lines.push({ ...makeLine(bullet[1]!), kind: "bullets" }); continue; }
+    const numbered = raw.match(/^\d+\.\s+(.+)$/);
+    if (numbered) { lines.push({ ...makeLine(numbered[1]!), kind: "numbered" }); continue; }
+    const quote = raw.match(/^>\s?(.+)$/);
+    if (quote) { lines.push({ ...makeLine(quote[1]!), kind: "quote" }); continue; }
+    lines.push(makeLine(raw));
+  }
+  return lines.length ? lines : [makeLine()];
+}
+
+function hasMarkdownStructure(value: string) { return /^(#{1,4}\s+|[-*]\s+|\d+\.\s+|- \[[ xX]\]\s+|>\s?|```)/m.test(value) || /\n\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*(?:\n|$)/.test(value); }
+
 function Glyph({ children }: { children: React.ReactNode }) { return <span className="ms-menu-glyph" aria-hidden>{children}</span>; }
 
 export function LineEditor({ value, onChange, storageKey, continuousSelection = false }: { value: string; onChange: (next: string) => void; storageKey: string; continuousSelection?: boolean }) {
-  const [lines, setLines] = useState<Line[]>(() => value.split("\n").map(makeLine));
+  const [lines, setLines] = useState<Line[]>(() => markdownLines(value));
   const [active, setActive] = useState<string | null>(null);
   const [commenting, setCommenting] = useState(false);
   const [comment, setComment] = useState("");
@@ -27,7 +50,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   const joined = useMemo(() => lines.map((line) => line.text).join("\n"), [lines]);
 
   useEffect(() => {
-    const base = value.split("\n").map(makeLine);
+    const base = markdownLines(value);
     try {
       const saved = JSON.parse(localStorage.getItem(userStorageKey(`work-sync:line-meta:${storageKey}`)) ?? "[]") as Partial<Line>[];
       const restored = base.map((line, i) => ({ ...line, kind: saved[i]?.kind ?? line.kind, comments: Array.isArray(saved[i]?.comments) ? saved[i]!.comments! : [], accent: saved[i]?.accent ?? false, align: saved[i]?.align ?? "left" })); linesRef.current = restored; setLines(restored);
@@ -38,11 +61,11 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   useEffect(() => {
     const currentJoined = (continuousSelection ? linesRef.current : lines).map((line) => line.text).join("\n");
     if (loadedKey === storageKey && value !== currentJoined) {
-      const wrapped = wrapExternalText(value); const normalized = wrapped.join("\n");
-      const next = wrapped.map((text, i) => {
+      const incoming = markdownLines(value); const normalized = incoming.map((line) => line.text).join("\n"); const structured = hasMarkdownStructure(value);
+      const next = incoming.map((line, i) => {
         const previous = linesRef.current;
         const prior = previous[i];
-        return prior ? { ...prior, ...(continuousSelection ? { id: crypto.randomUUID() } : {}), text } : makeLine(text);
+        return structured ? line : prior ? { ...prior, ...(continuousSelection ? { id: crypto.randomUUID() } : {}), text: line.text } : line;
       }); linesRef.current = next; setLines(next);
       if (normalized !== value) onChange(normalized);
       setActive(null);
@@ -123,9 +146,10 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   }
 
   function updateContinuousValue(nextValue: string) { const texts = nextValue.split("\n"); const next = texts.map((text, index) => linesRef.current[index] ? { ...linesRef.current[index]!, text } : makeLine(text)); linesRef.current = next; setLines(next); onChange(nextValue); }
+  function pasteMarkdown(valueWithPaste: string, caretAt: number) { const next = markdownLines(valueWithPaste); const normalized = next.map((line) => line.text).join("\n"); commit(next); requestAnimationFrame(() => { const textarea = continuousTextarea.current; if (!textarea) return; textarea.focus(); textarea.setSelectionRange(Math.min(caretAt, normalized.length), Math.min(caretAt, normalized.length)); }); }
 
   return <div className={`ms-line-editor${continuousSelection ? " is-continuous" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setActive(null); }}>
-    {continuousSelection && <textarea ref={continuousTextarea} className="ms-continuous-textarea" aria-label="Continuous line editor" value={value} onChange={(event) => updateContinuousValue(event.target.value)} onMouseMove={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const index = Math.floor((event.clientY - rect.top + event.currentTarget.scrollTop - 4) / 27); setHoveredContinuousLine(linesRef.current[index]?.id ?? null); }} onMouseLeave={() => setHoveredContinuousLine(null)} onScroll={(event) => { setContinuousScrollTop(event.currentTarget.scrollTop); setHoveredContinuousLine(null); }} onPaste={(event) => { const textarea = event.currentTarget; const pasted = event.clipboardData.getData("text/plain"); if (!pasted) return; event.preventDefault(); const start = textarea.selectionStart; const end = textarea.selectionEnd; const wrapped = wrapExternalText(pasted).join("\n"); const nextValue = value.slice(0, start) + wrapped + value.slice(end); updateContinuousValue(nextValue); requestAnimationFrame(() => { textarea.focus(); textarea.setSelectionRange(start + wrapped.length, start + wrapped.length); }); }} wrap="off" placeholder="Write a note…" />}
+    {continuousSelection && <textarea ref={continuousTextarea} className="ms-continuous-textarea" aria-label="Continuous line editor" value={value} onChange={(event) => updateContinuousValue(event.target.value)} onMouseMove={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const index = Math.floor((event.clientY - rect.top + event.currentTarget.scrollTop - 4) / 27); setHoveredContinuousLine(linesRef.current[index]?.id ?? null); }} onMouseLeave={() => setHoveredContinuousLine(null)} onScroll={(event) => { setContinuousScrollTop(event.currentTarget.scrollTop); setHoveredContinuousLine(null); }} onPaste={(event) => { const textarea = event.currentTarget; const pasted = event.clipboardData.getData("text/plain"); if (!pasted) return; event.preventDefault(); const start = textarea.selectionStart; const end = textarea.selectionEnd; const nextValue = value.slice(0, start) + pasted + value.slice(end); if (hasMarkdownStructure(pasted)) pasteMarkdown(nextValue, start + markdownLines(pasted).map((line) => line.text).join("\n").length); else { const wrapped = wrapExternalText(pasted).join("\n"); updateContinuousValue(value.slice(0, start) + wrapped + value.slice(end)); requestAnimationFrame(() => { textarea.focus(); textarea.setSelectionRange(start + wrapped.length, start + wrapped.length); }); } }} wrap="off" placeholder="Write a note…" />}
     {lines.map((line, index) => <div className={`ms-editor-line ms-line-${line.kind}${line.accent ? " is-accent" : ""}${continuousSelection && hoveredContinuousLine === line.id ? " is-hovered" : ""}`} style={continuousSelection ? { position: "absolute", top: 6 + index * 27 - continuousScrollTop, left: 25, right: 4, pointerEvents: "none" } : undefined} key={line.id}>
       <button type="button" contentEditable={false} className={`ms-line-toggle${active === line.id ? " is-active" : ""}`} onClick={() => { setActive(active === line.id ? null : line.id); setCommenting(false); }} aria-label={`Actions for line ${index + 1}`}>⋮⋮</button>
       <span className="ms-line-prefix" contentEditable={false} aria-hidden>{line.kind === "bullets" ? "•" : line.kind === "numbered" ? `${index + 1}.` : line.kind === "todo" ? "□" : line.kind === "quote" ? "❞" : ""}</span>
