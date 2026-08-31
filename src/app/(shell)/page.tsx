@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
 import { userStorageKey } from "@/lib/user-storage";
 import { LineEditor } from "@/components/LineEditor";
+import { MarkdownPreview } from "@/components/MarkdownPreview";
 import { AO_WORKSPACE_OPEN_EVENT, AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY } from "@/lib/ao-macro";
 
 type Note = {
@@ -24,6 +25,7 @@ export default function WorkspacePage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false); const creating = useRef(false);
   const [ready, setReady] = useState(false);
+  const [previewingMarkdown, setPreviewingMarkdown] = useState(false);
   const [noteMenu, setNoteMenu] = useState<string | null>(null); const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null); const [renameDraft, setRenameDraft] = useState("");
 
   const load = useCallback(async () => {
@@ -96,6 +98,7 @@ export default function WorkspacePage() {
     setActiveId(null);
     setBody("");
     setError(null);
+    setPreviewingMarkdown(false);
   }
 
   function openNote(note: Note) {
@@ -162,6 +165,9 @@ export default function WorkspacePage() {
           <button type="button" className="ms-btn" onClick={newNote} disabled={busy}>
             New
           </button>
+          <button type="button" className="ms-btn" aria-pressed={previewingMarkdown} onClick={() => setPreviewingMarkdown((current) => !current)}>
+            {previewingMarkdown ? "Edit Markdown" : "Preview Markdown"}
+          </button>
           {activeId ? (
             <button type="button" className="ms-btn" onClick={() => void deleteNote()} disabled={busy}>
               Delete
@@ -174,7 +180,7 @@ export default function WorkspacePage() {
       {error ? <p className="ms-sev-critical">{error}</p> : null}
       <div className="ms-notes-layout">
         <div className="ms-panel ms-notes-field">
-          <LineEditor value={body} onChange={setBody} storageKey={activeId ?? "draft"} continuousSelection />
+          {previewingMarkdown ? <div className="ms-workspace-markdown" role="region" aria-label="Markdown preview" tabIndex={0}><MarkdownPreview value={body} /></div> : <LineEditor value={body} onChange={setBody} storageKey={activeId ?? "draft"} continuousSelection />}
         </div>
         <aside className="ms-panel ms-notes-saved">
           <h2 className="ms-panel-title">Saved notes</h2>

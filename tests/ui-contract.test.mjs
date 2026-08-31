@@ -31,6 +31,7 @@ const historyPage = await readFile(new URL("../src/app/(shell)/history/page.tsx"
 const connectPage = await readFile(new URL("../src/app/(shell)/connect/page.tsx", import.meta.url), "utf8");
 const aoCatalog = await readFile(new URL("../src/lib/ao-catalog.ts", import.meta.url), "utf8");
 const todoModel = await readFile(new URL("../src/lib/todo-model.ts", import.meta.url), "utf8");
+const markdownPreview = await readFile(new URL("../src/components/MarkdownPreview.tsx", import.meta.url), "utf8");
 
 test("Verify uses Workspace notes, an evidence chat, and grounded findings", () => {
   assert.match(verifyPage, /api<Note\[]>\("\/api\/v1\/notes"\)/);
@@ -211,6 +212,17 @@ test("FTR 1011 selects existing objects and keeps mobile rail labels visible", (
   assert.match(globalCss, /\.ms-create-macro-save:hover, \.ms-create-macro-save:focus-visible/);
   assert.match(globalCss, /\.ms-rail-label \{ display: block; font-size: 8px; \}/);
   assert.match(globalCss, /\.ms-rail-item \{ display: block; overflow: hidden; padding: 8px 4px; font-size: 9px;/);
+});
+
+test("FTR 1012.2 renders ordinary Markdown in Workspace without removing editing", () => {
+  assert.match(workspacePage, /MarkdownPreview/);
+  assert.match(workspacePage, /Preview Markdown/);
+  assert.match(workspacePage, /Edit Markdown/);
+  assert.match(workspacePage, /aria-label="Markdown preview"/);
+  assert.match(workspacePage, /<LineEditor value=\{body\}/);
+  for (const structure of ["tableDivider", "ms-markdown-tasks", "ms-markdown-code", "blockquote"]) assert.match(markdownPreview, new RegExp(structure));
+  assert.match(globalCss, /\.ms-workspace-markdown/);
+  assert.match(globalCss, /\.ms-markdown-table/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {
