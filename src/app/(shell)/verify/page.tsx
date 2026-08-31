@@ -1,195 +1,61 @@
 "use client";
 
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Workspace } from "@/ui";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { api } from "@/lib/client-api";
-import { userStorageKey } from "@/lib/user-storage";
+import { api, ApiError } from "@/lib/client-api";
 
-type Source = { id: string; name: string; topicTag: string; status: string };
-
-type Finding = {
-  id: string;
-  analyzerId: string;
-  title: string;
-  severity: string;
-  confidence: number;
-  explanation: string;
-  evidence: { metric: string; detail: string; value?: number }[];
-  recommendedFixes: { id: string; title: string; summary: string; actions: string[] }[];
+type Note = { id: string; title: string; body: string; updatedAt: string };
+type ChatMessage = { role: "user" | "assistant"; content: string };
+type Verification = {
+  note: { id: string; title: string; updatedAt: string }; summary: string; method: string[];
+  confirmed: { assertion: string; status: "confirmed" | "partially-confirmed" | "unconfirmed" | "contradicted"; explanation: string; evidenceIds: string[] }[];
+  evidence: { id: string; title: string; url: string; publisher: string; relevance: string }[];
+  uncertainty: string[]; trustScore: number; trustRationale: string; answer: string;
 };
-
-type Diagnosis = {
-  sourceId: string;
-  analyzedAt: string;
-  findingCount: number;
-  findings: Finding[];
-};
-
-const SAMPLE_CSV = `claim,expires_at,evidence_pointer
-Onboarding FAQ is current,2026-01-01,docs/faq.md
-API rate limit is 100 req/min,2025-06-01,
-Use Postgres for the ledger,2026-12-31,adr/0001.md
-Staging URL is still valid,2024-01-01,https://staging.example.invalid`;
 
 export default function VerifyPage() {
-  const [sources, setSources] = useState<Source[]>([]);
-  const [sourceId, setSourceId] = useState("");
-  const [claimsText, setClaimsText] = useState(SAMPLE_CSV);
-  const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]); const [noteId, setNoteId] = useState(""); const [context, setContext] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]); const [chatInput, setChatInput] = useState(""); const [findings, setFindings] = useState<Verification | null>(null);
+  const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null); const conversationRef = useRef<HTMLDivElement>(null);
 
-  const loadSources = useCallback(async () => {
-    const list = await api<Source[]>("/api/v1/sources");
-    setSources(list);
-    const stored = localStorage.getItem(userStorageKey("knowledge:active-source"));
-    if (stored && list.some((r) => r.id === stored)) {
-      setSourceId(stored);
-    } else if (list[0]) {
-      setSourceId(list[0].id);
-    }
-  }, []);
+  const loadNotes = useCallback(async () => { const list = await api<Note[]>("/api/v1/notes"); setNotes(list); setNoteId((current) => list.some((note) => note.id === current) ? current : list[0]?.id ?? ""); }, []);
+  useEffect(() => { void loadNotes().catch((reason) => { if (!(reason instanceof ApiError && reason.status === 401)) setError(reason instanceof Error ? reason.message : "Could not load Workspace notes."); }); }, [loadNotes]);
+  useEffect(() => { const element = conversationRef.current; if (element) element.scrollTop = element.scrollHeight; }, [messages, busy]);
+  useEffect(() => { setMessages([]); setFindings(null); setError(null); }, [noteId]);
 
-  useEffect(() => {
-    void loadSources().catch((e) => setError(e instanceof Error ? e.message : "Load failed"));
-  }, [loadSources]);
-
-  useEffect(() => {
-    if (sourceId) localStorage.setItem(userStorageKey("knowledge:active-source"), sourceId);
-  }, [sourceId]);
-
-  const activeSource = useMemo(
-    () => sources.find((r) => r.id === sourceId),
-    [sources, sourceId],
-  );
-
-  async function ingestAndVerify() {
-    if (!sourceId) {
-      setError("Create a source first");
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    setMessage(null);
-    try {
-      await api(`/api/v1/sources/${sourceId}/claims`, {
-        method: "POST",
-        body: JSON.stringify({ text: claimsText }),
-      });
-      const result = await api<Diagnosis>(`/api/v1/sources/${sourceId}/verify`, {
-        method: "POST",
-      });
-      setDiagnosis(result);
-      setMessage(`Verified ${result.findingCount} finding(s)`);
-      await loadSources();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Verify failed");
-    } finally {
-      setBusy(false);
-    }
+  async function verify(nextMessages: ChatMessage[]) {
+    if (!noteId || !context.trim()) return; setBusy(true); setError(null);
+    try { const result = await api<Verification>("/api/v1/verify-note", { method: "POST", body: JSON.stringify({ noteId, context, messages: nextMessages }) }); setFindings(result); setMessages([...nextMessages, { role: "assistant", content: result.answer }]); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Verification failed."); }
+    finally { setBusy(false); }
   }
+  function startVerify() { setMessages([]); setFindings(null); void verify([]); }
+  function sendFollowUp(event: FormEvent) { event.preventDefault(); const text = chatInput.trim(); if (!text || busy || !findings) return; const next = [...messages, { role: "user" as const, content: text }]; setMessages(next); setChatInput(""); void verify(next); }
 
-  async function applyFix(finding: Finding, fixId: string) {
-    try {
-      await api(`/api/v1/sources/${sourceId}/fixes`, {
-        method: "POST",
-        body: JSON.stringify({ findingId: finding.id, fixId, status: "applied" }),
-      });
-      setMessage(`Applied fix and wrote documentation to history`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Apply failed");
-    }
-  }
-
-  return (
-    <Workspace
-      title="Verify"
-      subtitle={activeSource ? `${activeSource.name} · ${activeSource.topicTag}` : "Select a source"}
-      actions={
-        <button className="ms-btn ms-btn-primary" type="button" disabled={busy} onClick={() => void ingestAndVerify()}>
-          {busy ? "Working…" : "Ingest + verify"}
-        </button>
-      }
-    >
-      <div className="ms-grid-2">
-        <div className="ms-stack">
-          <div className="ms-panel">
-            <h2 className="ms-panel-title">Source</h2>
-            <select
-              className="ms-select"
-              value={sourceId}
-              onChange={(e) => setSourceId(e.target.value)}
-            >
-              {sources.length === 0 ? <option value="">No sources</option> : null}
-              {sources.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name} ({r.status})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="ms-panel">
-            <h2 className="ms-panel-title">Claims (CSV / JSON)</h2>
-            <textarea
-              className="ms-textarea"
-              style={{ minHeight: 220, maxWidth: "100%" }}
-              value={claimsText}
-              onChange={(e) => setClaimsText(e.target.value)}
-              spellCheck={false}
-            />
-            <p className="ms-muted ms-mono" style={{ marginTop: 6 }}>
-              Sample includes expired + missing evidence pointers
-            </p>
-          </div>
-          {error ? <p className="ms-sev-critical">{error}</p> : null}
-          {message ? <p className="ms-muted">{message}</p> : null}
+  return <Workspace title="Verify" subtitle={findings ? `${findings.note.title} · evidence review` : "Verify a Workspace note against factual evidence"}>
+    <div className="ms-verify-grid">
+      <section className="ms-verify-interaction">
+        <div className="ms-verify-controls">
+          <label>Workspace source<select className="ms-select" aria-label="Workspace source" value={noteId} onChange={(event) => setNoteId(event.target.value)}><option value="">{notes.length ? "Choose a note…" : "No Workspace notes"}</option>{notes.map((note) => <option key={note.id} value={note.id}>{note.title}</option>)}</select></label>
+          <label>Context<textarea className="ms-textarea" aria-label="Verification context" value={context} onChange={(event) => setContext(event.target.value)} placeholder="Add background and state exactly what you want verified about this note." /></label>
+          <button type="button" className="ms-btn ms-btn-primary" disabled={busy || !noteId || !context.trim()} onClick={startVerify}>{busy && !findings ? "Verifying…" : "Start Verify"}</button>
         </div>
-
-        <div className="ms-panel" style={{ overflow: "auto" }}>
-          <h2 className="ms-panel-title">Findings</h2>
-          {!diagnosis ? (
-            <p className="ms-muted">Run ingest + verify to populate this canvas.</p>
-          ) : diagnosis.findings.length === 0 ? (
-            <p className="ms-muted">No issues detected for this series.</p>
-          ) : (
-            diagnosis.findings.map((f) => (
-              <article key={f.id} className="ms-finding">
-                <div className="ms-row">
-                  <strong>{f.title}</strong>
-                  <span className={`ms-sev-${f.severity}`}>{f.severity}</span>
-                  <span className="ms-mono ms-muted">
-                    {(f.confidence * 100).toFixed(0)}% · {f.analyzerId}
-                  </span>
-                </div>
-                <p style={{ margin: "6px 0", maxWidth: 720 }}>{f.explanation}</p>
-                <ul className="ms-mono ms-muted" style={{ margin: "0 0 8px", paddingLeft: 16 }}>
-                  {f.evidence.map((e, i) => (
-                    <li key={`${f.id}-${i}`}>
-                      {e.metric}: {e.detail}
-                      {e.value !== undefined ? ` (${e.value})` : ""}
-                    </li>
-                  ))}
-                </ul>
-                <div className="ms-stack">
-                  {f.recommendedFixes.map((fix) => (
-                    <div key={fix.id} className="ms-row">
-                      <span>{fix.title}</span>
-                      <button
-                        type="button"
-                        className="ms-btn"
-                        onClick={() => void applyFix(f, fix.id)}
-                      >
-                        Apply + document
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            ))
-          )}
+        <div className="ms-verify-chat" aria-label="Verification conversation">
+          <div className="ms-verify-messages" ref={conversationRef}>{messages.length ? messages.map((message, index) => <article className={`ms-verify-message is-${message.role}`} key={`${message.role}-${index}`}><strong>{message.role === "assistant" ? "Verify" : "You"}</strong><p>{message.content}</p></article>) : <div className="ms-verify-empty"><strong>Evidence-focused verification</strong><p>Select a Workspace note, provide context, and start. Verify will identify factual assertions, seek provenance and corroboration, and clearly label uncertainty.</p></div>}{busy && findings ? <p className="ms-muted">Checking evidence…</p> : null}</div>
+          <form className="ms-verify-chat-input" onSubmit={sendFollowUp}><input aria-label="Ask about these findings" value={chatInput} onChange={(event) => setChatInput(event.target.value)} placeholder={findings ? "Ask about evidence, provenance, or uncertainty…" : "Start verification to ask follow-up questions"} disabled={!findings || busy} /><button type="submit" disabled={!findings || busy || !chatInput.trim()}>Send</button></form>
         </div>
-      </div>
-    </Workspace>
-  );
+        {error ? <p className="ms-sev-critical">{error}</p> : null}
+      </section>
+      <aside className="ms-panel ms-verify-findings">
+        <h2 className="ms-panel-title">Findings</h2>
+        {!findings ? <div className="ms-verify-findings-empty"><p>Findings appear here after verification.</p><small>The report will show method, confirmed assertions, supporting evidence, uncertainty, and a grounded trust score.</small></div> : <>
+          <div className="ms-trust-score"><span>{findings.trustScore}</span><div><strong>Evidence trust score</strong><p>{findings.trustRationale}</p></div></div>
+          <section><h3>How it was checked</h3><p>{findings.summary}</p><ol>{findings.method.map((step) => <li key={step}>{step}</li>)}</ol></section>
+          <section><h3>Assertions</h3>{findings.confirmed.map((item, index) => <article className="ms-verified-assertion" key={`${item.assertion}-${index}`}><span className={`is-${item.status}`}>{item.status}</span><strong>{item.assertion}</strong><p>{item.explanation}</p>{item.evidenceIds.length ? <small>Evidence: {item.evidenceIds.join(", ")}</small> : null}</article>)}</section>
+          <section><h3>Sources and evidence</h3>{findings.evidence.length ? findings.evidence.map((item) => <article className="ms-verify-evidence" key={item.id}><span>{item.id}</span><div><a href={item.url} target="_blank" rel="noreferrer">{item.title}</a><small>{item.publisher} · {item.relevance}</small></div></article>) : <p className="ms-muted">No supporting external evidence was found.</p>}</section>
+          <section><h3>Uncertainty</h3>{findings.uncertainty.length ? <ul>{findings.uncertainty.map((item) => <li key={item}>{item}</li>)}</ul> : <p>No material uncertainty was reported.</p>}</section>
+        </>}
+      </aside>
+    </div>
+  </Workspace>;
 }

@@ -24,6 +24,22 @@ const agentChatCss = await readFile(new URL("../src/components/AgentSideChat.mod
 const agentChatRoute = await readFile(new URL("../src/app/api/v1/agent/chat/route.ts", import.meta.url), "utf8");
 const userStateRoute = await readFile(new URL("../src/app/api/v1/user-state/route.ts", import.meta.url), "utf8");
 const rail = await readFile(new URL("../src/ui/Rail.tsx", import.meta.url), "utf8");
+const verifyPage = await readFile(new URL("../src/app/(shell)/verify/page.tsx", import.meta.url), "utf8");
+const verifyNoteRoute = await readFile(new URL("../src/app/api/v1/verify-note/route.ts", import.meta.url), "utf8");
+
+test("Verify uses Workspace notes, an evidence chat, and grounded findings", () => {
+  assert.match(verifyPage, /api<Note\[]>\("\/api\/v1\/notes"\)/);
+  for (const label of ["Workspace source", "Context", "Start Verify", "Verification conversation", "Findings", "How it was checked", "Assertions", "Sources and evidence", "Uncertainty", "Evidence trust score"]) assert.match(verifyPage, new RegExp(label));
+  assert.doesNotMatch(verifyPage, /Claims \(CSV \/ JSON\)|Ingest \+ verify/);
+  assert.match(verifyPage, /ms-verify-chat-input/);
+  assert.match(verifyNoteRoute, /WHERE id = \? AND user_id = \?/);
+  assert.match(verifyNoteRoute, /web_search_preview/);
+  assert.match(verifyNoteRoute, /provenance/);
+  assert.match(verifyNoteRoute, /corroborat/);
+  assert.match(verifyNoteRoute, /uncertainty/);
+  assert.match(globalCss, /\.ms-verify-messages \{[^}]*overflow-y: auto/);
+  assert.match(globalCss, /\.ms-verify-chat-input/);
+});
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
