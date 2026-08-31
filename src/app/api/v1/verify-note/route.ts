@@ -19,6 +19,46 @@ const FindingSchema = z.object({
   uncertainty: z.array(z.string()), trustScore: z.number().min(0).max(100), trustRationale: z.string(), answer: z.string(),
 });
 
+const findingJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["summary", "method", "confirmed", "evidence", "uncertainty", "trustScore", "trustRationale", "answer"],
+  properties: {
+    summary: { type: "string" },
+    method: { type: "array", items: { type: "string" } },
+    confirmed: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["assertion", "status", "explanation", "evidenceIds"],
+        properties: {
+          assertion: { type: "string" },
+          status: { type: "string", enum: ["confirmed", "partially-confirmed", "unconfirmed", "contradicted"] },
+          explanation: { type: "string" },
+          evidenceIds: { type: "array", items: { type: "string" } },
+        },
+      },
+    },
+    evidence: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "title", "url", "publisher", "relevance"],
+        properties: {
+          id: { type: "string" }, title: { type: "string" }, url: { type: "string" },
+          publisher: { type: "string" }, relevance: { type: "string" },
+        },
+      },
+    },
+    uncertainty: { type: "array", items: { type: "string" } },
+    trustScore: { type: "number", minimum: 0, maximum: 100 },
+    trustRationale: { type: "string" },
+    answer: { type: "string" },
+  },
+} as const;
+
 function responseText(payload: unknown) {
   if (!payload || typeof payload !== "object") return "";
   const direct = (payload as { output_text?: unknown }).output_text; if (typeof direct === "string") return direct;
@@ -37,14 +77,20 @@ export async function POST(req: Request) {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-5-mini", tools: [{ type: "web_search_preview" }], max_output_tokens: 3000,
+      model: "gpt-5-mini", reasoning: { effort: "low" }, tools: [{ type: "web_search_preview" }], max_output_tokens: 16_000,
+      text: { format: { type: "json_schema", name: "verification_findings", strict: true, schema: findingJsonSchema } },
       instructions: `You are Work Sync Verify, a rigorous fact-checking assistant. Check factual assertions against primary, authoritative, and independent corroborating sources. Track provenance. Separate confirmed, partially confirmed, unconfirmed, and contradicted assertions. State uncertainty and never convert absence of evidence into confirmation. Return JSON only with this shape: {"summary":string,"method":string[],"confirmed":[{"assertion":string,"status":"confirmed"|"partially-confirmed"|"unconfirmed"|"contradicted","explanation":string,"evidenceIds":string[]}],"evidence":[{"id":string,"title":string,"url":string,"publisher":string,"relevance":string}],"uncertainty":string[],"trustScore":number 0-100,"trustRationale":string,"answer":string}. Every evidence ID cited by an assertion must exist in evidence. The trust score must reflect evidence quality, provenance, corroboration, recency, contradictions, and unresolved uncertainty—not writing quality.`,
       input: [{ role: "user", content: `Workspace note title: ${note.title}\n\nSource text:\n${note.body}\n\nVerification context and requested checks:\n${parsed.data.context}` }, ...parsed.data.messages],
     }),
   });
   if (!response.ok) return NextResponse.json({ error: "Verification service could not complete the check.", detail: (await response.text()).slice(0, 500) }, { status: response.status || 502 });
-  const raw = responseText(await response.json());
-  let decoded: unknown; try { decoded = JSON.parse(raw.replace(/^```json\s*/i, "").replace(/\s*```$/, "")); } catch { return NextResponse.json({ error: "Verification service returned an unreadable findings report." }, { status: 502 }); }
-  const finding = FindingSchema.safeParse(decoded); if (!finding.success) return NextResponse.json({ error: "Verification service returned an incomplete findings report." }, { status: 502 });
+  const payload = await response.json();
+  const raw = responseText(payload);
+  let decoded: unknown; try { decoded = JSON.parse(raw); } catch {
+    const status = (payload as { status?: unknown }).status;
+    const reason = (payload as { incomplete_details?: { reason?: unknown } }).incomplete_details?.reason;
+    return NextResponse.json({ error: status === "incomplete" ? `Verification stopped before completing${typeof reason === "string" ? ` (${reason})` : ""}. Please try again.` : "Verification service returned an unreadable findings report." }, { status: 502 });
+  }
+  const finding = FindingSchema.safeParse(decoded); if (!finding.success) return NextResponse.json({ error: "Verification service returned an incomplete findings report.", detail: finding.error.issues[0]?.message }, { status: 502 });
   return NextResponse.json({ note: { id: note.id, title: note.title, updatedAt: note.updated_at }, ...finding.data });
 }

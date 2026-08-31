@@ -42,6 +42,13 @@ test("Verify uses Workspace notes, an evidence chat, and grounded findings", () 
   assert.match(globalCss, /\.ms-verify-chat-input/);
 });
 
+test("Verify requires a complete structured findings response", () => {
+  assert.match(verifyNoteRoute, /type: "json_schema", name: "verification_findings", strict: true/);
+  assert.match(verifyNoteRoute, /reasoning: \{ effort: "low" \}/);
+  assert.match(verifyNoteRoute, /max_output_tokens: 16_000/);
+  assert.match(verifyNoteRoute, /status === "incomplete"/);
+});
+
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
   assert.match(editor, /<LiquidChromeOrb size=\{16\} title="Ask AI"/);
