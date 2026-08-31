@@ -107,10 +107,15 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   }
   function focusSoon(id: string, offset = 0) {
     requestAnimationFrame(() => {
-      if (continuousSelection) { const textarea = continuousTextarea.current; const at = linesRef.current.findIndex((line) => line.id === id); if (!textarea || at < 0) return; const position = linesRef.current.slice(0, at).reduce((total, line) => total + line.text.length + 1, 0) + offset; textarea.focus(); textarea.setSelectionRange(position, position); return; }
-      const editor = editors.current[id]; if (!editor) return; editor.focus();
-      const range = document.createRange(); const selection = window.getSelection(); const node = editor.firstChild ?? editor;
-      range.setStart(node, Math.min(offset, node.textContent?.length ?? 0)); range.collapse(true); selection?.removeAllRanges(); selection?.addRange(range);
+      // Formatting changes alter the visual line before the parent note state has
+      // settled. A second frame restores the native caret against that finished
+      // line, rather than the previous visual layout.
+      requestAnimationFrame(() => {
+        if (continuousSelection) { const textarea = continuousTextarea.current; const at = linesRef.current.findIndex((line) => line.id === id); if (!textarea || at < 0) return; const line = linesRef.current[at]!; const position = linesRef.current.slice(0, at).reduce((total, item) => total + item.text.length + 1, 0) + Math.min(Math.max(offset, 0), line.text.length); textarea.focus(); textarea.setSelectionRange(position, position); return; }
+        const editor = editors.current[id]; if (!editor) return; editor.focus();
+        const range = document.createRange(); const selection = window.getSelection(); const node = editor.firstChild ?? editor;
+        range.setStart(node, Math.min(offset, node.textContent?.length ?? 0)); range.collapse(true); selection?.removeAllRanges(); selection?.addRange(range);
+      });
     });
   }
   function insert(id: string, offset: -1 | 1) {
@@ -139,7 +144,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     const pasted = event.clipboardData.getData("text/plain"); if (!pasted) return;
     event.preventDefault(); const current = linesRef.current; const liveLine = current.find((item) => item.id === line.id) ?? line; const at = current.findIndex((item) => item.id === line.id); const selection = selectionOffsets(editor); const before = liveLine.text.slice(0, selection.start); const after = liveLine.text.slice(selection.end); const wrapped = wrapExternalText(pasted); const replacement = wrapped.map((text, index) => index === 0 ? { ...liveLine, text: before + text } : makeLine(text)); replacement[replacement.length - 1] = { ...replacement[replacement.length - 1]!, text: replacement[replacement.length - 1]!.text + after }; if (continuousSelection) editor.textContent = replacement[0]!.text; const next = [...current]; next.splice(at, 1, ...replacement); commit(next); const target = replacement.at(-1)!; focusSoon(target.id, target.text.length - after.length);
   }
-  function setKind(id: string, kind: BlockKind) { const line = linesRef.current.find((item) => item.id === id); update(id, { kind }); setActive(null); if (kind === "h1" || kind === "h2" || kind === "h3" || kind === "h4") focusSoon(id, line?.text.length ?? 0); }
+  function setKind(id: string, kind: BlockKind) { update(id, { kind }); setActive(null); if (kind === "h1" || kind === "h2" || kind === "h3" || kind === "h4") { const current = linesRef.current.find((line) => line.id === id); focusSoon(id, current?.text.length ?? 0); } }
   function addComment(line: Line) {
     const text = comment.trim(); if (!text) return;
     update(line.id, { comments: [...line.comments, text] }); setComment(""); setCommenting(false);

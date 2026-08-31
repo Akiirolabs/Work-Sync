@@ -172,7 +172,8 @@ test("Workspace and table pages use one native multiline control for cross-line 
 });
 
 test("FTR 1009.2 updates Workspace controls, table icons, and Vault text actions", () => {
-  assert.match(editor, /if \(kind === "h1" \|\| kind === "h2" \|\| kind === "h3" \|\| kind === "h4"\) focusSoon\(id, line\?\.text\.length \?\? 0\)/);
+  assert.match(editor, /if \(kind === "h1" \|\| kind === "h2" \|\| kind === "h3" \|\| kind === "h4"\) \{ const current = linesRef\.current\.find/);
+  assert.match(editor, /focusSoon\(id, current\?\.text\.length \?\? 0\)/);
   assert.match(workspacePage, /Saved to cloud/);
   assert.doesNotMatch(workspacePage, /Save as/);
   for (const label of ["Edit title", "Duplicate", "Delete"]) assert.match(workspacePage, new RegExp(label));
@@ -225,6 +226,13 @@ test("FTR 1012.3 turns pasted Markdown into editable Workspace structure", () =>
   assert.match(workspacePage, /<LineEditor value=\{body\}/);
   for (const structure of ["markdownLines", "hasMarkdownStructure", "kind: \"bullets\"", "kind: \"numbered\"", "kind: \"todo\"", "kind: \"code\""]) assert.match(editor, new RegExp(structure));
   assert.match(editor, /pasteMarkdown\(nextValue/);
+});
+
+test("FTR 1012.4 restores the heading caret after the formatted line settles", () => {
+  assert.match(editor, /A second frame restores the native caret/);
+  assert.match(editor, /requestAnimationFrame\(\(\) => \{[\s\S]*requestAnimationFrame\(\(\) => \{/);
+  assert.match(editor, /Math\.min\(Math\.max\(offset, 0\), line\.text\.length\)/);
+  assert.match(editor, /focusSoon\(id, current\?\.text\.length \?\? 0\)/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {
