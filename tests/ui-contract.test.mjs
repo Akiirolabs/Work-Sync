@@ -116,6 +116,12 @@ test("account hydration does not create a reload loop", () => {
   assert.match(account, /if \(nextUser\) stopSync = startUserStorageSync\(nextUser\.id\)/);
 });
 
+test("cloud storage sync absorbs transient network failures and backs off retries", () => {
+  assert.match(userStorage, /catch \{[\s\S]*retry quietly instead of producing an unhandled rejection/);
+  assert.match(userStorage, /Math\.min\(retryDelay \* 2, 30_000\)/);
+  assert.doesNotMatch(userStorage, /uploadUserStorage\(userId\)\.finally\(schedule\)/);
+});
+
 test("Workspace notes and sources are constrained to their database owner", () => {
   assert.match(notesRoute, /WHERE user_id IS \?/);
   assert.match(notesRoute, /INSERT INTO workspace_notes \(id, user_id/);

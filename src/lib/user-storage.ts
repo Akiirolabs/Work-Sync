@@ -40,19 +40,25 @@ function applyUserStorage(userId: string, entries: Record<string, string>): void
   }
 }
 
-async function uploadUserStorage(userId: string): Promise<void> {
+async function uploadUserStorage(userId: string): Promise<boolean> {
   const entries = collectUserStorage(userId);
   const serialized = JSON.stringify(entries);
-  if (userId === lastUploadedUser && serialized === lastUploaded) return;
-  const response = await fetch("/api/v1/user-state", {
-    method: "PUT",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ entries }),
-    keepalive: true,
-  });
-  if (response.ok) {
+  if (userId === lastUploadedUser && serialized === lastUploaded) return true;
+  try {
+    const response = await fetch("/api/v1/user-state", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ entries }),
+      keepalive: true,
+    });
+    if (!response.ok) return false;
     lastUploadedUser = userId;
     lastUploaded = serialized;
+    return true;
+  } catch {
+    // The development server can briefly disappear during a rebuild. Keep the
+    // local state and retry quietly instead of producing an unhandled rejection.
+    return false;
   }
 }
 
@@ -82,10 +88,16 @@ export async function hydrateUserStorage(userId: string, preserveLocalOnly = fal
 
 export function startUserStorageSync(userId: string): () => void {
   let stopped = false;
-  const schedule = () => {
+  let retryDelay = 1_500;
+  const schedule = (delay = retryDelay) => {
     if (stopped) return;
     if (syncTimer) clearTimeout(syncTimer);
-    syncTimer = setTimeout(() => { void uploadUserStorage(userId).finally(schedule); }, 1_500);
+    syncTimer = setTimeout(() => {
+      void uploadUserStorage(userId).then((uploaded) => {
+        retryDelay = uploaded ? 1_500 : Math.min(retryDelay * 2, 30_000);
+        schedule();
+      });
+    }, delay);
   };
   schedule();
   const flush = () => { void uploadUserStorage(userId); };
