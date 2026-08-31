@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { AO_MACROS_CHANGED_EVENT, AO_MACROS_KEY, AO_OPEN_MACRO_MENU_EVENT, AO_RUN_MAIN_MACRO_EVENT, type AOMacroPreset } from "@/lib/ao-macro";
 import { userStorageKey } from "@/lib/user-storage";
 import styles from "./MacroPanels.module.css";
 
 const LIMIT = 6;
+const RADIAL_SIZE = 150;
+const EDGE_MARGIN = 8;
+const RADIAL_POSITION_KEY = "work-sync:macro-panel-position";
+const RADIAL_OPEN_KEY = "work-sync:macro-panel-open";
+type Position = { left: number; top: number };
 
 function readMainMacros(): AOMacroPreset[] {
   try {
@@ -14,40 +19,85 @@ function readMainMacros(): AOMacroPreset[] {
   } catch { return []; }
 }
 
-function MacroButtons({ items, radial = false, close }: { items: AOMacroPreset[]; radial?: boolean; close: () => void }) {
+function MacroButtons({ items, radial = false, close }: { items: AOMacroPreset[]; radial?: boolean; close?: () => void }) {
   if (!items.length) return <p className={styles.empty}>Choose Main Macros in Vault.</p>;
   return <div className={radial ? styles.radialButtons : styles.grid}>{items.map((item, index) => <button
     type="button" key={item.id} title={item.label} aria-label={`Run ${item.label}`}
     style={radial ? { "--macro-index": index, "--macro-count": items.length } as React.CSSProperties : undefined}
-    onClick={() => { window.dispatchEvent(new CustomEvent(AO_RUN_MAIN_MACRO_EVENT, { detail: { presetId: item.id } })); close(); }}
+    onClick={() => { window.dispatchEvent(new CustomEvent(AO_RUN_MAIN_MACRO_EVENT, { detail: { presetId: item.id } })); close?.(); }}
   ><span>{item.icon || "◇"}</span><small>{item.label}</small></button>)}</div>;
 }
 
 export function MacroPanels({ onAgent }: { onAgent: () => void }) {
   const root = useRef<HTMLDivElement>(null);
+  const radial = useRef<HTMLElement>(null);
+  const drag = useRef<{ pointerId: number; offsetX: number; offsetY: number } | null>(null);
   const [items, setItems] = useState<AOMacroPreset[]>([]);
   const [compactOpen, setCompactOpen] = useState(false);
   const [radialOpen, setRadialOpen] = useState(false);
+  const [radialPosition, setRadialPosition] = useState<Position | null>(null);
+  const [dragging, setDragging] = useState(false);
   const refresh = () => setItems(readMainMacros());
 
-  useEffect(() => { refresh(); window.addEventListener(AO_MACROS_CHANGED_EVENT, refresh); return () => window.removeEventListener(AO_MACROS_CHANGED_EVENT, refresh); }, []);
+  function clampPosition(position: Position): Position {
+    return {
+      left: Math.max(EDGE_MARGIN, Math.min(position.left, window.innerWidth - RADIAL_SIZE - EDGE_MARGIN)),
+      top: Math.max(EDGE_MARGIN, Math.min(position.top, window.innerHeight - RADIAL_SIZE - EDGE_MARGIN)),
+    };
+  }
+
+  function initialPosition(): Position {
+    try {
+      const saved = JSON.parse(localStorage.getItem(userStorageKey(RADIAL_POSITION_KEY)) ?? "null") as Partial<Position> | null;
+      if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) return clampPosition({ left: saved.left!, top: saved.top! });
+    } catch { /* use the default position */ }
+    return clampPosition({ left: 18, top: window.innerHeight - RADIAL_SIZE - 17 });
+  }
+
+  function toggleRadial() {
+    refresh(); setCompactOpen(false);
+    setRadialPosition((current) => current ?? initialPosition());
+    setRadialOpen((value) => { const next = !value; sessionStorage.setItem(RADIAL_OPEN_KEY, String(next)); return next; });
+  }
+
+  function beginDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    const panel = radial.current; if (!panel) return;
+    const rect = panel.getBoundingClientRect();
+    drag.current = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+    event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); event.preventDefault();
+  }
+
+  function moveDrag(event: PointerEvent) {
+    if (!drag.current || drag.current.pointerId !== event.pointerId) return;
+    setRadialPosition(clampPosition({ left: event.clientX - drag.current.offsetX, top: event.clientY - drag.current.offsetY }));
+  }
+
+  function endDrag(event: Pick<PointerEvent, "pointerId">) {
+    if (!drag.current || drag.current.pointerId !== event.pointerId) return;
+    drag.current = null; setDragging(false);
+    setRadialPosition((current) => { if (current) localStorage.setItem(userStorageKey(RADIAL_POSITION_KEY), JSON.stringify(current)); return current; });
+  }
+
+  useEffect(() => { refresh(); setRadialPosition(initialPosition()); setRadialOpen(sessionStorage.getItem(RADIAL_OPEN_KEY) === "true"); window.addEventListener(AO_MACROS_CHANGED_EVENT, refresh); return () => window.removeEventListener(AO_MACROS_CHANGED_EVENT, refresh); }, []);
   useEffect(() => {
     function keydown(event: KeyboardEvent) {
-      if (event.ctrlKey && event.key.toLowerCase() === "m") { event.preventDefault(); refresh(); setCompactOpen(false); setRadialOpen((value) => !value); }
-      if (event.key === "Escape") { setCompactOpen(false); setRadialOpen(false); }
+      if (event.ctrlKey && event.key.toLowerCase() === "m") { event.preventDefault(); toggleRadial(); }
+      if (event.key === "Escape") setCompactOpen(false);
     }
-    function outside(event: PointerEvent) { if (!root.current?.contains(event.target as Node)) { setCompactOpen(false); setRadialOpen(false); } }
-    document.addEventListener("keydown", keydown); document.addEventListener("pointerdown", outside);
-    return () => { document.removeEventListener("keydown", keydown); document.removeEventListener("pointerdown", outside); };
+    function outside(event: PointerEvent) { if (!root.current?.contains(event.target as Node)) setCompactOpen(false); }
+    function resize() { setRadialPosition((current) => current ? clampPosition(current) : current); }
+    document.addEventListener("keydown", keydown); document.addEventListener("pointerdown", outside); document.addEventListener("pointermove", moveDrag); document.addEventListener("pointerup", endDrag); document.addEventListener("pointercancel", endDrag);
+    window.addEventListener("resize", resize);
+    return () => { document.removeEventListener("keydown", keydown); document.removeEventListener("pointerdown", outside); document.removeEventListener("pointermove", moveDrag); document.removeEventListener("pointerup", endDrag); document.removeEventListener("pointercancel", endDrag); window.removeEventListener("resize", resize); };
   }, []);
 
   return <div ref={root} className={styles.root}>
     <div className={styles.headerActions}>
-      <button type="button" aria-expanded={compactOpen} onClick={() => { refresh(); setRadialOpen(false); setCompactOpen((value) => !value); }}>Macro Panel</button>
+      <button type="button" aria-expanded={compactOpen} onClick={() => { refresh(); setCompactOpen((value) => !value); }}>Macro Panel</button>
       <button type="button" onClick={onAgent}>Agent</button>
     </div>
     {compactOpen && <section className={styles.compact} role="dialog" aria-label="Macro Panel shortcuts"><header><strong>Main Macros</strong><button type="button" aria-label="Open full Macro menu" onClick={() => window.dispatchEvent(new Event(AO_OPEN_MACRO_MENU_EVENT))}>Vault ›</button></header><MacroButtons items={items} close={() => setCompactOpen(false)} /></section>}
-    <button type="button" className={styles.dot} aria-label="Open circular Macro Panel" aria-expanded={radialOpen} title="Macro Panel · Ctrl+M" onClick={() => { refresh(); setCompactOpen(false); setRadialOpen((value) => !value); }} />
-    {radialOpen && <section className={styles.radial} role="dialog" aria-label="Circular Macro Panel"><span className={styles.radialCenter}>AO</span><MacroButtons items={items} radial close={() => setRadialOpen(false)} /></section>}
+    <button type="button" className={styles.dot} aria-label="Toggle circular Macro Panel" aria-expanded={radialOpen} title="Macro Panel · Ctrl+M" onClick={toggleRadial} />
+    {radialOpen && <section ref={radial} className={`${styles.radial}${dragging ? ` ${styles.dragging}` : ""}`} style={radialPosition ? { left: radialPosition.left, top: radialPosition.top } as CSSProperties : undefined} role="dialog" aria-label="Circular Macro Panel"><button type="button" className={styles.radialCenter} aria-label="Move circular Macro Panel" onPointerDown={beginDrag}>AO</button><MacroButtons items={items} radial /></section>}
   </div>;
 }

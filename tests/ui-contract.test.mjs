@@ -23,6 +23,7 @@ const agentChat = await readFile(new URL("../src/components/AgentSideChat.tsx", 
 const agentChatCss = await readFile(new URL("../src/components/AgentSideChat.module.css", import.meta.url), "utf8");
 const agentChatRoute = await readFile(new URL("../src/app/api/v1/agent/chat/route.ts", import.meta.url), "utf8");
 const userStateRoute = await readFile(new URL("../src/app/api/v1/user-state/route.ts", import.meta.url), "utf8");
+const rail = await readFile(new URL("../src/ui/Rail.tsx", import.meta.url), "utf8");
 
 test("uses the animated atom in settings and Ask AI", () => {
   assert.match(account, /<LiquidChromeOrb size=\{17\}/);
@@ -274,6 +275,22 @@ test("two Macro Panel entrances expose no more than six Vault shortcuts", () => 
   assert.match(macroPanels, /className=\{styles\.dot\}/);
   assert.match(macroPanels, /aria-label="Circular Macro Panel"/);
   assert.match(macroPanels, /AO_RUN_MAIN_MACRO_EVENT/);
+});
+
+test("circular Macro Panel stays open across navigation and moves from its AO center", () => {
+  assert.match(macroPanels, /aria-label="Move circular Macro Panel"/);
+  assert.match(macroPanels, /setPointerCapture/);
+  assert.match(macroPanels, /document\.addEventListener\("pointermove", moveDrag\)/);
+  assert.match(macroPanels, /document\.addEventListener\("pointerup", endDrag\)/);
+  assert.match(macroPanels, /RADIAL_POSITION_KEY/);
+  assert.match(macroPanels, /sessionStorage\.setItem\(RADIAL_OPEN_KEY/);
+  assert.match(macroPanels, /sessionStorage\.getItem\(RADIAL_OPEN_KEY\) === "true"/);
+  assert.match(macroPanels, /localStorage\.setItem\(userStorageKey\(RADIAL_POSITION_KEY\)/);
+  assert.match(macroPanels, /aria-label="Toggle circular Macro Panel"/);
+  assert.doesNotMatch(macroPanels, /setRadialOpen\(false\)/);
+  assert.match(macroPanels, /<MacroButtons items=\{items\} radial \/>/);
+  assert.match(rail, /import Link from "next\/link"/);
+  assert.match(rail, /<Link key=\{item\.id\}/);
 });
 
 test("Agent is a simple authenticated streaming text side chat", () => {

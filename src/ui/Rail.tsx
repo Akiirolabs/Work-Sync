@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export type RailItem = {
   id: string;
   label: string;
@@ -14,9 +16,9 @@ export function Rail({ label, items, collapsed = false, onToggle }: { label?: st
         const className = `ms-rail-item${item.active ? " is-active" : ""}`;
         if (item.href) {
           return (
-            <a key={item.id} className={className} href={item.href}>
+            <Link key={item.id} className={className} href={item.href}>
               {item.label}
-            </a>
+            </Link>
           );
         }
         return (

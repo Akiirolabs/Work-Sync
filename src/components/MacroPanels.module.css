@@ -13,8 +13,10 @@
 .empty { margin: 12px 4px; color: var(--ms-text-dim); font-size: 10px; text-align: center; }
 .dot { position: fixed; z-index: 650; left: 76px; bottom: 33px; width: 10px; height: 10px; padding: 0; border: 1px solid #8ec9ef; border-radius: 50%; background: #76bfe8; box-shadow: 0 0 8px rgba(106,183,229,.9), 0 0 18px rgba(61,111,140,.6); cursor: pointer; }
 .dot:hover, .dot[aria-expanded="true"] { transform: scale(1.18); background: #d7f3ff; }
-.radial { position: fixed; z-index: 640; left: 18px; bottom: 17px; width: 150px; height: 150px; border: 1px solid var(--ms-edge); border-radius: 50%; background: radial-gradient(circle, #17232d 0 26%, #0a0f15 27% 100%); box-shadow: 0 18px 48px rgba(0,0,0,.72), 0 0 24px rgba(61,111,140,.22); }
-.radialCenter { position: absolute; inset: 56px; display: grid; place-items: center; border: 1px solid var(--ms-accent-soft); border-radius: 50%; color: var(--ms-text-bright); font: 12px var(--ms-font-mono); }
+.radial { position: fixed; z-index: 640; left: 18px; top: calc(100vh - 167px); width: 150px; height: 150px; border: 1px solid var(--ms-edge); border-radius: 50%; background: radial-gradient(circle, #17232d 0 26%, #0a0f15 27% 100%); box-shadow: 0 18px 48px rgba(0,0,0,.72), 0 0 24px rgba(61,111,140,.22); }
+.radial.dragging { user-select: none; box-shadow: 0 22px 58px rgba(0,0,0,.78), 0 0 30px rgba(94,174,220,.34); }
+.radialCenter { position: absolute; z-index: 2; inset: 56px; display: grid; place-items: center; padding: 0; border: 1px solid var(--ms-accent-soft); border-radius: 50%; background: #17232d; color: var(--ms-text-bright); font: 12px var(--ms-font-mono); cursor: grab; touch-action: none; }
+.radialCenter:active { cursor: grabbing; }
 .radialButtons button { --angle: calc((360deg / var(--macro-count)) * var(--macro-index) - 90deg); position: absolute; left: 59px; top: 59px; width: 32px; height: 32px; transform: rotate(var(--angle)) translateY(-52px) rotate(calc(-1 * var(--angle))); display: grid; place-items: center; border: 1px solid var(--ms-edge); border-radius: 7px; background: #111820; color: var(--ms-accent); cursor: pointer; }
 .radialButtons button:hover { border-color: #75b7dd; background: #1b2a35; color: #d8f2ff; }
 .radialButtons small { display: none; }
