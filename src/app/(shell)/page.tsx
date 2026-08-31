@@ -174,7 +174,7 @@ export default function WorkspacePage() {
       {error ? <p className="ms-sev-critical">{error}</p> : null}
       <div className="ms-notes-layout">
         <div className="ms-panel ms-notes-field">
-          <LineEditor value={body} onChange={setBody} storageKey={activeId ?? "draft"} continuousSelection />
+          <LineEditor value={body} onChange={setBody} storageKey={activeId ?? "draft"} />
         </div>
         <aside className="ms-panel ms-notes-saved">
           <h2 className="ms-panel-title">Saved notes</h2>

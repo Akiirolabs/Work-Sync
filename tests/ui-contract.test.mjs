@@ -155,8 +155,8 @@ test("table FTR-1001 interactions are implemented", () => {
   assert.match(editor, /wrapExternalText/);
 });
 
-test("Workspace and table pages use one native multiline control for cross-line selection", () => {
-  assert.match(workspacePage, /continuousSelection/);
+test("table pages use one native multiline control for cross-line selection", () => {
+  assert.doesNotMatch(workspacePage, /continuousSelection/);
   assert.match(tablesPage, /storageKey=\{`table-page:[^\n]+continuousSelection/);
   assert.match(editor, /className="ms-continuous-textarea"/);
   assert.match(editor, /aria-label="Continuous line editor"/);
