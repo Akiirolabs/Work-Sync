@@ -42,8 +42,8 @@ export function applyTodoCommand(items: TodoItem[], command: AOTodoCommand): Tod
     const next = items.find((item) => !item.completed); return next ? items.map((item) => item.id === next.id ? { ...item, completed: true } : item) : items;
   }
   if (command.action === "todo-add-subtask" || command.action === "todo-set-description") {
-    const target = command.taskTitle?.trim().toLowerCase(); if (!target) return items;
-    const exact = items.find((item) => item.title.toLowerCase() === target); const match = exact ?? items.find((item) => item.title.toLowerCase().includes(target)); if (!match) return items;
+    const target = command.taskTitle?.trim().toLowerCase(); const direct = command.taskId ? items.find((item) => item.id === command.taskId) : undefined; if (!direct && !target) return items;
+    const exact = target ? items.find((item) => item.title.toLowerCase() === target) : undefined; const match = direct ?? exact ?? (target ? items.find((item) => item.title.toLowerCase().includes(target)) : undefined); if (!match) return items;
     if (command.action === "todo-set-description") return items.map((item) => item.id === match.id ? { ...item, description: command.description?.trim() || undefined } : item);
     const subtask = createSubtask(command.subtaskTitle ?? "", command.subtaskDescription); return subtask ? items.map((item) => item.id === match.id ? { ...item, subtasks: [...(item.subtasks ?? []), subtask] } : item) : items;
   }

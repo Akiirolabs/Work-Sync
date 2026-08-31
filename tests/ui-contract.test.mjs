@@ -29,6 +29,8 @@ const verifyPage = await readFile(new URL("../src/app/(shell)/verify/page.tsx", 
 const verifyNoteRoute = await readFile(new URL("../src/app/api/v1/verify-note/route.ts", import.meta.url), "utf8");
 const historyPage = await readFile(new URL("../src/app/(shell)/history/page.tsx", import.meta.url), "utf8");
 const connectPage = await readFile(new URL("../src/app/(shell)/connect/page.tsx", import.meta.url), "utf8");
+const aoCatalog = await readFile(new URL("../src/lib/ao-catalog.ts", import.meta.url), "utf8");
+const todoModel = await readFile(new URL("../src/lib/todo-model.ts", import.meta.url), "utf8");
 
 test("Verify uses Workspace notes, an evidence chat, and grounded findings", () => {
   assert.match(verifyPage, /api<Note\[]>\("\/api\/v1\/notes"\)/);
@@ -192,10 +194,21 @@ test("FTR 1010 provides structured findings, retained histories, Vault isolation
   assert.match(historyPage, /Ask Agent/);
   assert.match(historyPage, /Day-linked document workspace/);
   assert.match(historyPage, /TODO_STORAGE_KEY/);
-  assert.match(connectPage, /Macro Presets and Vault/);
-  assert.doesNotMatch(connectPage, /ConnectorInfo|connectors/);
+  assert.match(connectPage, /Create Macro/);
+  assert.doesNotMatch(connectPage, /ConnectorInfo|connectors|Macro Presets and Vault/);
   assert.match(globalCss, /\.ms-markdown-code/);
   assert.match(globalCss, /\.ms-calendar-grid/);
+});
+
+test("FTR 1011 selects existing objects and keeps mobile rail labels visible", () => {
+  assert.match(aoCatalog, /key: "taskId", label: "Existing task", type: "todo"/);
+  assert.doesNotMatch(aoCatalog, /text\("taskTitle", "Existing task"/);
+  assert.match(todoModel, /const direct = command\.taskId/);
+  assert.match(connectPage, /OBJECT_FIELDS/);
+  assert.match(connectPage, /Choose an existing object/);
+  assert.match(connectPage, /Save macro to Vault/);
+  assert.match(globalCss, /\.ms-rail-label \{ display: block; font-size: 8px; \}/);
+  assert.match(globalCss, /\.ms-rail-item \{ display: block; overflow: hidden; padding: 8px 4px; font-size: 9px;/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {

@@ -198,8 +198,8 @@ export function AOMacroMenu() {
     return { action: macro.action, tableId: get("tableId"), columnId: get("columnId"), rowId: get("rowId"), destinationRowId: get("destinationRowId"), name: get("name"), title: get("title"), text: chosen?.text ?? get("text"), type: macro.value ?? get("type"), template: macro.value, query: get("query"), count: Number(get("count")) || undefined, page: get("page") };
   }
   function todoCommandFor(macro: AOMacroDefinition, context: Record<string, string>): AOTodoCommand {
-    const note = notes.find((item) => item.id === context.noteId); const noteLines = note?.body.split("\n").slice(1).map((line) => line.trim()).filter(Boolean) ?? [];
-    return { action: macro.action, title: note?.title ?? context.title?.trim(), taskId: context.taskId?.trim(), taskTitle: context.taskTitle?.trim(), description: context.description?.trim(), subtaskTitle: context.subtaskTitle?.trim(), subtaskDescription: context.subtaskDescription?.trim(), subtasks: macro.action === "todo-from-note-content" ? noteLines : undefined, dueDate: context.dueDate?.trim() };
+    const note = notes.find((item) => item.id === context.noteId); const task = todos.find((item) => item.id === context.taskId); const noteLines = note?.body.split("\n").slice(1).map((line) => line.trim()).filter(Boolean) ?? [];
+    return { action: macro.action, title: note?.title ?? context.title?.trim(), taskId: context.taskId?.trim(), taskTitle: task?.title ?? context.taskTitle?.trim(), description: context.description?.trim(), subtaskTitle: context.subtaskTitle?.trim(), subtaskDescription: context.subtaskDescription?.trim(), subtasks: macro.action === "todo-from-note-content" ? noteLines : undefined, dueDate: context.dueDate?.trim() };
   }
   function saveBuiltIn(macro: AOMacroDefinition) {
     if (presets.some((item) => item.macroId === macro.id)) { setNotice(`${macro.label} is already saved.`); return; }
