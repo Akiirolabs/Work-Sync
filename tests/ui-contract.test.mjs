@@ -19,6 +19,7 @@ const noteRoute = await readFile(new URL("../src/app/api/v1/notes/[noteId]/route
 const sourcesRoute = await readFile(new URL("../src/app/api/v1/sources/route.ts", import.meta.url), "utf8");
 const clientApi = await readFile(new URL("../src/lib/client-api.ts", import.meta.url), "utf8");
 const macroPanels = await readFile(new URL("../src/components/MacroPanels.tsx", import.meta.url), "utf8");
+const macroPanelsCss = await readFile(new URL("../src/components/MacroPanels.module.css", import.meta.url), "utf8");
 const agentChat = await readFile(new URL("../src/components/AgentSideChat.tsx", import.meta.url), "utf8");
 const agentChatCss = await readFile(new URL("../src/components/AgentSideChat.module.css", import.meta.url), "utf8");
 const agentChatRoute = await readFile(new URL("../src/app/api/v1/agent/chat/route.ts", import.meta.url), "utf8");
@@ -233,8 +234,8 @@ test("Vault manages typed entries and a six-item draggable Main Macro row", () =
   assert.match(aoMenu, /data-vault-chevron/);
   assert.match(aoMenu, /isTextPreset\(preset\) \? "T" : "M"/);
   assert.match(aoMenu, /Add to Main Macro/);
-  assert.match(aoMenu, /className=\{styles\.mainIconGrid\}/);
-  assert.match(aoMenu, /mainIconPrompt === menuPreset\.id/);
+  assert.match(aoMenu, /macroTextIcon\(preset\)/);
+  assert.doesNotMatch(aoMenu, /MAIN_MACRO_ICONS|mainIconPrompt|chooseMainIcon/);
   assert.match(aoMenu, /icon: undefined/);
   assert.match(aoMenu, /VAULT_CATEGORIES/);
   assert.match(aoMenu, /dataTransfer\.setData\("text\/main-macro"/);
@@ -246,6 +247,16 @@ test("Vault manages typed entries and a six-item draggable Main Macro row", () =
   assert.match(aoMenu, /reorderMainPreset\(source, preset\.id\)/);
   assert.match(aoMenu, /deleteVaultPreset\(menuPreset\)/);
   assert.match(aoMenu, /Delete<\/button>/);
+});
+
+test("macro cards use fast explicit text-symbol icons and responsive hover targets", () => {
+  assert.match(macroPanels, /macroTextIcon\(item\)/);
+  assert.match(macroPanels, /<small role="tooltip">\{item\.label\}<\/small>/);
+  assert.doesNotMatch(macroPanels, /title=\{item\.label\}/);
+  assert.match(macroPanelsCss, /\.radialButtons button::before \{[^}]*inset: -5px/);
+  assert.match(macroPanelsCss, /transition: opacity 35ms/);
+  assert.match(macroPanelsCss, /button:hover small, \.radialButtons button:focus-visible small/);
+  assert.match(macroPanelsCss, /color: #fff/);
 });
 
 test("AO commands are consumed once by their destination pages", () => {

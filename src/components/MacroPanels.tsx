@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { AO_MACROS_CHANGED_EVENT, AO_MACROS_KEY, AO_OPEN_MACRO_MENU_EVENT, AO_RUN_MAIN_MACRO_EVENT, type AOMacroPreset } from "@/lib/ao-macro";
+import { AO_MACROS_CHANGED_EVENT, AO_MACROS_KEY, AO_OPEN_MACRO_MENU_EVENT, AO_RUN_MAIN_MACRO_EVENT, macroTextIcon, type AOMacroPreset } from "@/lib/ao-macro";
 import { userStorageKey } from "@/lib/user-storage";
 import styles from "./MacroPanels.module.css";
 
@@ -22,10 +22,10 @@ function readMainMacros(): AOMacroPreset[] {
 function MacroButtons({ items, radial = false, close }: { items: AOMacroPreset[]; radial?: boolean; close?: () => void }) {
   if (!items.length) return <p className={styles.empty}>Choose Main Macros in Vault.</p>;
   return <div className={radial ? styles.radialButtons : styles.grid}>{items.map((item, index) => <button
-    type="button" key={item.id} title={item.label} aria-label={`Run ${item.label}`}
+    type="button" key={item.id} aria-label={`Run ${item.label}`}
     style={radial ? { "--macro-index": index, "--macro-count": items.length } as React.CSSProperties : undefined}
     onClick={() => { window.dispatchEvent(new CustomEvent(AO_RUN_MAIN_MACRO_EVENT, { detail: { presetId: item.id } })); close?.(); }}
-  ><span>{item.icon || "◇"}</span><small>{item.label}</small></button>)}</div>;
+  ><span aria-hidden>{macroTextIcon(item)}</span><small role="tooltip">{item.label}</small></button>)}</div>;
 }
 
 export function MacroPanels({ onAgent }: { onAgent: () => void }) {

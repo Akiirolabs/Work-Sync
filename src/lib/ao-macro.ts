@@ -24,6 +24,23 @@ export type AOCustomMacroStep = { macroId: string; values: Record<string, string
 export type AOMacroPreset = { id: string; label: string; text: string; macroId?: string; steps?: AOCustomMacroStep[]; pinned?: boolean; createdAt?: string; lastUsedAt?: string; main?: boolean; mainOrder?: number; icon?: string };
 export type AOTableMacroResult = { tables: WorkTable[]; activeId: string; openPage?: { rowId: string; columnId: string }; openColumn?: string; focusCell?: { rowId: string; columnId: string }; filter?: { columnId: string; query: string }; summary?: string };
 
+const MACRO_TEXT_ICONS: Record<string, string> = {
+  "workspace-new": "+N", "workspace-new-preset": "N+", "workspace-meeting": "MT", "workspace-project": "PJ", "workspace-open": "ON", "workspace-duplicate": "DN", "workspace-append": "A+", "workspace-prepend": "+A", "workspace-section": "D+", "workspace-save-new": "SN", "workspace-add-text": "TX", "workspace-add-comment": "CM", "workspace-add-heading": "H#", "workspace-add-code": "</>",
+  "todo-add": "+T", "todo-add-detailed": "TD", "todo-add-with-subtask": "T+", "todo-add-high-with-subtask": "!T", "todo-add-subtask": "+S", "todo-set-description": "DS", "todo-add-high": "!T", "todo-add-today": "T0", "todo-add-due": "DT", "todo-open": "OT", "todo-from-note": "N>T", "todo-from-note-content": "N+T", "todo-complete-next": "OK", "todo-clear-completed": "CL",
+  "table-blank": "+TB", "table-template": "TB", "table-open": "OTB", "table-rename": "RTB", "table-duplicate": "DTB", "table-project": "PT", "table-meeting": "MTB", "table-lab": "LAB", "table-content": "CAL", "table-issues": "ISS",
+  "row-add": "+R", "row-many": "R+", "row-named": "NR", "row-duplicate": "DR", "row-page": "R>P", "row-preset": "PR", "row-empty": "ER",
+  "page-create": "+P", "page-open": "OP", "page-column-first": "P+C", "page-row": "R+P", "page-rename": "RP", "page-append": "P+", "page-duplicate": "DP", "page-fill-empty": "FP",
+  "vault-create": "+V", "vault-run": "RUN", "vault-find": "FND", "vault-pin": "PIN", "vault-duplicate": "DV", "vault-rename": "RV", "vault-edit": "EV", "vault-recent": "REC",
+};
+
+export function macroTextIcon(preset: Pick<AOMacroPreset, "macroId" | "steps">): string {
+  if (preset.macroId?.startsWith("column-add-")) return "+C";
+  if (preset.macroId?.startsWith("column-")) return "COL";
+  if (preset.macroId && MACRO_TEXT_ICONS[preset.macroId]) return MACRO_TEXT_ICONS[preset.macroId]!;
+  if (preset.steps?.length) return "FX";
+  return "TXT";
+}
+
 export function saveMacroPretext(entries: AOMacroPreset[], label: string): AOMacroPreset[] {
   const text = label.trim(); if (!text || entries.some((item) => !item.macroId && !item.steps?.length && item.text === text)) return entries;
   return [...entries, { id: crypto.randomUUID(), label: text, text, createdAt: new Date().toISOString() }];
