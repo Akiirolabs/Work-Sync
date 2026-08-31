@@ -1,127 +1,32 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable, Workspace } from "@/ui";
-import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client-api";
 import { userStorageKey } from "@/lib/user-storage";
+import { TODO_STORAGE_KEY, type TodoItem } from "@/lib/todo-model";
+import { LineEditor } from "@/components/LineEditor";
+import { MarkdownPreview } from "@/components/MarkdownPreview";
 
-type Source = { id: string; name: string };
-type Event = {
-  id: string;
-  type: string;
-  message: string;
-  createdAt: string;
-};
-type FixDoc = {
-  id: string;
-  title: string;
-  status: string;
-  bodyMarkdown: string;
-  updatedAt: string;
-};
+type Source = { id: string; name: string }; type TimelineEvent = { id: string; type: string; message: string; createdAt: string }; type FixDoc = { id: string; title: string; status: string; bodyMarkdown: string; updatedAt: string };
+type CalendarEvent = { id: string; title: string; date: string; time?: string; alert: boolean; detail?: string; createdAt: string };
+const isoDay = (date: Date) => date.toISOString().slice(0, 10); const short = (value: string) => value.length > 23 ? `${value.slice(0, 22)}…` : value;
 
 export default function HistoryPage() {
-  const [sources, setSources] = useState<Source[]>([]);
-  const [sourceId, setSourceId] = useState("");
-  const [events, setEvents] = useState<Event[]>([]);
-  const [fixes, setFixes] = useState<FixDoc[]>([]);
-  const [selectedFix, setSelectedFix] = useState<FixDoc | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async (id: string) => {
-    const [ev, fx] = await Promise.all([
-      api<Event[]>(`/api/v1/sources/${id}/history`),
-      api<FixDoc[]>(`/api/v1/sources/${id}/fixes`),
-    ]);
-    setEvents(ev);
-    setFixes(fx);
-    setSelectedFix(fx[0] ?? null);
-  }, []);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const list = await api<Source[]>("/api/v1/sources");
-        setSources(list);
-        const stored = localStorage.getItem(userStorageKey("knowledge:active-source"));
-        const id =
-          stored && list.some((r) => r.id === stored) ? stored : list[0]?.id ?? "";
-        setSourceId(id);
-        if (id) await load(id);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load");
-      }
-    })();
-  }, [load]);
-
-  async function onSelectSource(id: string) {
-    setSourceId(id);
-    localStorage.setItem(userStorageKey("knowledge:active-source"), id);
-    setError(null);
-    try {
-      await load(id);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load history");
-    }
-  }
-
-  return (
-    <Workspace title="History" subtitle="Append-only timeline and fix documents">
-      <div className="ms-field" style={{ maxWidth: 360, marginBottom: 12 }}>
-        <label className="ms-label" htmlFor="source">
-          Source
-        </label>
-        <select
-          id="source"
-          className="ms-select"
-          value={sourceId}
-          onChange={(e) => void onSelectSource(e.target.value)}
-        >
-          {sources.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {error ? <p className="ms-sev-critical">{error}</p> : null}
-
-      <div className="ms-grid-2">
-        <div className="ms-panel">
-          <h2 className="ms-panel-title">Timeline</h2>
-          <DataTable
-            rows={events}
-            rowKey={(e) => e.id}
-            emptyMessage="No events yet."
-            columns={[
-              {
-                key: "when",
-                header: "When",
-                render: (e) => new Date(e.createdAt).toLocaleString(),
-              },
-              { key: "type", header: "Type", render: (e) => e.type },
-              { key: "msg", header: "Message", render: (e) => e.message },
-            ]}
-          />
-        </div>
-        <div className="ms-panel">
-          <h2 className="ms-panel-title">Fix documents</h2>
-          <div className="ms-stack" style={{ marginBottom: 8 }}>
-            {fixes.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                className="ms-btn"
-                onClick={() => setSelectedFix(f)}
-              >
-                {f.title} · {f.status}
-              </button>
-            ))}
-            {fixes.length === 0 ? <p className="ms-muted">No fix docs yet.</p> : null}
-          </div>
-          {selectedFix ? <pre className="ms-pre">{selectedFix.bodyMarkdown}</pre> : null}
-        </div>
-      </div>
-    </Workspace>
-  );
+  const [sources, setSources] = useState<Source[]>([]), [sourceId, setSourceId] = useState(""), [events, setEvents] = useState<TimelineEvent[]>([]), [fixes, setFixes] = useState<FixDoc[]>([]), [error, setError] = useState<string | null>(null);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]), [todos, setTodos] = useState<TodoItem[]>([]), [month, setMonth] = useState(() => new Date()), [selectedDay, setSelectedDay] = useState<string | null>(null), [eventTitle, setEventTitle] = useState(""), [eventDate, setEventDate] = useState(isoDay(new Date())), [eventTime, setEventTime] = useState(""), [eventAlert, setEventAlert] = useState(true), [agentRequest, setAgentRequest] = useState(""), [dayDocs, setDayDocs] = useState<Record<string, string>>({}), [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null), [calendarKey, setCalendarKey] = useState(""), [docsKey, setDocsKey] = useState(""), [calendarLoaded, setCalendarLoaded] = useState(false);
+  const load = useCallback(async (id: string) => { const [ev, fx] = await Promise.all([api<TimelineEvent[]>(`/api/v1/sources/${id}/history`), api<FixDoc[]>(`/api/v1/sources/${id}/fixes`)]); setEvents(ev); setFixes(fx); }, []);
+  useEffect(() => { setCalendarKey(userStorageKey("work-sync:tomlog-events")); setDocsKey(userStorageKey("work-sync:tomlog-day-docs")); }, []);
+  useEffect(() => { if (!calendarKey || !docsKey) return; try { setCalendarEvents(JSON.parse(localStorage.getItem(calendarKey) ?? "[]")); setDayDocs(JSON.parse(localStorage.getItem(docsKey) ?? "{}")); setTodos(JSON.parse(localStorage.getItem(userStorageKey(TODO_STORAGE_KEY)) ?? "[]")); } catch { setCalendarEvents([]); setDayDocs({}); setTodos([]); } setCalendarLoaded(true); }, [calendarKey, docsKey]);
+  useEffect(() => { if (calendarKey && calendarLoaded) localStorage.setItem(calendarKey, JSON.stringify(calendarEvents)); }, [calendarEvents, calendarKey, calendarLoaded]); useEffect(() => { if (docsKey && calendarLoaded) localStorage.setItem(docsKey, JSON.stringify(dayDocs)); }, [dayDocs, docsKey, calendarLoaded]);
+  useEffect(() => { void (async () => { try { const list = await api<Source[]>("/api/v1/sources"); setSources(list); const id = list[0]?.id ?? ""; setSourceId(id); if (id) await load(id); } catch (reason) { setError(reason instanceof Error ? reason.message : "Failed to load timeline"); } })(); }, [load]);
+  const dayEvents = useMemo(() => { const todoEvents = todos.filter((todo) => todo.dueDate).map((todo) => ({ id: `todo-${todo.id}`, title: todo.title, date: todo.dueDate!, detail: `${todo.description ?? "No description"}\n\nPriority: ${todo.priority}`, alert: false, createdAt: "", todo })); return [...calendarEvents, ...todoEvents]; }, [calendarEvents, todos]);
+  const days = useMemo(() => { const first = new Date(month.getFullYear(), month.getMonth(), 1), start = new Date(first); start.setDate(first.getDate() - first.getDay()); return Array.from({ length: 42 }, (_, index) => { const day = new Date(start); day.setDate(start.getDate() + index); return day; }); }, [month]);
+  function createEvent(title = eventTitle, date = eventDate, time = eventTime, alert = eventAlert) { if (!title.trim() || !date) return; setCalendarEvents((current) => [{ id: crypto.randomUUID(), title: title.trim(), date, time: time || undefined, alert, createdAt: new Date().toISOString() }, ...current]); setEventTitle(""); setEventTime(""); }
+  function askAgent() { const match = agentRequest.match(/(?:on\s+)?(\d{4}-\d{2}-\d{2})(?:\s+(?:at\s+)?(\d{1,2}:\d{2}))?/i); const date = match?.[1] ?? eventDate; const time = match?.[2] ?? ""; const title = agentRequest.replace(match?.[0] ?? "", "").replace(/^(create|add|schedule)\s+(an?\s+)?(event\s+)?/i, "").trim() || "Agent-created event"; createEvent(title, date, time, true); setAgentRequest(""); }
+  if (selectedDay) return <Workspace title={`Tomlog · ${selectedDay}`} subtitle="Day-linked document workspace" actions={<button className="ms-btn" type="button" onClick={() => setSelectedDay(null)}>Back to Tomlog</button>}><div className="ms-day-workspace"><section className="ms-panel"><h2 className="ms-panel-title">Day document</h2><LineEditor value={dayDocs[selectedDay] ?? `# ${selectedDay}\n\n`} onChange={(value) => setDayDocs((current) => ({ ...current, [selectedDay]: value }))} storageKey={`tomlog-day-${selectedDay}`} continuousSelection /></section><section className="ms-panel"><h2 className="ms-panel-title">Markdown preview</h2><MarkdownPreview value={dayDocs[selectedDay] ?? ""} /></section></div></Workspace>;
+  return <Workspace title="Tomlog" subtitle="Timeline, calendar, alerts, and day documents"><div className="ms-field" style={{ maxWidth: 360, marginBottom: 12 }}><label className="ms-label" htmlFor="source">Source</label><select id="source" className="ms-select" value={sourceId} onChange={(event) => { const id = event.target.value; setSourceId(id); void load(id); }}><option value="">To Do items</option>{sources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></div>{error ? <p className="ms-sev-critical">{error}</p> : null}
+    <div className="ms-grid-2"><section className="ms-panel"><h2 className="ms-panel-title">Tomline</h2><DataTable rows={events} rowKey={(event) => event.id} emptyMessage="No events yet." columns={[{ key: "when", header: "When", render: (event) => new Date(event.createdAt).toLocaleString() }, { key: "type", header: "Type", render: (event) => event.type }, { key: "message", header: "Message", render: (event) => event.message }]} /></section><section className="ms-panel"><h2 className="ms-panel-title">Fix documents</h2><div className="ms-fix-list">{fixes.map((fix) => <article key={fix.id}><strong>{fix.title}</strong><MarkdownPreview value={fix.bodyMarkdown} /></article>)}{!fixes.length && <p className="ms-muted">No fix documents yet.</p>}</div></section></div>
+    <section className="ms-panel ms-calendar"><header className="ms-calendar-header"><div><h2 className="ms-panel-title">Calendar</h2><p>Events, alerts, and dated To Do items.</p></div><div><button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>‹</button><strong>{month.toLocaleString(undefined, { month: "long", year: "numeric" })}</strong><button type="button" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>›</button></div></header><div className="ms-calendar-create"><input aria-label="Event title" value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} placeholder="Create calendar event…" /><input aria-label="Event date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} /><input aria-label="Event time" type="time" value={eventTime} onChange={(event) => setEventTime(event.target.value)} /><label><input type="checkbox" checked={eventAlert} onChange={(event) => setEventAlert(event.target.checked)} /> Alert</label><button type="button" className="ms-btn ms-btn-primary" onClick={() => createEvent()}>Add event</button></div><div className="ms-calendar-agent"><input aria-label="Ask agent to create event" value={agentRequest} onChange={(event) => setAgentRequest(event.target.value)} placeholder="Ask Agent: schedule review on 2026-09-03 at 10:00" /><button type="button" onClick={askAgent}>Ask Agent</button></div><div className="ms-calendar-grid" role="grid" aria-label="Tomlog calendar">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span key={day}>{day}</span>)}{days.map((day) => { const key = isoDay(day), entries = dayEvents.filter((event) => event.date === key); return <button type="button" role="gridcell" className={day.getMonth() === month.getMonth() ? "" : "is-other"} key={key} onClick={() => setSelectedDay(key)}><b>{day.getDate()}</b>{entries.slice(0, 3).map((entry: any) => <small key={entry.id} className={entry.todo ? "is-todo" : ""} onClick={(event) => { event.stopPropagation(); if (entry.todo) setSelectedTodo(entry.todo); }}>{entry.alert ? "◷ " : ""}{short(entry.title)}</small>)}</button>; })}</div>{selectedTodo && <aside className="ms-todo-side-panel"><button type="button" aria-label="Close To Do detail" onClick={() => setSelectedTodo(null)}>×</button><h3>{selectedTodo.title}</h3><MarkdownPreview value={`## Due ${selectedTodo.dueDate}\n\n${selectedTodo.description ?? "No description."}\n\n**Priority:** ${selectedTodo.priority}`} /></aside>}</section>
+  </Workspace>;
 }

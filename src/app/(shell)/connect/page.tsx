@@ -1,48 +1,15 @@
 "use client";
 
-import { DataTable, Workspace } from "@/ui";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/client-api";
-
-type ConnectorInfo = {
-  id: string;
-  label: string;
-  status: string;
-  description: string;
-};
+import { Workspace } from "@/ui";
+import { AO_MACROS_KEY, AO_OPEN_MACRO_MENU_EVENT, AO_OPEN_VAULT_EVENT, type AOMacroPreset } from "@/lib/ao-macro";
+import { userStorageKey } from "@/lib/user-storage";
 
 export default function ConnectPage() {
-  const [rows, setRows] = useState<ConnectorInfo[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    void api<ConnectorInfo[]>("/api/v1/connectors")
-      .then(setRows)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed"));
-  }, []);
-
-  return (
-    <Workspace
-      title="Connect"
-      subtitle="Pluggable evidence pointers — file ready; folder & URL stubs"
-    >
-      {error ? <p className="ms-sev-critical">{error}</p> : null}
-      <div className="ms-panel">
-        <DataTable
-          rows={rows}
-          rowKey={(r) => r.id}
-          emptyMessage="No connectors registered."
-          columns={[
-            { key: "label", header: "Connector", render: (r) => r.label },
-            { key: "id", header: "Id", render: (r) => r.id },
-            { key: "status", header: "Status", render: (r) => r.status },
-            { key: "desc", header: "Notes", render: (r) => r.description },
-          ]}
-        />
-      </div>
-      <p className="ms-muted" style={{ marginTop: 12, maxWidth: 640 }}>
-        Pointers stay as paths or URLs you already have. This console does not copy vaults.
-      </p>
-    </Workspace>
-  );
+  const [presets, setPresets] = useState<AOMacroPreset[]>([]);
+  useEffect(() => { try { const saved = JSON.parse(localStorage.getItem(userStorageKey(AO_MACROS_KEY)) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(saved) ? saved : []); } catch { setPresets([]); } }, []);
+  const macros = presets.filter((item) => item.macroId || item.steps?.length); const text = presets.filter((item) => !item.macroId && !item.steps?.length);
+  function openMacroMenu() { window.dispatchEvent(new Event(AO_OPEN_MACRO_MENU_EVENT)); }
+  function openVault() { window.dispatchEvent(new Event(AO_OPEN_VAULT_EVENT)); }
+  return <Workspace title="Connect" subtitle="Macro Presets and Vault"><div className="ms-connect-page"><section className="ms-panel"><header className="ms-connect-header"><div><h2 className="ms-panel-title">Macro Presets</h2><p>Reusable automation presets available in this workspace.</p></div><button type="button" className="ms-btn ms-btn-primary" onClick={openMacroMenu}>Open presets</button></header><div className="ms-connect-list">{macros.map((preset) => <article key={preset.id}><strong>{preset.label}</strong><small>{preset.steps?.length ? `${preset.steps.length} step custom macro` : "Saved macro preset"}</small></article>)}{!macros.length && <p className="ms-muted">No saved macro presets yet.</p>}</div></section><section className="ms-panel"><header className="ms-connect-header"><div><h2 className="ms-panel-title">Vault</h2><p>Saved text is available only through Vault’s dedicated Saved Text view.</p></div><button type="button" className="ms-btn" onClick={openVault}>Open Vault</button></header><div className="ms-connect-list">{text.map((preset) => <article key={preset.id}><strong>{preset.label}</strong><small>Saved text</small></article>)}{!text.length && <p className="ms-muted">No saved text in Vault.</p>}</div></section></div></Workspace>;
 }

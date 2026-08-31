@@ -27,6 +27,8 @@ const userStateRoute = await readFile(new URL("../src/app/api/v1/user-state/rout
 const rail = await readFile(new URL("../src/ui/Rail.tsx", import.meta.url), "utf8");
 const verifyPage = await readFile(new URL("../src/app/(shell)/verify/page.tsx", import.meta.url), "utf8");
 const verifyNoteRoute = await readFile(new URL("../src/app/api/v1/verify-note/route.ts", import.meta.url), "utf8");
+const historyPage = await readFile(new URL("../src/app/(shell)/history/page.tsx", import.meta.url), "utf8");
+const connectPage = await readFile(new URL("../src/app/(shell)/connect/page.tsx", import.meta.url), "utf8");
 
 test("Verify uses Workspace notes, an evidence chat, and grounded findings", () => {
   assert.match(verifyPage, /api<Note\[]>\("\/api\/v1\/notes"\)/);
@@ -167,7 +169,28 @@ test("FTR 1009.2 updates Workspace controls, table icons, and Vault text actions
   assert.match(aoMenu, /className=\{styles\.vaultTextActions\}/);
   assert.match(aoMenu, /Create text preset/);
   assert.match(aoMenu, /View saved text/);
-  assert.match(aoMenu, /setVaultCategory\("Text"\)/);
+  assert.match(aoMenu, /setVaultTextOnly\(true\)/);
+  assert.doesNotMatch(aoMenu, /\["All", "Text"/);
+});
+
+test("FTR 1010 provides structured findings, retained histories, Vault isolation, and Tomlog", () => {
+  assert.match(verifyPage, /MarkdownPreview/);
+  assert.match(verifyPage, /Send findings to Workspace/);
+  assert.match(verifyPage, /Saved verification chats/);
+  assert.match(verifyPage, /Findings history/);
+  assert.match(verifyPage, /Send to Workspace/);
+  assert.match(verifyPage, /work-sync:verify-chats/);
+  assert.match(aoMenu, /vaultTextOnly/);
+  assert.match(aoMenu, /View saved text/);
+  assert.match(historyPage, /Tomlog/);
+  assert.match(historyPage, /Calendar/);
+  assert.match(historyPage, /Ask Agent/);
+  assert.match(historyPage, /Day-linked document workspace/);
+  assert.match(historyPage, /TODO_STORAGE_KEY/);
+  assert.match(connectPage, /Macro Presets and Vault/);
+  assert.doesNotMatch(connectPage, /ConnectorInfo|connectors/);
+  assert.match(globalCss, /\.ms-markdown-code/);
+  assert.match(globalCss, /\.ms-calendar-grid/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {

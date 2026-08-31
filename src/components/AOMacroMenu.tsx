@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { api } from "@/lib/client-api";
 import { AO_MACRO_CATALOG, AO_MACRO_CATEGORIES, type AOMacroDefinition, type AOMacroField } from "@/lib/ao-catalog";
 import {
-  AO_MACROS_KEY, AO_MACROS_CHANGED_EVENT, AO_OPEN_MACRO_MENU_EVENT, AO_RUN_MAIN_MACRO_EVENT, AO_TABLE_COMMAND_EVENT, AO_TABLE_COMMAND_KEY, AO_WORKSPACE_OPEN_EVENT,
+  AO_MACROS_KEY, AO_MACROS_CHANGED_EVENT, AO_OPEN_MACRO_MENU_EVENT, AO_OPEN_VAULT_EVENT, AO_RUN_MAIN_MACRO_EVENT, AO_TABLE_COMMAND_EVENT, AO_TABLE_COMMAND_KEY, AO_WORKSPACE_OPEN_EVENT,
   AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY, AO_WORKSPACE_LINE_COMMAND_EVENT, AO_WORKSPACE_LINE_COMMAND_KEY,
   macroTextIcon, type AOCustomMacroStep, type AOMacroPreset, type AOTableCommand, type AOWorkspaceLineCommand,
 } from "@/lib/ao-macro";
@@ -25,7 +25,7 @@ const TABLES_KEY = "work-sync:tables";
 const MAIN_MACRO_LIMIT = 6;
 
 const ROUTES = [["Workspace", "/", "⌂"], ["To Do", "/todo", "□"], ["Tables", "/tables", "▦"], ["Sources", "/sources", "S"], ["Verify", "/verify", "✓"], ["History", "/history", "H"], ["Connect", "/connect", "C"]] as const;
-const VAULT_CATEGORIES = ["All", "Text", "Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Custom"] as const;
+const VAULT_CATEGORIES = ["All", "Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Custom"] as const;
 const WORKSPACE_TEMPLATES: Record<string, string> = {
   meeting: "| Attendees | Agenda | Decisions | Follow-Up |\n| --- | --- | --- | --- |\n|  |  |  |  |",
   project: "| Objective | Owner | Milestones | Risks | Next Action |\n| --- | --- | --- | --- | --- |\n|  |  |  |  |  |",
@@ -45,6 +45,7 @@ export function AOMacroMenu() {
   const [vaultQuery, setVaultQuery] = useState("");
   const [vaultCategory, setVaultCategory] = useState<(typeof VAULT_CATEGORIES)[number]>("All");
   const [vaultRecent, setVaultRecent] = useState(false);
+  const [vaultTextOnly, setVaultTextOnly] = useState(false);
   const [macroMode, setMacroMode] = useState<MacroMode>("home");
   const [builderName, setBuilderName] = useState("");
   const [builderChoice, setBuilderChoice] = useState(AO_MACRO_CATALOG[0]!.id);
@@ -61,6 +62,7 @@ export function AOMacroMenu() {
   useEffect(readLocalData, []);
   useEffect(() => {
     function openMenu() { readLocalData(); setOpen(true); setView("macro"); setMacroMode("home"); }
+    function openVault() { readLocalData(); setOpen(true); setView("vault"); setVaultRecent(false); setVaultCategory("All"); setVaultTextOnly(false); }
     function runMain(event: Event) {
       const presetId = (event as CustomEvent<{ presetId?: string }>).detail?.presetId;
       try {
@@ -70,8 +72,9 @@ export function AOMacroMenu() {
       } catch { /* ignore malformed saved macros */ }
     }
     window.addEventListener(AO_OPEN_MACRO_MENU_EVENT, openMenu);
+    window.addEventListener(AO_OPEN_VAULT_EVENT, openVault);
     window.addEventListener(AO_RUN_MAIN_MACRO_EVENT, runMain);
-    return () => { window.removeEventListener(AO_OPEN_MACRO_MENU_EVENT, openMenu); window.removeEventListener(AO_RUN_MAIN_MACRO_EVENT, runMain); };
+    return () => { window.removeEventListener(AO_OPEN_MACRO_MENU_EVENT, openMenu); window.removeEventListener(AO_OPEN_VAULT_EVENT, openVault); window.removeEventListener(AO_RUN_MAIN_MACRO_EVENT, runMain); };
   });
   useEffect(() => {
     function dismiss(event: PointerEvent) {
@@ -92,7 +95,7 @@ export function AOMacroMenu() {
   }, [customToRun, macroMode, selected, vaultMenu, view]);
 
   async function refreshNotes() { try { setNotes(await api<Note[]>("/api/v1/notes")); } catch { setNotes([]); } }
-  function showView(next: View) { readLocalData(); setView(next); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainTooltip(null); setError(""); setNotice(""); if (next === "macro") setMacroMode("home"); if (next === "vault") { setVaultRecent(false); setVaultCategory("All"); } if (next === "macro" || next === "vault") void refreshNotes(); }
+  function showView(next: View) { readLocalData(); setView(next); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainTooltip(null); setError(""); setNotice(""); if (next === "macro") setMacroMode("home"); if (next === "vault") { setVaultRecent(false); setVaultCategory("All"); setVaultTextOnly(false); } if (next === "macro" || next === "vault") void refreshNotes(); }
   function close() { setOpen(false); setView("main"); setSelected(null); setCustomToRun(null); setVaultMenu(null); setMainTooltip(null); setError(""); }
   function showMainTooltip(button: HTMLButtonElement, label: string) { const rect = button.getBoundingClientRect(); const width = Math.min(190, Math.max(72, label.length * 6 + 16)); setMainTooltip({ label, left: Math.max(8, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 8)), top: Math.max(8, rect.top - 31) }); }
   function savePresets(next: AOMacroPreset[]) { setPresets(next); localStorage.setItem(userStorageKey(AO_MACROS_KEY), JSON.stringify(next)); window.dispatchEvent(new Event(AO_MACROS_CHANGED_EVENT)); }
@@ -269,7 +272,7 @@ export function AOMacroMenu() {
   const filteredMacros = AO_MACRO_CATALOG.filter((item) => (!category || item.category === category) && (!query || `${item.label} ${item.description}`.toLowerCase().includes(query.toLowerCase())));
   const builderCatalog = AO_MACRO_CATALOG.filter((item) => item.category !== "Vault");
   function vaultType(item: AOMacroPreset) { if (isTextPreset(item)) return "Text"; if (item.steps?.length) return "Custom"; return AO_MACRO_CATALOG.find((macro) => macro.id === item.macroId)?.category ?? "Custom"; }
-  const vaultItems = [...presets].filter((item) => (!vaultRecent || item.lastUsedAt) && (vaultCategory === "All" || vaultType(item) === vaultCategory) && (!vaultQuery || `${item.label} ${item.text}`.toLowerCase().includes(vaultQuery.toLowerCase()))).sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || (b.lastUsedAt ?? b.createdAt ?? "").localeCompare(a.lastUsedAt ?? a.createdAt ?? ""));
+  const vaultItems = [...presets].filter((item) => (vaultTextOnly ? isTextPreset(item) : !isTextPreset(item)) && (!vaultRecent || item.lastUsedAt) && (vaultTextOnly || vaultCategory === "All" || vaultType(item) === vaultCategory) && (!vaultQuery || `${item.label} ${item.text}`.toLowerCase().includes(vaultQuery.toLowerCase()))).sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || (b.lastUsedAt ?? b.createdAt ?? "").localeCompare(a.lastUsedAt ?? a.createdAt ?? ""));
   const mainItems = presets.filter((item) => item.main).sort((a, b) => (a.mainOrder ?? 0) - (b.mainOrder ?? 0)).slice(0, MAIN_MACRO_LIMIT);
   const menuPreset = vaultMenu ? presets.find((item) => item.id === vaultMenu.id) : undefined;
   const builderReady = Boolean(builderName.trim() && builderSteps.length && builderSteps.every((step) => { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId); return (macro?.fields ?? []).every((field) => field.optional || Boolean(step.values[field.key]?.trim())); }));
@@ -312,10 +315,10 @@ export function AOMacroMenu() {
         <label className={styles.search}><span>⌕</span><input aria-label="Search Vault" value={vaultQuery} onChange={(event) => setVaultQuery(event.target.value)} placeholder="Search saved macros…" /></label>
         <div className={styles.vaultMainHeader}><strong>Main Macro</strong><span>{mainItems.length}/{MAIN_MACRO_LIMIT}</span></div>
         {mainItems.length ? <div className={styles.mainMacros} aria-label="Main Macro shortcuts">{mainItems.map((preset) => <button type="button" key={preset.id} draggable onMouseEnter={(event) => showMainTooltip(event.currentTarget, preset.label)} onMouseLeave={() => setMainTooltip(null)} onFocus={(event) => showMainTooltip(event.currentTarget, preset.label)} onBlur={() => setMainTooltip(null)} onDragStart={(event) => { setMainTooltip(null); event.dataTransfer.setData("text/main-macro", preset.id); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/main-macro"); if (source) reorderMainPreset(source, preset.id); }} onClick={() => launchPreset(preset)} aria-label={`Run ${preset.label}`}><span aria-hidden>{macroTextIcon(preset)}</span></button>)}</div> : <p className={styles.mainEmpty}>Choose up to six shortcuts from Vault.</p>}
-        <div className={styles.categories}>{VAULT_CATEGORIES.map((item) => <button type="button" key={item} className={vaultCategory === item ? styles.active : ""} onClick={() => setVaultCategory(item)}>{item}</button>)}</div>
+        <div className={styles.categories}>{VAULT_CATEGORIES.map((item) => <button type="button" key={item} className={!vaultTextOnly && vaultCategory === item ? styles.active : ""} onClick={() => { setVaultTextOnly(false); setVaultCategory(item); }}>{item}</button>)}</div>
         {vaultRecent && <p className={styles.notice}>Recently used macros</p>}{notice && <p className={styles.notice}>{notice}</p>}
-        <div className={styles.vaultTextActions}><button type="button" onClick={() => { setView("macro"); setMacroMode("home"); beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!); }}>Create text preset</button><button type="button" onClick={() => { setVaultCategory("Text"); setVaultRecent(false); }}>View saved text</button></div>
-        {vaultItems.length ? <div className={styles.vaultItems}>{vaultItems.map((preset) => <div className={styles.vaultItem} key={preset.id}><span>{preset.pinned ? "◇" : ""}</span><button type="button" onClick={() => launchPreset(preset)}><strong>{preset.label}</strong><small>{preset.steps?.length ? `${preset.steps.length} step custom macro` : preset.macroId ? `Saved ${vaultType(preset)} preset` : preset.text}</small></button><div className={styles.vaultTail}><span title={isTextPreset(preset) ? "Text preset" : "Macro"}>{isTextPreset(preset) ? "T" : "M"}</span><button type="button" data-vault-chevron aria-label={`Options for ${preset.label}`} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const width = 218; setVaultMenu(vaultMenu?.id === preset.id ? null : { id: preset.id, left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)), top: Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 210)) }); }}>›</button></div></div>)}</div> : <p className={styles.empty}>{vaultRecent ? "No recently used macros." : "No saved macros match this category."}</p>}
+        <div className={styles.vaultTextActions}><button type="button" onClick={() => { setView("macro"); setMacroMode("home"); beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!); }}>Create text preset</button><button type="button" className={vaultTextOnly ? styles.active : ""} onClick={() => { setVaultTextOnly(true); setVaultRecent(false); }}>View saved text</button></div>
+        {vaultTextOnly && <p className={styles.notice}>Saved text</p>}{vaultItems.length ? <div className={styles.vaultItems}>{vaultItems.map((preset) => <div className={styles.vaultItem} key={preset.id}><span>{preset.pinned ? "◇" : ""}</span><button type="button" onClick={() => launchPreset(preset)}><strong>{preset.label}</strong><small>{preset.steps?.length ? `${preset.steps.length} step custom macro` : preset.macroId ? `Saved ${vaultType(preset)} preset` : preset.text}</small></button><div className={styles.vaultTail}><span title={isTextPreset(preset) ? "Text preset" : "Macro"}>{isTextPreset(preset) ? "T" : "M"}</span><button type="button" data-vault-chevron aria-label={`Options for ${preset.label}`} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const width = 218; setVaultMenu(vaultMenu?.id === preset.id ? null : { id: preset.id, left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)), top: Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - 210)) }); }}>›</button></div></div>)}</div> : <p className={styles.empty}>{vaultTextOnly ? "No saved text yet." : vaultRecent ? "No recently used macros." : "No saved macros match this category."}</p>}
       </div>}
       {menuPreset && vaultMenu && createPortal(<div className={styles.vaultActions} style={{ left: vaultMenu.left, top: vaultMenu.top }} role="menu" aria-label={`Manage ${menuPreset.label}`} data-vault-actions>
 

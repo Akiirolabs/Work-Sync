@@ -17,6 +17,7 @@ export const AO_WORKSPACE_LINE_COMMAND_EVENT = "work-sync:ao-workspace-line-comm
 export const AO_MACROS_CHANGED_EVENT = "work-sync:ao-macros-changed";
 export const AO_RUN_MAIN_MACRO_EVENT = "work-sync:run-main-macro";
 export const AO_OPEN_MACRO_MENU_EVENT = "work-sync:open-macro-menu";
+export const AO_OPEN_VAULT_EVENT = "work-sync:open-vault";
 
 export type AOTableCommand = { action: string; tableId?: string; columnId?: string; rowId?: string; destinationRowId?: string; name?: string; title?: string; text?: string; type?: string; template?: string; query?: string; count?: number; page?: string; commands?: AOTableCommand[] };
 export type AOWorkspaceLineCommand = { action: "add-text" | "add-comment" | "add-heading" | "add-code"; text: string; kind?: "h1" | "h2" | "h3" | "h4" };
