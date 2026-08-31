@@ -206,7 +206,9 @@ test("FTR 1011 selects existing objects and keeps mobile rail labels visible", (
   assert.match(todoModel, /const direct = command\.taskId/);
   assert.match(connectPage, /OBJECT_FIELDS/);
   assert.match(connectPage, /Choose an existing object/);
-  assert.match(connectPage, /Save macro to Vault/);
+  assert.match(connectPage, /className="ms-create-macro-save"/);
+  assert.match(connectPage, />Save to Vault</);
+  assert.match(globalCss, /\.ms-create-macro-save:hover, \.ms-create-macro-save:focus-visible/);
   assert.match(globalCss, /\.ms-rail-label \{ display: block; font-size: 8px; \}/);
   assert.match(globalCss, /\.ms-rail-item \{ display: block; overflow: hidden; padding: 8px 4px; font-size: 9px;/);
 });
