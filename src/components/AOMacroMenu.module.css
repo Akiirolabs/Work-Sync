@@ -94,6 +94,9 @@
 .vaultMainHeader span { color: #6f7a84; }
 .mainEmpty { margin: 3px 9px 8px; padding: 9px; border: 1px dashed #333c44; border-radius: 6px; color: #78838c; font-size: 9px; text-align: center; }
 .createPreset { width: calc(100% - 16px); margin: 0 8px 8px; }
+.vaultTextActions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0 8px 8px; }
+.vaultTextActions button { min-width: 0; min-height: 35px; border: 1px solid #3b4853; border-radius: 6px; padding: 0 7px; background: #222a31; color: #e6ebef; font: 10px var(--ms-font-sans); cursor: pointer; }
+.vaultTextActions button:hover { border-color: var(--ms-accent-soft); background: #2b353e; }
 .vaultItems { max-height: 371px; overflow-y: auto; scrollbar-color: #46515b #11161b; scrollbar-width: thin; }
 .vaultItem { min-height: 48px; display: grid; grid-template-columns: 20px 1fr 49px; align-items: center; margin: 0 7px 5px; border-radius: 7px; padding: 3px 5px; background: #11161b; }
 .vaultItem > span { color: #83b7d3; font-size: 11px; text-align: center; }

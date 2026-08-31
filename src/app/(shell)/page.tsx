@@ -24,6 +24,7 @@ export default function WorkspacePage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false); const creating = useRef(false);
   const [ready, setReady] = useState(false);
+  const [noteMenu, setNoteMenu] = useState<string | null>(null); const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null); const [renameDraft, setRenameDraft] = useState("");
 
   const load = useCallback(async () => {
     setSaved(await api<Note[]>("/api/v1/notes"));
@@ -89,6 +90,8 @@ export default function WorkspacePage() {
     return () => window.removeEventListener(AO_WORKSPACE_OPEN_EVENT, consumeAOOpen);
   }, [ready, load]);
 
+  useEffect(() => { function dismiss(event: PointerEvent) { if (!(event.target instanceof Element && event.target.closest("[data-note-actions]"))) setNoteMenu(null); } document.addEventListener("pointerdown", dismiss); return () => document.removeEventListener("pointerdown", dismiss); }, []);
+
   function newNote() {
     setActiveId(null);
     setBody("");
@@ -129,6 +132,27 @@ export default function WorkspacePage() {
     }
   }
 
+  async function deleteSavedNote(note: Note) {
+    setBusy(true); setError(null);
+    try { await api(`/api/v1/notes/${note.id}`, { method: "DELETE" }); setSaved((current) => current.filter((item) => item.id !== note.id)); if (activeId === note.id) newNote(); setNoteMenu(null); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Delete failed"); }
+    finally { setBusy(false); }
+  }
+  function bodyWithTitle(note: Note, title: string) { const lines = note.body.split("\n"); const index = lines.findIndex((line) => line.trim()); if (index < 0) return title; lines[index] = title; return lines.join("\n"); }
+  async function renameSavedNote(note: Note) {
+    const title = renameDraft.trim(); if (!title) return;
+    setBusy(true); setError(null);
+    try { const updated = await api<Note>(`/api/v1/notes/${note.id}`, { method: "PATCH", body: JSON.stringify({ title, body: bodyWithTitle(note, title) }) }); setSaved((current) => current.map((item) => item.id === updated.id ? updated : item)); if (activeId === updated.id) setBody(updated.body); setRenamingNoteId(null); setNoteMenu(null); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Rename failed"); }
+    finally { setBusy(false); }
+  }
+  async function duplicateSavedNote(note: Note) {
+    const title = `${note.title} copy`; setBusy(true); setError(null);
+    try { const copy = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ title, body: bodyWithTitle(note, title) }) }); setSaved((current) => [copy, ...current]); setNoteMenu(null); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Duplicate failed"); }
+    finally { setBusy(false); }
+  }
+
   return (
     <Workspace
       title="Workspace"
@@ -143,7 +167,7 @@ export default function WorkspacePage() {
               Delete
             </button>
           ) : null}
-          <span className="ms-muted">{busy ? "Saving…" : "Saved automatically"}</span>
+          <span className="ms-muted">{busy ? "Saving…" : "Saved to cloud"}</span>
         </div>
       }
     >
@@ -155,19 +179,11 @@ export default function WorkspacePage() {
         <aside className="ms-panel ms-notes-saved">
           <h2 className="ms-panel-title">Saved notes</h2>
           <div className="ms-stack">
-            {saved.map((note) => (
-              <button
-                key={note.id}
-                type="button"
-                className={`ms-rail-item${note.id === activeId ? " is-active" : ""}`}
-                onClick={() => openNote(note)}
-              >
-                <span>{note.title}</span>
-                <span className="ms-mono ms-muted">
-                  {new Date(note.updatedAt).toLocaleString()}
-                </span>
-              </button>
-            ))}
+            {saved.map((note) => <div className={`ms-saved-note-row${note.id === activeId ? " is-active" : ""}`} key={note.id} data-note-actions>
+              {renamingNoteId === note.id ? <form onSubmit={(event) => { event.preventDefault(); void renameSavedNote(note); }}><input aria-label={`Edit title for ${note.title}`} value={renameDraft} onChange={(event) => setRenameDraft(event.target.value)} autoFocus /><button type="submit">Save</button></form> : <button type="button" className="ms-saved-note-open" onClick={() => openNote(note)}><span>{note.title}</span><span className="ms-mono ms-muted">{new Date(note.updatedAt).toLocaleString()}</span></button>}
+              <button type="button" className="ms-note-more" aria-label={`Options for ${note.title}`} aria-expanded={noteMenu === note.id} onClick={() => setNoteMenu((current) => current === note.id ? null : note.id)}>•••</button>
+              {noteMenu === note.id && <div className="ms-note-menu" role="menu"><button type="button" onClick={() => { setRenamingNoteId(note.id); setRenameDraft(note.title); setNoteMenu(null); }}>Edit title</button><button type="button" onClick={() => void duplicateSavedNote(note)}>Duplicate</button><button type="button" className="is-danger" onClick={() => void deleteSavedNote(note)}>Delete</button></div>}
+            </div>)}
             {saved.length === 0 ? <p className="ms-muted">No notes yet.</p> : null}
           </div>
         </aside>

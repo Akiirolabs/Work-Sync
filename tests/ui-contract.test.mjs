@@ -148,6 +148,21 @@ test("Workspace and table pages use one native multiline control for cross-line 
   assert.doesNotMatch(globalCss, /> \[contenteditable\](?!\=)/);
 });
 
+test("FTR 1009.2 updates Workspace controls, table icons, and Vault text actions", () => {
+  assert.match(editor, /if \(kind === "h1" \|\| kind === "h2" \|\| kind === "h3" \|\| kind === "h4"\) focusSoon\(id, line\?\.text\.length \?\? 0\)/);
+  assert.match(workspacePage, /Saved to cloud/);
+  assert.doesNotMatch(workspacePage, /Save as/);
+  for (const label of ["Edit title", "Duplicate", "Delete"]) assert.match(workspacePage, new RegExp(label));
+  assert.match(workspacePage, /className="ms-note-more"/);
+  assert.match(tablesPage, /function TableIcon/);
+  for (const name of ["people", "date", "files", "filter", "group", "appearance", "settings", "comments"]) assert.match(tablesPage, new RegExp(`name="${name}"|${name}:`));
+  assert.match(globalCss, /\.ms-ui-icon \{[^}]*color: #fff/);
+  assert.match(aoMenu, /className=\{styles\.vaultTextActions\}/);
+  assert.match(aoMenu, /Create text preset/);
+  assert.match(aoMenu, /View saved text/);
+  assert.match(aoMenu, /setVaultCategory\("Text"\)/);
+});
+
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {
   assert.match(tablesPage, /Type an option and press Enter/);
   assert.match(tablesPage, /text\/select-option/);

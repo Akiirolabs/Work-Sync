@@ -564,6 +564,23 @@
   align-items: flex-start;
   gap: 2px;
 }
+.ms-saved-note-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 30px; align-items: center; border-radius: 5px; }
+.ms-saved-note-row:hover, .ms-saved-note-row.is-active { background: var(--ms-bg-3); }
+.ms-saved-note-open { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; border: 0; padding: 7px 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-saved-note-open > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-note-more { width: 26px; height: 26px; border: 0; border-radius: 5px; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
+.ms-note-more:hover, .ms-note-more[aria-expanded="true"] { background: #303840; color: #fff; }
+.ms-note-menu { position: absolute; z-index: 25; top: 34px; right: 3px; width: 126px; padding: 5px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2127; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
+.ms-note-menu button { width: 100%; height: 30px; border: 0; border-radius: 5px; padding: 0 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-note-menu button:hover { background: #303840; }
+.ms-note-menu button.is-danger:hover { color: var(--ms-danger); }
+.ms-saved-note-row form { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px; padding: 5px; }
+.ms-saved-note-row form input { min-width: 0; border: 1px solid var(--ms-edge); border-radius: 5px; outline: 0; padding: 5px 7px; background: var(--ms-bg-1); color: #fff; }
+.ms-saved-note-row form button { border: 1px solid var(--ms-accent-soft); border-radius: 5px; background: var(--ms-accent-soft); color: var(--ms-accent); }
+.ms-ui-icon { width: 16px; height: 16px; display: inline-block; flex: 0 0 16px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0,0,0,.45)); vertical-align: middle; }
+.ms-toolbar-main button .ms-ui-icon { width: 14px; height: 14px; margin-right: 5px; }
+.ms-toolbar-end button .ms-ui-icon { width: 16px; height: 16px; }
+.ms-column-type .ms-ui-icon, .ms-type-grid .ms-ui-icon, .ms-hidden-columns .ms-ui-icon, .ms-group-menu .ms-ui-icon { width: 14px; height: 14px; }
 
 .ms-verify-grid { height: min(690px, calc(100vh - 128px)); min-height: 520px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, .9fr); gap: var(--ms-space-3); }
 .ms-verify-interaction { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--ms-space-2); }

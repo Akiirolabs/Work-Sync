@@ -116,7 +116,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     const pasted = event.clipboardData.getData("text/plain"); if (!pasted) return;
     event.preventDefault(); const current = linesRef.current; const liveLine = current.find((item) => item.id === line.id) ?? line; const at = current.findIndex((item) => item.id === line.id); const selection = selectionOffsets(editor); const before = liveLine.text.slice(0, selection.start); const after = liveLine.text.slice(selection.end); const wrapped = wrapExternalText(pasted); const replacement = wrapped.map((text, index) => index === 0 ? { ...liveLine, text: before + text } : makeLine(text)); replacement[replacement.length - 1] = { ...replacement[replacement.length - 1]!, text: replacement[replacement.length - 1]!.text + after }; if (continuousSelection) editor.textContent = replacement[0]!.text; const next = [...current]; next.splice(at, 1, ...replacement); commit(next); const target = replacement.at(-1)!; focusSoon(target.id, target.text.length - after.length);
   }
-  function setKind(id: string, kind: BlockKind) { update(id, { kind }); setActive(null); }
+  function setKind(id: string, kind: BlockKind) { const line = linesRef.current.find((item) => item.id === id); update(id, { kind }); setActive(null); if (kind === "h1" || kind === "h2" || kind === "h3" || kind === "h4") focusSoon(id, line?.text.length ?? 0); }
   function addComment(line: Line) {
     const text = comment.trim(); if (!text) return;
     update(line.id, { comments: [...line.comments, text] }); setComment(""); setCommenting(false);
