@@ -19,10 +19,12 @@ export function AccountSettings() {
     void fetch("/api/v1/account").then((r) => r.json()).then(async (d) => {
       const nextUser = (d.user ?? null) as User | null;
       const storageUserChanged = setActiveStorageUser(nextUser?.id ?? null);
-      const hydratedStorageChanged = nextUser ? await hydrateUserStorage(nextUser.id, storageUserChanged) : false;
+      if (nextUser) await hydrateUserStorage(nextUser.id, storageUserChanged);
       setUser(nextUser);
-      if (storageUserChanged || hydratedStorageChanged) window.location.reload();
-      else if (nextUser) stopSync = startUserStorageSync(nextUser.id);
+      // Hydration runs after child effects in this shell. Reloading here can
+      // create a fetch/reload loop when an initially mounted child writes its
+      // empty state before the remote state finishes hydrating.
+      if (nextUser) stopSync = startUserStorageSync(nextUser.id);
     });
     return () => stopSync?.();
   }, []);

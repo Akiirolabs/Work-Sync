@@ -108,6 +108,11 @@ test("device-local account data is synchronized through an owned server record",
   assert.match(agentChat, /AGENT_CHAT_STORAGE_KEY/);
 });
 
+test("account hydration does not create a reload loop", () => {
+  assert.match(account, /Reloading here can[\s\S]*fetch\/reload loop/);
+  assert.match(account, /if \(nextUser\) stopSync = startUserStorageSync\(nextUser\.id\)/);
+});
+
 test("Workspace notes and sources are constrained to their database owner", () => {
   assert.match(notesRoute, /WHERE user_id IS \?/);
   assert.match(notesRoute, /INSERT INTO workspace_notes \(id, user_id/);
