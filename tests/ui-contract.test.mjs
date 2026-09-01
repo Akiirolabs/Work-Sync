@@ -54,6 +54,8 @@ test("Verify requires a complete structured findings response", () => {
   assert.match(verifyNoteRoute, /reasoning: \{ effort: "low" \}/);
   assert.match(verifyNoteRoute, /max_output_tokens: 16_000/);
   assert.match(verifyNoteRoute, /status === "incomplete"/);
+  assert.match(verifyNoteRoute, /verification provider is rate-limited/);
+  assert.match(verifyNoteRoute, /response\.status === 429/);
 });
 
 test("uses the animated atom in settings and Ask AI", () => {

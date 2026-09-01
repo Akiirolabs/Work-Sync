@@ -83,7 +83,17 @@ export async function POST(req: Request) {
       input: [{ role: "user", content: `Workspace note title: ${note.title}\n\nSource text:\n${note.body}\n\nVerification context and requested checks:\n${parsed.data.context}` }, ...parsed.data.messages],
     }),
   });
-  if (!response.ok) return NextResponse.json({ error: "Verification service could not complete the check.", detail: (await response.text()).slice(0, 500) }, { status: response.status || 502 });
+  if (!response.ok) {
+    const detail = (await response.text()).slice(0, 500);
+    if (response.status === 429) {
+      const retryAfter = response.headers.get("retry-after");
+      return NextResponse.json(
+        { error: `The verification provider is rate-limited. Please wait${retryAfter ? ` about ${retryAfter} seconds` : " a moment"} and try again.`, detail },
+        { status: 429, headers: retryAfter ? { "retry-after": retryAfter } : undefined },
+      );
+    }
+    return NextResponse.json({ error: "Verification service could not complete the check.", detail }, { status: response.status || 502 });
+  }
   const payload = await response.json();
   const raw = responseText(payload);
   let decoded: unknown; try { decoded = JSON.parse(raw); } catch {
