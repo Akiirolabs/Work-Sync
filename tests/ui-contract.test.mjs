@@ -275,11 +275,14 @@ test("FTR 1014 researches sources from Workspace Notes and preserves result vers
   assert.match(sourceFindRoute, /most trustworthy, directly relevant sources/);
 });
 
-test("FTR 1014 makes Timeline calendar-led with a synchronized To Do organizer and branched day documents", () => {
-  for (const label of ["To Do organizer", "Clear", "Day Documents", "Documents", "Back to Timeline", "Save As", "Associated To Do"]) assert.match(historyPage, new RegExp(label));
+test("Timeline uses real To Do sources below Calendar and preserves branched day documents", () => {
+  for (const label of ["All To Do items", "To Do items", "Clear", "Day Documents", "Documents", "Back to Timeline", "Save As", "Associated To Do"]) assert.match(historyPage, new RegExp(label));
   assert.match(historyPage, /updateTodoDate/);
   assert.match(historyPage, /TODO_STORAGE_EVENT/);
-  assert.match(historyPage, /setOrganizerTaskIds\(todos\.map/);
+  assert.match(historyPage, /setOrganizerTaskIds\(id \? \[id\] : todos\.map/);
+  assert.match(historyPage, /todos\.map\(\(todo\) => <option/);
+  assert.match(historyPage, /ms-timeline-flow/);
+  assert.doesNotMatch(historyPage, /To Do organizer/);
   assert.match(historyPage, /taskMarkdown\(dayTask\)/);
   assert.match(historyPage, /branchOf: activeDocument\?\.id/);
   assert.doesNotMatch(historyPage, /Back to Tomlog|Fixed documents|Markdown preview/);

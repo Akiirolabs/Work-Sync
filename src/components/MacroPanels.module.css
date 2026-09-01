@@ -23,4 +23,4 @@
 .radialButtons button > span { color: #fff; font: 800 8px var(--ms-font-mono); letter-spacing: -.07em; line-height: 1; }
 .radialButtons small { position: absolute; z-index: 2147483647; left: 50%; bottom: calc(100% + 4px); max-width: 190px; box-sizing: border-box; transform: translateX(-50%) translateY(2px); padding: 5px 7px; overflow: hidden; border: 1px solid #46515b; border-radius: 5px; background: #0b1015; color: #fff; box-shadow: 0 8px 22px rgba(0,0,0,.58); font: 9px var(--ms-font-sans); text-overflow: ellipsis; white-space: nowrap; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 35ms linear, transform 35ms linear, visibility 0s linear 35ms; }
 .radialButtons button:hover small, .radialButtons button:focus-visible small { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; transition-delay: 0s; }
-@media (max-width: 700px) { .headerActions button:first-child { display: none; } .compact { left: 8px; } }
+@media (max-width: 700px) { .headerActions button:first-child { display: inline-flex; padding: 0 4px; font-size: 8px; } .compact { left: 8px; } }
