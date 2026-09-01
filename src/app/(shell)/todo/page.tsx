@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Workspace } from "@/ui";
-import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, TODO_STORAGE_KEY, applyTodoCommand, createSubtask, createTodo, moveSubtask, moveTodo, type AOTodoCommand, type TodoItem, type TodoSubtask } from "@/lib/todo-model";
+import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, TODO_STORAGE_EVENT, TODO_STORAGE_KEY, applyTodoCommand, createSubtask, createTodo, moveSubtask, moveTodo, type AOTodoCommand, type TodoItem, type TodoSubtask } from "@/lib/todo-model";
 import { userStorageKey } from "@/lib/user-storage";
 
 type Filter = "all" | "open" | "done";
@@ -14,6 +14,7 @@ export default function TodoPage() {
 
   useEffect(() => { try { const value = JSON.parse(localStorage.getItem(userStorageKey(TODO_STORAGE_KEY)) ?? "[]") as TodoItem[]; setItems(Array.isArray(value) ? value : []); } catch { setItems([]); } setReady(true); }, []);
   useEffect(() => { if (ready) localStorage.setItem(userStorageKey(TODO_STORAGE_KEY), JSON.stringify(items)); }, [items, ready]);
+  useEffect(() => { function syncFromTimeline() { try { const saved = JSON.parse(localStorage.getItem(userStorageKey(TODO_STORAGE_KEY)) ?? "[]") as TodoItem[]; if (Array.isArray(saved)) setItems(saved); } catch { /* ignore malformed local state */ } } window.addEventListener(TODO_STORAGE_EVENT, syncFromTimeline); return () => window.removeEventListener(TODO_STORAGE_EVENT, syncFromTimeline); }, []);
   useEffect(() => { if (!ready) return; function consume() { const raw = localStorage.getItem(userStorageKey(AO_TODO_COMMAND_KEY)); if (!raw) return; localStorage.removeItem(userStorageKey(AO_TODO_COMMAND_KEY)); try { const command = JSON.parse(raw) as AOTodoCommand; if (command.action === "todo-open" && command.taskId) { setFilter("all"); setMacroTarget(command.taskId); requestAnimationFrame(() => document.querySelector(`[data-todo-id="${CSS.escape(command.taskId!)}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" })); window.setTimeout(() => setMacroTarget(null), 2400); } else setItems((current) => applyTodoCommand(current, command)); } catch { /* invalid command */ } } consume(); window.addEventListener(AO_TODO_COMMAND_EVENT, consume); return () => window.removeEventListener(AO_TODO_COMMAND_EVENT, consume); }, [ready]);
   useEffect(() => { function dismiss(event: PointerEvent) { if (!(event.target instanceof Element && (event.target.closest("[data-todo-menu]") || event.target.closest("[data-todo-menu-toggle]")))) { setTaskMenu(null); setSubMenu(null); } } function escape(event: KeyboardEvent) { if (event.key === "Escape") { setTaskMenu(null); setSubMenu(null); } } document.addEventListener("pointerdown", dismiss); document.addEventListener("keydown", escape); return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", escape); }; }, []);
 

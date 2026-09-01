@@ -3,6 +3,7 @@ export type SourceRow = {
   user_id: string | null;
   name: string;
   topic_tag: string;
+  workspace_note_id: string | null;
   notes: string;
   status: string;
   created_at: string;

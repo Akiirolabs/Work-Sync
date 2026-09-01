@@ -23,6 +23,7 @@ function migrate(db: DatabaseSync): void {
       user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       topic_tag TEXT NOT NULL,
+      workspace_note_id TEXT REFERENCES workspace_notes(id) ON DELETE SET NULL,
       notes TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'draft',
       created_at TEXT NOT NULL,
@@ -119,6 +120,7 @@ function migrate(db: DatabaseSync): void {
     const firstUser = db.prepare("SELECT id FROM users ORDER BY created_at ASC LIMIT 1").get() as { id: string } | undefined;
     if (firstUser) db.prepare("UPDATE sources SET user_id = ? WHERE user_id IS NULL").run(firstUser.id);
   }
+  if (!sourceColumns.some((column) => column.name === "workspace_note_id")) db.exec("ALTER TABLE sources ADD COLUMN workspace_note_id TEXT REFERENCES workspace_notes(id) ON DELETE SET NULL");
   db.exec("CREATE INDEX IF NOT EXISTS idx_sources_user_updated ON sources(user_id, updated_at)");
 
   const noteColumns = db.prepare("PRAGMA table_info(workspace_notes)").all() as Array<{ name: string }>;

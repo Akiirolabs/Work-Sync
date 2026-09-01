@@ -1,4 +1,5 @@
 export const TODO_STORAGE_KEY = "work-sync:todos";
+export const TODO_STORAGE_EVENT = "work-sync:todo-updated";
 export const AO_TODO_COMMAND_KEY = "work-sync:ao-todo-command";
 export const AO_TODO_COMMAND_EVENT = "work-sync:ao-todo-command";
 

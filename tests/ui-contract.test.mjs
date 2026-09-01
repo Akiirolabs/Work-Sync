@@ -17,6 +17,8 @@ const userStorage = await readFile(new URL("../src/lib/user-storage.ts", import.
 const notesRoute = await readFile(new URL("../src/app/api/v1/notes/route.ts", import.meta.url), "utf8");
 const noteRoute = await readFile(new URL("../src/app/api/v1/notes/[noteId]/route.ts", import.meta.url), "utf8");
 const sourcesRoute = await readFile(new URL("../src/app/api/v1/sources/route.ts", import.meta.url), "utf8");
+const sourcesPage = await readFile(new URL("../src/app/(shell)/sources/page.tsx", import.meta.url), "utf8");
+const sourceFindRoute = await readFile(new URL("../src/app/api/v1/sources/find/route.ts", import.meta.url), "utf8");
 const clientApi = await readFile(new URL("../src/lib/client-api.ts", import.meta.url), "utf8");
 const macroPanels = await readFile(new URL("../src/components/MacroPanels.tsx", import.meta.url), "utf8");
 const macroPanelsCss = await readFile(new URL("../src/components/MacroPanels.module.css", import.meta.url), "utf8");
@@ -189,7 +191,7 @@ test("FTR 1009.2 updates Workspace controls, table icons, and Vault text actions
   assert.doesNotMatch(aoMenu, /\["All", "Text"/);
 });
 
-test("FTR 1010 provides structured findings, retained histories, Vault isolation, and Tomlog", () => {
+test("FTR 1010 provides structured findings, retained histories, Vault isolation, and Timeline", () => {
   assert.match(verifyPage, /MarkdownPreview/);
   assert.match(verifyPage, /Send findings to Workspace/);
   assert.match(verifyPage, /Saved verification chats/);
@@ -198,7 +200,7 @@ test("FTR 1010 provides structured findings, retained histories, Vault isolation
   assert.match(verifyPage, /work-sync:verify-chats/);
   assert.match(aoMenu, /vaultTextOnly/);
   assert.match(aoMenu, /View saved text/);
-  assert.match(historyPage, /Tomlog/);
+  assert.match(historyPage, /Timeline/);
   assert.match(historyPage, /Calendar/);
   assert.match(historyPage, /Ask Agent/);
   assert.match(historyPage, /Day-linked document workspace/);
@@ -259,6 +261,28 @@ test("FTR 1013 improves Findings, table drag feedback, calendar contrast, and ma
   assert.match(globalCss, /::-webkit-calendar-picker-indicator/);
   assert.match(globalCss, /\.ms-calendar-header button \{[^}]*color: #fff/);
   assert.match(macroPanelsCss, /z-index: 2147483647/);
+});
+
+test("FTR 1014 researches sources from Workspace Notes and preserves result versions", () => {
+  assert.match(sourcesPage, /Workspace Notes/);
+  assert.match(sourcesPage, /All Sources/);
+  assert.match(sourcesPage, /Saved source results/);
+  assert.match(sourcesPage, /work-sync:source-results/);
+  assert.match(sourcesPage, /workspaceNoteId/);
+  assert.match(sourcesRoute, /workspace_note_id/);
+  assert.match(sourceFindRoute, /web_search_preview/);
+  assert.match(sourceFindRoute, /OPENAI_API_KEY/);
+  assert.match(sourceFindRoute, /most trustworthy, directly relevant sources/);
+});
+
+test("FTR 1014 makes Timeline calendar-led with a synchronized To Do organizer and branched day documents", () => {
+  for (const label of ["To Do organizer", "Clear", "Day Documents", "Documents", "Back to Timeline", "Save As", "Associated To Do"]) assert.match(historyPage, new RegExp(label));
+  assert.match(historyPage, /updateTodoDate/);
+  assert.match(historyPage, /TODO_STORAGE_EVENT/);
+  assert.match(historyPage, /setOrganizerTaskIds\(todos\.map/);
+  assert.match(historyPage, /taskMarkdown\(dayTask\)/);
+  assert.match(historyPage, /branchOf: activeDocument\?\.id/);
+  assert.doesNotMatch(historyPage, /Back to Tomlog|Fixed documents|Markdown preview/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {

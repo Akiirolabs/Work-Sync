@@ -8,9 +8,10 @@ import { requestUserId } from "@/lib/security/auth";
 
 const CreateSourceSchema = z.object({
   name: z.string().min(1).max(200),
-  topicTag: z.string().min(1).max(120),
+  topicTag: z.string().min(1).max(120).optional(),
+  workspaceNoteId: z.string().min(1).optional(),
   notes: z.string().max(4000).optional(),
-});
+}).refine((value) => Boolean(value.topicTag || value.workspaceNoteId), { message: "Choose a Workspace Note or provide a topic." });
 
 export async function GET(req: Request) {
   const denied = requireApiKey(req);
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
   const db = getDb();
   const rows = db
     .prepare(
-      `SELECT id, user_id, name, topic_tag, notes, status, created_at, updated_at
+      `SELECT id, user_id, name, topic_tag, workspace_note_id, notes, status, created_at, updated_at
        FROM sources WHERE user_id IS ? ORDER BY updated_at DESC`,
     )
     .all(userId) as SourceRow[];
@@ -30,6 +31,7 @@ export async function GET(req: Request) {
       id: r.id,
       name: r.name,
       topicTag: r.topic_tag,
+      workspaceNoteId: r.workspace_note_id,
       notes: r.notes,
       status: r.status,
       createdAt: r.created_at,
@@ -58,20 +60,25 @@ export async function POST(req: Request) {
   const id = crypto.randomUUID();
   const ts = nowIso();
   const db = getDb();
+  const note = parsed.data.workspaceNoteId ? db.prepare("SELECT id, title FROM workspace_notes WHERE id = ? AND user_id = ?").get(parsed.data.workspaceNoteId, userId) as { id: string; title: string } | undefined : undefined;
+  if (parsed.data.workspaceNoteId && !note) return jsonError("Workspace note not found.", 404);
+  const topicTag = note?.title ?? parsed.data.topicTag!;
   db.prepare(
-    `INSERT INTO sources (id, user_id, name, topic_tag, notes, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)`,
-  ).run(id, userId, parsed.data.name, parsed.data.topicTag, parsed.data.notes ?? "", ts, ts);
+    `INSERT INTO sources (id, user_id, name, topic_tag, workspace_note_id, notes, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?)`,
+  ).run(id, userId, parsed.data.name, topicTag, note?.id ?? null, parsed.data.notes ?? "", ts, ts);
 
   appendEvent(id, "source_created", `Source created: ${parsed.data.name}`, {
-    topicTag: parsed.data.topicTag,
+    topicTag,
+    workspaceNoteId: note?.id ?? null,
   });
 
   return NextResponse.json(
     {
       id,
       name: parsed.data.name,
-      topicTag: parsed.data.topicTag,
+      topicTag,
+      workspaceNoteId: note?.id ?? null,
       notes: parsed.data.notes ?? "",
       status: "draft",
       createdAt: ts,
