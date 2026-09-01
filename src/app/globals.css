@@ -563,6 +563,8 @@
   flex-direction: column;
   min-height: 0;
   overflow: auto;
+  isolation: isolate;
+  background: #10161d;
 }
 
 .ms-notes-saved .ms-rail-item {
@@ -571,11 +573,11 @@
   align-items: flex-start;
   gap: 2px;
 }
-.ms-saved-note-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 30px; align-items: center; border-radius: 5px; }
+.ms-saved-note-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 30px; align-items: center; border: 1px solid transparent; border-radius: 5px; background: #10161d; }
 .ms-saved-note-row:hover, .ms-saved-note-row.is-active { background: var(--ms-bg-3); }
-.ms-saved-note-open { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; border: 0; padding: 7px 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-saved-note-open { position: relative; z-index: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; border: 0; padding: 7px 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; pointer-events: auto; }
 .ms-saved-note-open > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ms-note-more { width: 28px; height: 28px; border: 1px solid var(--ms-edge-soft); border-radius: 5px; background: var(--ms-bg-2); color: var(--ms-text-bright); font: 18px/1 var(--ms-font-sans); cursor: pointer; }
+.ms-note-more { position: relative; z-index: 2; width: 28px; height: 28px; border: 1px solid var(--ms-edge-soft); border-radius: 5px; background: var(--ms-bg-2); color: var(--ms-text-bright); font: 18px/1 var(--ms-font-sans); cursor: pointer; pointer-events: auto; }
 .ms-note-more:hover, .ms-note-more[aria-expanded="true"] { background: #303840; color: #fff; }
 .ms-note-menu { position: fixed; z-index: 1000; width: 162px; padding: 5px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2127; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .ms-note-menu button { width: 100%; height: 30px; border: 0; border-radius: 5px; padding: 0 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
