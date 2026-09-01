@@ -26,7 +26,7 @@ export default function WorkspacePage() {
   const persistedNote = useRef<{ id: string | null; body: string }>({ id: null, body: "" });
   const [ready, setReady] = useState(false);
   const [savedPanelOpen, setSavedPanelOpen] = useState(true);
-  const [noteMenu, setNoteMenu] = useState<string | null>(null); const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null); const [renameDraft, setRenameDraft] = useState("");
+  const [noteMenu, setNoteMenu] = useState<{ id: string; left: number; top: number } | null>(null); const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null); const [renameDraft, setRenameDraft] = useState("");
 
   const load = useCallback(async () => {
     setSaved(await api<Note[]>("/api/v1/notes"));
@@ -197,8 +197,8 @@ export default function WorkspacePage() {
           <div className="ms-stack">
             {saved.map((note) => <div className={`ms-saved-note-row${note.id === activeId ? " is-active" : ""}`} key={note.id} data-note-actions>
               {renamingNoteId === note.id ? <form onSubmit={(event) => { event.preventDefault(); void renameSavedNote(note); }}><input aria-label={`Edit title for ${note.title}`} value={renameDraft} onChange={(event) => setRenameDraft(event.target.value)} autoFocus /><button type="submit">Save</button></form> : <button type="button" className="ms-saved-note-open" onClick={() => openNote(note)}><span>{note.title}</span><span className="ms-mono ms-muted">{new Date(note.updatedAt).toLocaleString()}</span></button>}
-              <button type="button" className="ms-note-more" aria-label={`Options for ${note.title}`} aria-expanded={noteMenu === note.id} onClick={() => setNoteMenu((current) => current === note.id ? null : note.id)}>•••</button>
-              {noteMenu === note.id && <div className="ms-note-menu" role="menu"><button type="button" onClick={() => { setRenamingNoteId(note.id); setRenameDraft(note.title); setNoteMenu(null); }}>Edit title</button><button type="button" onClick={() => void duplicateSavedNote(note)}>Duplicate</button><button type="button" className="is-danger" onClick={() => void deleteSavedNote(note)}>Delete</button></div>}
+              <button type="button" className="ms-note-more" aria-label={`Options for ${note.title}`} aria-haspopup="menu" aria-expanded={noteMenu?.id === note.id} onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); setNoteMenu((current) => current?.id === note.id ? null : { id: note.id, left: Math.max(8, rect.right - 162), top: Math.min(window.innerHeight - 126, rect.bottom + 4) }); }}>⋯</button>
+              {noteMenu?.id === note.id && <div className="ms-note-menu" data-note-actions role="menu" style={{ left: noteMenu.left, top: noteMenu.top }}><button type="button" onClick={() => { setRenamingNoteId(note.id); setRenameDraft(note.title); setNoteMenu(null); }}>Edit title</button><button type="button" onClick={() => void duplicateSavedNote(note)}>Duplicate</button><button type="button" className="is-danger" onClick={() => void deleteSavedNote(note)}>Delete</button></div>}
             </div>)}
             {saved.length === 0 ? <p className="ms-muted">No notes yet.</p> : null}
           </div>

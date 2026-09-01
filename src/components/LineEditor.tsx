@@ -109,6 +109,18 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     end.selectNodeContents(editor); end.setEnd(range.endContainer, range.endOffset);
     return { start: start.toString().length, end: end.toString().length, collapsed: range.collapsed };
   }
+  function placeCaret(editor: HTMLDivElement, offset: number) {
+    const selection = window.getSelection(); const range = document.createRange();
+    let remaining = Math.min(Math.max(offset, 0), editor.textContent?.length ?? 0);
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+    let text = walker.nextNode();
+    while (text) {
+      const length = text.textContent?.length ?? 0;
+      if (remaining <= length) { range.setStart(text, remaining); range.collapse(true); selection?.removeAllRanges(); selection?.addRange(range); return; }
+      remaining -= length; text = walker.nextNode();
+    }
+    range.selectNodeContents(editor); range.collapse(false); selection?.removeAllRanges(); selection?.addRange(range);
+  }
   function focusSoon(id: string, offset = 0) {
     requestAnimationFrame(() => {
       // Formatting changes alter the visual line before the parent note state has
@@ -116,18 +128,13 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
       // line, rather than the previous visual layout.
       requestAnimationFrame(() => {
         if (continuousSelection) { const textarea = continuousTextarea.current; const at = linesRef.current.findIndex((line) => line.id === id); if (!textarea || at < 0) return; const line = linesRef.current[at]!; const position = linesRef.current.slice(0, at).reduce((total, item) => total + item.text.length + 1, 0) + Math.min(Math.max(offset, 0), line.text.length); textarea.focus(); textarea.setSelectionRange(position, position); return; }
-        const editor = editors.current[id]; if (!editor) return; editor.focus();
-        const range = document.createRange(); const selection = window.getSelection(); const node = editor.firstChild ?? editor;
-        range.setStart(node, Math.min(offset, node.textContent?.length ?? 0)); range.collapse(true); selection?.removeAllRanges(); selection?.addRange(range);
+        const editor = editors.current[id]; if (!editor) return; editor.focus(); placeCaret(editor, offset);
       });
     });
   }
   function restoreCaret(id: string, offset: number) {
     requestAnimationFrame(() => {
-      const editor = editors.current[id]; if (!editor) return;
-      const node = editor.firstChild ?? editor; const at = Math.min(Math.max(offset, 0), node.textContent?.length ?? 0);
-      const range = document.createRange(); range.setStart(node, at); range.collapse(true);
-      const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+      const editor = editors.current[id]; if (!editor) return; placeCaret(editor, offset);
     });
   }
   function onLineInput(event: FormEvent<HTMLDivElement>, line: Line) {

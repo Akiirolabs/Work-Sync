@@ -290,6 +290,18 @@ test("Timeline uses real To Do sources below Calendar and preserves branched day
   assert.doesNotMatch(historyPage, /Back to Tomlog|Fixed documents|Markdown preview/);
 });
 
+test("Workspace menus and Timeline lists remain reachable without changing calendar behavior", () => {
+  assert.match(workspacePage, /aria-haspopup="menu"/);
+  assert.match(workspacePage, /Math\.min\(window\.innerHeight - 126/);
+  assert.match(globalCss, /\.ms-note-menu \{ position: fixed; z-index: 1000/);
+  assert.match(editor, /function placeCaret\(/);
+  assert.match(historyPage, /aria-label="Scrollable To Do items"/);
+  assert.match(historyPage, /aria-label="Scrollable Day Documents"/);
+  assert.match(historyPage, /ms-day-document-actions/);
+  assert.match(globalCss, /\.ms-organizer-list \{ display: grid; max-height: 278px;[^}]*overflow-y: auto/);
+  assert.match(globalCss, /\.ms-day-document-history \{ max-height: 278px; overflow-y: auto/);
+});
+
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {
   assert.match(tablesPage, /Type an option and press Enter/);
   assert.match(tablesPage, /text\/select-option/);
