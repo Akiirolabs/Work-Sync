@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { LiquidChromeOrb } from "@/ui";
 import { wrapExternalText } from "@/lib/text-layout";
 import { userStorageKey } from "@/lib/user-storage";
@@ -47,6 +47,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   const editors = useRef<Record<string, HTMLDivElement | null>>({});
   const continuousTextarea = useRef<HTMLTextAreaElement | null>(null);
   const linesRef = useRef(lines);
+  const appliedExternalValue = useRef<string | null>(null);
   const joined = useMemo(() => lines.map((line) => line.text).join("\n"), [lines]);
 
   useEffect(() => {
@@ -55,19 +56,22 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
       const saved = JSON.parse(localStorage.getItem(userStorageKey(`work-sync:line-meta:${storageKey}`)) ?? "[]") as Partial<Line>[];
       const restored = base.map((line, i) => ({ ...line, kind: saved[i]?.kind ?? line.kind, comments: Array.isArray(saved[i]?.comments) ? saved[i]!.comments! : [], accent: saved[i]?.accent ?? false, align: saved[i]?.align ?? "left" })); linesRef.current = restored; setLines(restored);
     } catch { linesRef.current = base; setLines(base); }
+    appliedExternalValue.current = value;
     setLoadedKey(storageKey); setActive(null);
   }, [storageKey]);
 
   useEffect(() => {
     const currentJoined = (continuousSelection ? linesRef.current : lines).map((line) => line.text).join("\n");
-    if (loadedKey === storageKey && value !== currentJoined) {
-      const incoming = markdownLines(value); const normalized = incoming.map((line) => line.text).join("\n"); const structured = hasMarkdownStructure(value);
+    if (loadedKey === storageKey && value !== currentJoined && appliedExternalValue.current !== value) {
+      const incoming = markdownLines(value); const structured = hasMarkdownStructure(value);
       const next = incoming.map((line, i) => {
         const previous = linesRef.current;
         const prior = previous[i];
         return structured ? line : prior ? { ...prior, ...(continuousSelection ? { id: crypto.randomUUID() } : {}), text: line.text } : line;
       }); linesRef.current = next; setLines(next);
-      if (normalized !== value) onChange(normalized);
+      // Loading Markdown-shaped note content changes only the editor's structured
+      // representation. It is not a user edit and must never trigger an autosave.
+      appliedExternalValue.current = value;
       setActive(null);
     }
   }, [value, joined, lines, loadedKey, storageKey, onChange, continuousSelection]);
@@ -118,6 +122,21 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
       });
     });
   }
+  function restoreCaret(id: string, offset: number) {
+    requestAnimationFrame(() => {
+      const editor = editors.current[id]; if (!editor) return;
+      const node = editor.firstChild ?? editor; const at = Math.min(Math.max(offset, 0), node.textContent?.length ?? 0);
+      const range = document.createRange(); range.setStart(node, at); range.collapse(true);
+      const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+    });
+  }
+  function onLineInput(event: FormEvent<HTMLDivElement>, line: Line) {
+    const editor = event.currentTarget; const offset = selectionOffsets(editor).end;
+    update(line.id, { text: editor.textContent ?? "" });
+    // React state updates must not turn a native one-character Backspace into a
+    // jump to the beginning of the line. Restore the browser's post-edit offset.
+    restoreCaret(line.id, offset);
+  }
   function insert(id: string, offset: -1 | 1) {
     const current = linesRef.current; const at = current.findIndex((line) => line.id === id); const fresh = makeLine(); const next = [...current];
     next.splice(at + (offset > 0 ? 1 : 0), 0, fresh); commit(next); setActive(null); focusSoon(fresh.id);
@@ -159,7 +178,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
       <button type="button" contentEditable={false} className={`ms-line-toggle${active === line.id ? " is-active" : ""}`} onClick={() => { setActive(active === line.id ? null : line.id); setCommenting(false); }} aria-label={`Actions for line ${index + 1}`}>⋮⋮</button>
       <span className="ms-line-prefix" contentEditable={false} aria-hidden>{line.kind === "bullets" ? "•" : line.kind === "numbered" ? `${index + 1}.` : line.kind === "todo" ? "□" : line.kind === "quote" ? "❞" : ""}</span>
       {continuousSelection && <span className="ms-line-display" style={{ textAlign: line.align }} aria-hidden>{line.text.startsWith("|") && line.text.endsWith("|") ? <span className={`ms-markdown-row${/^\|(?:\s*---\s*\|)+$/.test(line.text) ? " is-divider" : ""}`}>{line.text.slice(1, -1).split("|").map((cell, cellIndex) => <span key={cellIndex}>{cell.trim()}</span>)}</span> : line.text}</span>}
-      {!continuousSelection && <div ref={(el) => { editors.current[line.id] = el; }} contentEditable suppressContentEditableWarning data-placeholder={index === 0 ? "Write a note…" : ""} onInput={(e) => update(line.id, { text: e.currentTarget.textContent ?? "" })} onKeyDown={(e) => onKey(e, line)} onPaste={(e) => onPaste(e, line)} style={{ textAlign: line.align }} aria-label={`Line ${index + 1}`}>{line.text}</div>}
+      {!continuousSelection && <div ref={(el) => { editors.current[line.id] = el; }} contentEditable suppressContentEditableWarning data-placeholder={index === 0 ? "Write a note…" : ""} onInput={(e) => onLineInput(e, line)} onKeyDown={(e) => onKey(e, line)} onPaste={(e) => onPaste(e, line)} style={{ textAlign: line.align }} aria-label={`Line ${index + 1}`}>{line.text}</div>}
       {line.comments.length > 0 && <button className="ms-comment-count" contentEditable={false} type="button" onClick={() => { setActive(line.id); setCommenting(true); }} title={line.comments.join("\n")}>▱ {line.comments.length}</button>}
       {active === line.id && <div className="ms-line-menu" contentEditable={false} role="menu">
         <button className="ms-menu-item ms-menu-ask" onClick={() => setActive(null)}><span className="ms-menu-glyph"><LiquidChromeOrb size={16} title="Ask AI" /></span><span>Ask AI</span><span className="ms-menu-chevron">›</span></button>

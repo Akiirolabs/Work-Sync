@@ -144,7 +144,8 @@ test("save-and-create macro persists both existing and unsaved Workspace drafts"
 });
 
 test("table FTR-1001 interactions are implemented", () => {
-  assert.match(tablesPage, /moveColumn\(current, source, column\.id\)/);
+  assert.match(tablesPage, /function dropColumn\(source: string, target: string, placement/);
+  assert.match(tablesPage, /moveColumn\(current, source, target\)/);
   assert.match(tablesPage, /moveToNextRow\(row\.id, column\.id\)/);
   assert.match(tablesPage, /aria-label="Group table"/);
   assert.match(tablesPage, /groupBy: column\.id/);
@@ -233,6 +234,31 @@ test("FTR 1012.4 restores the heading caret after the formatted line settles", (
   assert.match(editor, /requestAnimationFrame\(\(\) => \{[\s\S]*requestAnimationFrame\(\(\) => \{/);
   assert.match(editor, /Math\.min\(Math\.max\(offset, 0\), line\.text\.length\)/);
   assert.match(editor, /focusSoon\(id, current\?\.text\.length \?\? 0\)/);
+});
+
+test("FTR 1013 preserves saved-note state, caret position, and contained note editing", () => {
+  assert.match(workspacePage, /const persistedNote = useRef/);
+  assert.match(workspacePage, /const hasUnsavedEdit = persistedNote\.current\.id !== activeId/);
+  assert.match(workspacePage, /Show saved notes/);
+  assert.match(workspacePage, /Hide saved notes/);
+  assert.match(workspacePage, /aria-controls="saved-notes-panel"/);
+  assert.match(editor, /function onLineInput/);
+  assert.match(editor, /restoreCaret\(line\.id, offset\)/);
+  assert.match(editor, /Loading Markdown-shaped note content changes only the editor's structured/);
+  assert.match(globalCss, /\.ms-line-editor \{[^}]*overflow: auto/);
+  assert.match(globalCss, /\.ms-notes-field \{[^}]*overflow: hidden/);
+});
+
+test("FTR 1013 improves Findings, table drag feedback, calendar contrast, and macro layering", () => {
+  assert.match(verifyPage, /aria-label="Search Findings history"/);
+  assert.match(verifyPage, /visibleFindingHistory/);
+  for (const name of ["edit", "duplicate", "summarize", "freeze", "delete", "clipboard", "search"]) assert.match(tablesPage, new RegExp(`name="${name}"|${name}:`));
+  assert.match(tablesPage, /columnDropTarget/);
+  assert.match(tablesPage, /is-column-drop-\$\{placement\}/);
+  assert.match(globalCss, /\.ms-data-grid th\.is-column-drop-before::before/);
+  assert.match(globalCss, /::-webkit-calendar-picker-indicator/);
+  assert.match(globalCss, /\.ms-calendar-header button \{[^}]*color: #fff/);
+  assert.match(macroPanelsCss, /z-index: 2147483647/);
 });
 
 test("Select options support create, reorder, recolor, delete and macro pretext saving", () => {
