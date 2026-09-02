@@ -213,7 +213,7 @@
 .ms-line-editor.is-continuous > .ms-editor-line .ms-line-toggle, .ms-line-editor.is-continuous > .ms-editor-line .ms-comment-count, .ms-line-editor.is-continuous > .ms-editor-line .ms-line-menu { pointer-events: auto; }
 .ms-editor-line { z-index: 2; min-width: 0; min-height: 27px; display: flex; align-items: center; position: relative; border-radius: 3px; }
 .ms-editor-line:focus-within { background: rgba(26, 34, 44, .42); }
-.ms-line-toggle { position: absolute; left: -25px; width: 21px; height: 21px; padding: 0; opacity: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--ms-text-dim); font: 10px var(--ms-font-mono); letter-spacing: -3px; cursor: pointer; }
+.ms-line-toggle { position: absolute; left: -25px; width: 21px; height: 21px; padding: 0; opacity: 1; border: 1px solid var(--ms-edge-soft); border-radius: 4px; background: #141b22; color: #c7d5df; font: 10px var(--ms-font-mono); letter-spacing: -3px; cursor: pointer; pointer-events: auto; }
 .ms-editor-line:hover .ms-line-toggle, .ms-line-toggle:focus, .ms-line-toggle.is-active { opacity: 1; }
 .ms-editor-line.is-hovered .ms-line-toggle { opacity: 1; }
 .ms-line-toggle:hover, .ms-line-toggle.is-active { background: var(--ms-bg-3); border-color: var(--ms-edge); color: var(--ms-text-bright); }
