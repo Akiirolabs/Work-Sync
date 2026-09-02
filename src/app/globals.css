@@ -237,7 +237,8 @@
 .ms-editor-line.is-accent > [contenteditable="true"], .ms-editor-line.is-accent > [data-line-content], .ms-editor-line.is-accent .ms-line-display, .ms-editor-line.is-accent .ms-line-prefix { color: var(--ms-accent); }
 .ms-comment-count { flex: 0 0 auto; border: 0; background: transparent; color: var(--ms-accent); font: 10px var(--ms-font-mono); cursor: pointer; }
 
-.ms-line-menu { position: absolute; z-index: 30; left: -18px; top: 25px; width: 258px; padding: 8px; border: 1px solid #303842; border-radius: 7px; background: #1d2228; color: #e5e9ed; box-shadow: 0 14px 38px rgba(0,0,0,.5); font-family: var(--ms-font-sans); font-size: 13px; }
+.ms-editor-line:has(.ms-line-menu) { z-index: 100; }
+.ms-line-menu { position: absolute; z-index: 1000; isolation: isolate; left: -18px; top: 25px; width: 258px; padding: 8px; border: 1px solid #303842; border-radius: 7px; background: #1d2228; color: #e5e9ed; box-shadow: 0 14px 38px rgba(0,0,0,.5); font-family: var(--ms-font-sans); font-size: 13px; opacity: 1; pointer-events: auto; }
 .ms-menu-item { width: 100%; min-height: 31px; display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 3px; border: 0; border-radius: 4px; padding: 3px 5px; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
 .ms-menu-item:hover { background: #2a3038; }
 .ms-menu-item.is-danger:hover { color: #f18d81; }

@@ -295,6 +295,8 @@ test("Workspace menus and Timeline lists remain reachable without changing calen
   assert.match(workspacePage, /Math\.min\(window\.innerHeight - 126/);
   assert.match(globalCss, /\.ms-note-menu \{ position: fixed; z-index: 1000/);
   assert.match(editor, /function placeCaret\(/);
+  assert.match(globalCss, /\.ms-editor-line:has\(\.ms-line-menu\) \{ z-index: 100/);
+  assert.match(globalCss, /\.ms-line-menu \{ position: absolute; z-index: 1000;[^}]*pointer-events: auto/);
   assert.match(historyPage, /aria-label="Scrollable To Do items"/);
   assert.match(historyPage, /aria-label="Scrollable Day Documents"/);
   assert.match(historyPage, /ms-day-document-actions/);
