@@ -71,6 +71,17 @@ test("table ellipsis exposes the exact compact menu actions", () => {
   assert.match(tablesPage, /Choose icon for/);
 });
 
+test("mobile keeps table selection and the circular Macro Panel easy to use", () => {
+  assert.match(tablesPage, /className="ms-mobile-table-picker"/);
+  assert.match(tablesPage, /aria-label="Select table"/);
+  assert.match(globalCss, /\.ms-mobile-table-picker \{ display: none; \}/);
+  assert.match(globalCss, /\.ms-mobile-table-picker \{ width: fit-content;/);
+  assert.match(macroPanels, /const MOBILE_RADIAL_SIZE = 132/);
+  assert.match(macroPanels, /window\.matchMedia\("\(max-width: 700px\)"\)/);
+  assert.match(macroPanelsCss, /\.dot::after/);
+  assert.match(macroPanelsCss, /\.radial \{ width: 132px; height: 132px;/);
+});
+
 test("column chevrons expose every referenced action", () => {
   for (const label of ["Edit column", "Duplicate column", "Insert left", "Insert right", "Filter column", "Summarize column", "Freeze up to this column", "Hide column", "Delete column", "View more actions"]) assert.match(tablesPage, new RegExp(label));
   assert.match(tablesPage, /aria-label="Column name"/);

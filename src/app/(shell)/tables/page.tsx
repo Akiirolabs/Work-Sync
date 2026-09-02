@@ -225,6 +225,12 @@ export default function TablesPage() {
     </aside>
     <section className="ms-table-stage">
       {sidebarCollapsed && <button type="button" className="ms-tables-expand" aria-label="Expand Tables panel" onClick={() => setSidebarCollapsed(false)}>»</button>}
+      <label className="ms-mobile-table-picker">
+        <span>Tables</span>
+        <select aria-label="Select table" value={table.id} onChange={(event) => setActiveId(event.target.value)}>
+          {tables.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+        </select>
+      </label>
       <div className="ms-view-tabs"><button className="is-active"><span>▦</span> Grid <span>⋮</span></button><button className="ms-view-add" onClick={addTable}>＋</button></div>
       <div className="ms-data-frame">
         <div className="ms-data-toolbar">

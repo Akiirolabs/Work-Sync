@@ -7,10 +7,15 @@ import styles from "./MacroPanels.module.css";
 
 const LIMIT = 6;
 const RADIAL_SIZE = 150;
+const MOBILE_RADIAL_SIZE = 132;
 const EDGE_MARGIN = 8;
 const RADIAL_POSITION_KEY = "work-sync:macro-panel-position";
 const RADIAL_OPEN_KEY = "work-sync:macro-panel-open";
 type Position = { left: number; top: number };
+
+function currentRadialSize() {
+  return window.matchMedia("(max-width: 700px)").matches ? MOBILE_RADIAL_SIZE : RADIAL_SIZE;
+}
 
 function readMainMacros(): AOMacroPreset[] {
   try {
@@ -40,9 +45,10 @@ export function MacroPanels({ onAgent }: { onAgent: () => void }) {
   const refresh = () => setItems(readMainMacros());
 
   function clampPosition(position: Position): Position {
+    const size = currentRadialSize();
     return {
-      left: Math.max(EDGE_MARGIN, Math.min(position.left, window.innerWidth - RADIAL_SIZE - EDGE_MARGIN)),
-      top: Math.max(EDGE_MARGIN, Math.min(position.top, window.innerHeight - RADIAL_SIZE - EDGE_MARGIN)),
+      left: Math.max(EDGE_MARGIN, Math.min(position.left, window.innerWidth - size - EDGE_MARGIN)),
+      top: Math.max(EDGE_MARGIN, Math.min(position.top, window.innerHeight - size - EDGE_MARGIN)),
     };
   }
 
@@ -51,7 +57,7 @@ export function MacroPanels({ onAgent }: { onAgent: () => void }) {
       const saved = JSON.parse(localStorage.getItem(userStorageKey(RADIAL_POSITION_KEY)) ?? "null") as Partial<Position> | null;
       if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) return clampPosition({ left: saved.left!, top: saved.top! });
     } catch { /* use the default position */ }
-    return clampPosition({ left: 18, top: window.innerHeight - RADIAL_SIZE - 17 });
+    return clampPosition({ left: 18, top: window.innerHeight - currentRadialSize() - 17 });
   }
 
   function toggleRadial() {

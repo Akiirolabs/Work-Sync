@@ -370,6 +370,7 @@
 .ms-add-table > span { color: var(--ms-text-dim); font-size: 17px; }
 
 .ms-table-stage { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 12px 20px 20px; overflow: hidden; background: rgba(11, 15, 20, .48); }
+.ms-mobile-table-picker { display: none; }
 .ms-view-tabs { height: 39px; display: flex; align-items: flex-start; gap: 5px; }
 .ms-view-tabs button { height: 33px; border: 1px solid transparent; border-radius: 14px; padding: 0 12px; background: transparent; color: var(--ms-text-dim); font: 13px var(--ms-font-sans); cursor: pointer; }
 .ms-view-tabs button.is-active { border-color: var(--ms-accent-soft); background: rgba(28, 70, 113, .42); color: #6aaeff; }
@@ -522,6 +523,9 @@
   .ms-tables-page { grid-template-columns: 1fr; }
   .ms-tables-sidebar { display: none; }
   .ms-table-stage { padding: 9px; }
+  .ms-mobile-table-picker { width: fit-content; max-width: 100%; height: 32px; display: inline-flex; align-items: center; gap: 7px; margin: 0 0 5px; padding: 0 7px 0 10px; border: 1px solid var(--ms-edge); border-radius: 6px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 10px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
+  .ms-mobile-table-picker select { min-width: 0; max-width: min(250px, 58vw); border: 0; outline: 0; padding: 0 18px 0 0; background: transparent; color: var(--ms-text-bright); font: 600 12px var(--ms-font-sans); cursor: pointer; }
+  .ms-mobile-table-picker:focus-within { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
   .ms-column-picker { left: 10px; width: min(360px, calc(100vw - 90px)); }
   .ms-toolbar-main button:nth-of-type(3) { display: none; }
   .ms-toolbar-end { display: none; }
