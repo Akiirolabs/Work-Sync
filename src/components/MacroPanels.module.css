@@ -23,8 +23,9 @@
 .radialButtons button > span { color: #fff; font: 800 8px var(--ms-font-mono); letter-spacing: -.07em; line-height: 1; }
 .radialButtons small { position: absolute; z-index: 2147483647; left: 50%; bottom: calc(100% + 4px); max-width: 190px; box-sizing: border-box; transform: translateX(-50%) translateY(2px); padding: 5px 7px; overflow: hidden; border: 1px solid #46515b; border-radius: 5px; background: #0b1015; color: #fff; box-shadow: 0 8px 22px rgba(0,0,0,.58); font: 9px var(--ms-font-sans); text-overflow: ellipsis; white-space: nowrap; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 35ms linear, transform 35ms linear, visibility 0s linear 35ms; }
 .radialButtons button:hover small, .radialButtons button:focus-visible small { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; transition-delay: 0s; }
+.radialTooltip { position: fixed; z-index: 2147483647; max-width: 190px; box-sizing: border-box; padding: 5px 7px; overflow: hidden; border: 1px solid #46515b; border-radius: 5px; background: #0b1015; color: #fff; box-shadow: 0 8px 22px rgba(0,0,0,.58); font: 9px var(--ms-font-sans); text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
 @media (max-width: 700px) {
-  .headerActions button:first-child { display: inline-flex; padding: 0 4px; font-size: 8px; }
+  .headerActions button { display: inline-flex; align-items: center; justify-content: center; height: 22px; padding: 0 4px; font-size: 8px; }
   .compact { left: 8px; }
   /* Keep the small visual dot, but give it a dependable 30px touch target. */
   .dot { left: 66px; bottom: 23px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; background: transparent; box-shadow: none; touch-action: manipulation; }
@@ -32,7 +33,7 @@
   .dot:hover, .dot[aria-expanded="true"] { transform: none; background: transparent; }
   .dot:hover::after, .dot[aria-expanded="true"]::after { transform: scale(1.18); background: #d7f3ff; }
   .radial { width: 124px; height: 124px; }
-  .radialCenter { inset: 47px; font-size: 10px; }
-  .radialButtons button { left: 46px; top: 46px; width: 32px; height: 32px; transform: rotate(var(--angle)) translateY(-41px) rotate(calc(-1 * var(--angle))); }
+  .radialCenter { inset: 48px; font-size: 10px; }
+  .radialButtons button { left: 47px; top: 47px; width: 30px; height: 30px; transform: rotate(var(--angle)) translateY(-40px) rotate(calc(-1 * var(--angle))); }
   .radialButtons button::before { inset: -7px; }
 }

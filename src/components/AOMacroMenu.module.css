@@ -138,4 +138,4 @@
 .customRun ol { max-height: 340px; margin: 0 0 12px; padding-left: 25px; color: #d9dfe4; font-size: 11px; line-height: 2; }
 .customRun > button { width: 100%; min-height: 36px; }
 
-@media (max-width: 520px) { .root { left: 12px; bottom: 12px; } .panel { bottom: 50px; } }
+@media (max-width: 520px) { .root { left: 12px; bottom: 12px; } .panel { width: min(292px, calc(100vw - 24px)); bottom: 50px; } .list > button { grid-template-columns: 24px max-content 16px; column-gap: 6px; justify-content: start; padding: 0 7px; } .list > button em { justify-self: start; } }

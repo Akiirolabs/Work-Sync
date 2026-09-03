@@ -123,6 +123,13 @@ a:hover {
   flex-shrink: 0;
 }
 
+@media (max-width: 700px) {
+  .ms-account-trigger, .ms-account-trigger:hover, .ms-account-trigger:active { border-color: transparent; background: transparent; box-shadow: none; }
+  .ms-account-trigger:focus { outline: 0; }
+  .ms-account-trigger:focus-visible { outline: 1px solid var(--ms-accent-soft); outline-offset: 2px; }
+  .ms-shell-status > [role="img"] { outline: 0; box-shadow: none; }
+}
+
 .ms-brand svg {
   display: block;
 }

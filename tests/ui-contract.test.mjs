@@ -84,7 +84,7 @@ test("table and Workspace selectors keep navigation beside their primary control
   assert.match(macroPanels, /window\.matchMedia\("\(max-width: 700px\)"\)/);
   assert.match(macroPanelsCss, /\.dot::after/);
   assert.match(macroPanelsCss, /\.radial \{ width: 124px; height: 124px;/);
-  assert.match(macroPanelsCss, /width: 32px; height: 32px/);
+  assert.match(macroPanelsCss, /width: 30px; height: 30px/);
 });
 
 test("column chevrons expose every referenced action", () => {
@@ -490,7 +490,8 @@ test("circular Macro Panel stays open across navigation and moves from its AO ce
   assert.match(macroPanels, /localStorage\.setItem\(userStorageKey\(RADIAL_POSITION_KEY\)/);
   assert.match(macroPanels, /aria-label="Toggle circular Macro Panel"/);
   assert.doesNotMatch(macroPanels, /setRadialOpen\(false\)/);
-  assert.match(macroPanels, /<MacroButtons items=\{items\} radial \/>/);
+  assert.match(macroPanels, /<MacroButtons items=\{items\} radial onShowTooltip=\{showRadialTooltip\}/);
+  assert.match(macroPanels, /createPortal\(<div className=\{styles\.radialTooltip\}/);
   assert.match(rail, /import Link from "next\/link"/);
   assert.match(rail, /<Link key=\{item\.id\}/);
 });
