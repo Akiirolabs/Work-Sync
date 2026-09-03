@@ -136,6 +136,14 @@
 .ms-workspace-note-picker { height: 31px; display: inline-flex; align-items: center; gap: 6px; min-width: 0; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0 6px 0 8px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .ms-workspace-note-picker select { min-width: 0; max-width: min(230px, 35vw); border: 0; outline: 0; padding: 0 14px 0 0; background: transparent; color: var(--ms-text-bright); font: 600 11px var(--ms-font-sans); cursor: pointer; }
 .ms-workspace-note-picker:focus-within { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
+.ms-workspace-note-actions { position: relative; display: flex; align-items: center; gap: 4px; }
+.ms-workspace-note-more { width: 29px; height: 29px; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0; background: var(--ms-bg-2); color: var(--ms-text-bright); font: 18px/1 var(--ms-font-sans); cursor: pointer; }
+.ms-workspace-note-more:hover, .ms-workspace-note-more[aria-expanded="true"] { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
+.ms-workspace-note-menu { position: absolute; z-index: 1000; top: 35px; right: 0; width: 126px; padding: 5px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2127; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
+.ms-workspace-note-menu button { width: 100%; height: 30px; border: 0; border-radius: 5px; padding: 0 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-workspace-note-menu button:hover:not(:disabled) { background: #303840; }
+.ms-workspace-note-menu button.is-danger:hover:not(:disabled) { color: var(--ms-danger); }
+.ms-workspace-note-menu button:disabled { opacity: .45; cursor: not-allowed; }
 
 .ms-finding {
   border-top: 1px solid var(--ms-edge-soft);
@@ -160,12 +168,11 @@
 
 .ms-notes-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(200px, 260px);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--ms-space-3);
   flex: 1;
   min-height: 0;
 }
-.ms-notes-layout:not(.has-saved-panel) { grid-template-columns: minmax(0, 1fr); }
 
 @media (max-width: 900px) {
   .ms-notes-layout {

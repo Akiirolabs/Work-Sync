@@ -32,7 +32,7 @@
   .dot:hover, .dot[aria-expanded="true"] { transform: none; background: transparent; }
   .dot:hover::after, .dot[aria-expanded="true"]::after { transform: scale(1.18); background: #d7f3ff; }
   .radial { width: 124px; height: 124px; }
-  .radialCenter { inset: 45px; font-size: 10px; }
-  .radialButtons button { left: 45px; top: 45px; width: 34px; height: 34px; transform: rotate(var(--angle)) translateY(-42px) rotate(calc(-1 * var(--angle))); }
+  .radialCenter { inset: 47px; font-size: 10px; }
+  .radialButtons button { left: 46px; top: 46px; width: 32px; height: 32px; transform: rotate(var(--angle)) translateY(-41px) rotate(calc(-1 * var(--angle))); }
   .radialButtons button::before { inset: -7px; }
 }

@@ -84,6 +84,7 @@ test("table and Workspace selectors keep navigation beside their primary control
   assert.match(macroPanels, /window\.matchMedia\("\(max-width: 700px\)"\)/);
   assert.match(macroPanelsCss, /\.dot::after/);
   assert.match(macroPanelsCss, /\.radial \{ width: 124px; height: 124px;/);
+  assert.match(macroPanelsCss, /width: 32px; height: 32px/);
 });
 
 test("column chevrons expose every referenced action", () => {
@@ -196,8 +197,8 @@ test("FTR 1009.2 updates Workspace controls, table icons, and Vault text actions
   assert.match(editor, /focusSoon\(id, current\?\.text\.length \?\? 0\)/);
   assert.match(workspacePage, /Saved to cloud/);
   assert.doesNotMatch(workspacePage, /Save as/);
-  for (const label of ["Edit title", "Duplicate", "Delete"]) assert.match(workspacePage, new RegExp(label));
-  assert.match(workspacePage, /className="ms-note-more"/);
+  for (const label of ["Save", "Delete"]) assert.match(workspacePage, new RegExp(label));
+  assert.match(workspacePage, /className="ms-workspace-note-more"/);
   assert.match(tablesPage, /function TableIcon/);
   for (const name of ["people", "date", "files", "filter", "group", "appearance", "settings", "comments"]) assert.match(tablesPage, new RegExp(`name="${name}"|${name}:`));
   assert.match(globalCss, /\.ms-ui-icon \{[^}]*color: #fff/);
@@ -258,9 +259,9 @@ test("FTR 1012.4 restores the heading caret after the formatted line settles", (
 test("FTR 1013 preserves saved-note state, caret position, and contained note editing", () => {
   assert.match(workspacePage, /const persistedNote = useRef/);
   assert.match(workspacePage, /const hasUnsavedEdit = persistedNote\.current\.id !== activeId/);
-  assert.match(workspacePage, /Show saved notes/);
-  assert.match(workspacePage, /Hide saved notes/);
-  assert.match(workspacePage, /aria-controls="saved-notes-panel"/);
+  assert.match(workspacePage, /aria-label="Workspace note options"/);
+  assert.match(workspacePage, /async function saveCurrentNote\(\)/);
+  assert.doesNotMatch(workspacePage, /Hide saved notes|Show saved notes|saved-notes-panel/);
   assert.match(editor, /function onLineInput/);
   assert.match(editor, /restoreCaret\(line\.id, offset\)/);
   assert.match(editor, /Loading Markdown-shaped note content changes only the editor's structured/);
@@ -307,8 +308,8 @@ test("Timeline uses real To Do sources below Calendar and preserves branched day
 
 test("Workspace menus and Timeline lists remain reachable without changing calendar behavior", () => {
   assert.match(workspacePage, /aria-haspopup="menu"/);
-  assert.match(workspacePage, /Math\.min\(window\.innerHeight - 126/);
-  assert.match(globalCss, /\.ms-note-menu \{ position: fixed; z-index: 1000/);
+  assert.match(workspacePage, /data-workspace-note-actions/);
+  assert.match(globalCss, /\.ms-workspace-note-menu \{ position: absolute; z-index: 1000/);
   assert.match(editor, /function placeCaret\(/);
   assert.match(globalCss, /\.ms-editor-line:has\(\.ms-line-menu\) \{ z-index: 100/);
   assert.match(globalCss, /\.ms-line-menu \{ position: absolute; z-index: 1000;[^}]*pointer-events: auto/);
