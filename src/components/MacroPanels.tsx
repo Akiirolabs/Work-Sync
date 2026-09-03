@@ -7,7 +7,7 @@ import styles from "./MacroPanels.module.css";
 
 const LIMIT = 6;
 const RADIAL_SIZE = 150;
-const MOBILE_RADIAL_SIZE = 132;
+const MOBILE_RADIAL_SIZE = 124;
 const EDGE_MARGIN = 8;
 const RADIAL_POSITION_KEY = "work-sync:macro-panel-position";
 const RADIAL_OPEN_KEY = "work-sync:macro-panel-open";

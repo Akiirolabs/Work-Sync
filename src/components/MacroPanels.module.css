@@ -31,8 +31,8 @@
   .dot::after { content: ""; width: 10px; height: 10px; border: 1px solid #8ec9ef; border-radius: 50%; background: #76bfe8; box-shadow: 0 0 8px rgba(106,183,229,.9), 0 0 18px rgba(61,111,140,.6); transition: transform 120ms ease, background 120ms ease; }
   .dot:hover, .dot[aria-expanded="true"] { transform: none; background: transparent; }
   .dot:hover::after, .dot[aria-expanded="true"]::after { transform: scale(1.18); background: #d7f3ff; }
-  .radial { width: 132px; height: 132px; }
-  .radialCenter { inset: 49px; font-size: 11px; }
-  .radialButtons button { left: 49px; top: 49px; width: 34px; height: 34px; transform: rotate(var(--angle)) translateY(-44px) rotate(calc(-1 * var(--angle))); }
+  .radial { width: 124px; height: 124px; }
+  .radialCenter { inset: 45px; font-size: 10px; }
+  .radialButtons button { left: 45px; top: 45px; width: 34px; height: 34px; transform: rotate(var(--angle)) translateY(-42px) rotate(calc(-1 * var(--angle))); }
   .radialButtons button::before { inset: -7px; }
 }

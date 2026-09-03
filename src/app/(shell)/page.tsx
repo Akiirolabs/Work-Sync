@@ -172,6 +172,13 @@ export default function WorkspacePage() {
       subtitle="Open field · saved notes"
       actions={
         <div className="ms-row">
+          <label className="ms-workspace-note-picker">
+            <span>Notes</span>
+            <select aria-label="Select Workspace note" value={activeId ?? ""} onChange={(event) => { const note = saved.find((item) => item.id === event.target.value); if (note) openNote(note); else newNote(); }}>
+              <option value="">New note</option>
+              {saved.map((note) => <option key={note.id} value={note.id}>{note.title}</option>)}
+            </select>
+          </label>
           <button type="button" className="ms-btn" onClick={newNote} disabled={busy}>
             New
           </button>

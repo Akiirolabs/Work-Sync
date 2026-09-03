@@ -71,15 +71,19 @@ test("table ellipsis exposes the exact compact menu actions", () => {
   assert.match(tablesPage, /Choose icon for/);
 });
 
-test("mobile keeps table selection and the circular Macro Panel easy to use", () => {
-  assert.match(tablesPage, /className="ms-mobile-table-picker"/);
+test("table and Workspace selectors keep navigation beside their primary controls", () => {
+  assert.match(tablesPage, /className="ms-table-picker"/);
   assert.match(tablesPage, /aria-label="Select table"/);
-  assert.match(globalCss, /\.ms-mobile-table-picker \{ display: none; \}/);
-  assert.match(globalCss, /\.ms-mobile-table-picker \{ width: fit-content;/);
-  assert.match(macroPanels, /const MOBILE_RADIAL_SIZE = 132/);
+  assert.doesNotMatch(tablesPage, /> Grid </);
+  assert.match(tablesPage, /aria-label="Add table"/);
+  assert.match(workspacePage, /className="ms-workspace-note-picker"/);
+  assert.match(workspacePage, /aria-label="Select Workspace note"/);
+  assert.match(globalCss, /\.ms-table-picker \{ width: fit-content;/);
+  assert.match(globalCss, /\.ms-workspace-note-picker/);
+  assert.match(macroPanels, /const MOBILE_RADIAL_SIZE = 124/);
   assert.match(macroPanels, /window\.matchMedia\("\(max-width: 700px\)"\)/);
   assert.match(macroPanelsCss, /\.dot::after/);
-  assert.match(macroPanelsCss, /\.radial \{ width: 132px; height: 132px;/);
+  assert.match(macroPanelsCss, /\.radial \{ width: 124px; height: 124px;/);
 });
 
 test("column chevrons expose every referenced action", () => {
@@ -440,6 +444,9 @@ test("AO commands are consumed once by their destination pages", () => {
 test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(appShell, /label: "To Do", href: "\/todo"/);
   assert.match(todoPage, /createTodo\(title, "normal", undefined, description\)/);
+  assert.match(todoPage, /className="ms-todo-disclosure"/);
+  assert.match(todoPage, /expandedTasks\[item\.id\] && <div className="ms-todo-detail"/);
+  assert.match(globalCss, /\.ms-todo-disclosure\[aria-expanded="true"\]/);
   assert.match(todoPage, /Complete \$\{item\.title\}/);
   assert.match(todoPage, /Clear completed/);
   assert.match(aoMenu, /selected\.category === "To Do"/);
