@@ -461,7 +461,10 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(todoPage, /aria-label="New task due date"/);
   assert.match(todoPage, /className="ms-todo-title-row"/);
   assert.match(todoPage, /className="ms-todo-menu-date"/);
-  assert.match(globalCss, /\.ms-todo-menu \{ width: min\(300px, calc\(100vw - 32px\)\); max-width: calc\(100vw - 32px\); \}/);
+  assert.match(todoPage, /createPortal\(<form className="ms-todo-menu"/);
+  assert.match(todoPage, /style=\{\{ left: taskMenu\.left, top: taskMenu\.top \}\}/);
+  assert.match(globalCss, /\.ms-todo-menu \{ position: fixed; z-index: 2147483640;/);
+  assert.match(globalCss, /\.ms-todo-menu \{ width: min\(320px, calc\(100vw - 20px\)\); max-width: calc\(100vw - 20px\); \}/);
   assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\] \{ width: 100%; min-width: 0; padding-right: 7px;/);
   assert.match(todoPage, /className="ms-todo-disclosure"/);
   assert.match(todoPage, /expandedTasks\[item\.id\] && <div className="ms-todo-detail"/);

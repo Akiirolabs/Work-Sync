@@ -350,7 +350,7 @@
 .ms-todo-actions > button:hover, .ms-todo-actions > button[aria-expanded="true"] { background: var(--ms-bg-3); color: var(--ms-text-bright); }
 .ms-todo-actions > button.ms-todo-delete { font-size: 17px; }
 .ms-todo-actions > button.ms-todo-delete:hover { background: #342429; color: #ef8175; }
-.ms-todo-menu { position: absolute; z-index: 30; top: 39px; right: 7px; width: 245px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 9px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2026; box-shadow: 0 14px 36px rgba(0,0,0,.62); }
+.ms-todo-menu { position: fixed; z-index: 2147483640; width: 245px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 9px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2026; box-shadow: 0 14px 36px rgba(0,0,0,.62); }
 .ms-todo-menu label { min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--ms-text-dim); font: 9px var(--ms-font-sans); }
 .ms-todo-menu input { width: 100%; min-width: 0; max-width: 100%; height: 32px; box-sizing: border-box; border: 1px solid var(--ms-edge); border-radius: 5px; outline: 0; padding: 0 7px; color-scheme: dark; background: #0d1217; color: var(--ms-text); font: 10px var(--ms-font-sans); }
 .ms-todo-menu input:focus { border-color: var(--ms-accent-soft); }
@@ -381,7 +381,7 @@
 .ms-subtask-add button { height: 31px; border: 1px solid var(--ms-edge); border-radius: 5px; background: var(--ms-bg-2); color: var(--ms-text); font: 9px var(--ms-font-sans); cursor: pointer; }
 .ms-subtask-add button:hover { border-color: var(--ms-accent-soft); color: var(--ms-text-bright); }
 .ms-todo-empty { padding: 25px 4px; text-align: center; }
-@media (max-width: 800px) { .ms-todo-add, .ms-subtask-add { grid-template-columns: 1fr; } .ms-todo-date-field { width: 100%; } .ms-todo-menu { width: min(300px, calc(100vw - 32px)); max-width: calc(100vw - 32px); } .ms-todo-menu-date input[type="date"] { width: 100%; min-width: 0; padding-right: 7px; } .ms-todo-list-bar { align-items: flex-start; flex-direction: column; } .ms-todo-list-bar .ms-muted { max-width: 100%; text-align: left; } .ms-todo-list-picker select { max-width: calc(100vw - 130px); } .ms-todo-new-list { flex-wrap: wrap; } .ms-todo-new-list input { flex-basis: 100%; } }
+@media (max-width: 800px) { .ms-todo-add, .ms-subtask-add { grid-template-columns: 1fr; } .ms-todo-date-field { width: 100%; } .ms-todo-menu { width: min(320px, calc(100vw - 20px)); max-width: calc(100vw - 20px); } .ms-todo-menu-date input[type="date"] { width: 100%; min-width: 0; padding-right: 7px; } .ms-todo-list-bar { align-items: flex-start; flex-direction: column; } .ms-todo-list-bar .ms-muted { max-width: 100%; text-align: left; } .ms-todo-list-picker select { max-width: calc(100vw - 130px); } .ms-todo-new-list { flex-wrap: wrap; } .ms-todo-new-list input { flex-basis: 100%; } }
 
 /* Tables workspace */
 .ms-tables-sidebar { min-height: 0; border-right: 1px solid var(--ms-edge-soft); background: rgba(9, 13, 18, .72); padding: 13px 9px; }
