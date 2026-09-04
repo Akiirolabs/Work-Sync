@@ -39,11 +39,13 @@ test("a login transfers signed-out data once without exposing another user", () 
 test("account sync collects durable user data and excludes one-shot commands", () => {
   localStorage.setItem("work-sync:tables:user:user-1", '[{"name":"Shared"}]');
   localStorage.setItem("work-sync:todos:user:user-1", '[{"title":"Follow up"}]');
+  localStorage.setItem("work-sync:todo-lists:user:user-1", '[{"id":"launch","title":"Launch"}]');
   localStorage.setItem("work-sync:ao-table-command:user:user-1", '{"action":"add-row"}');
   localStorage.setItem("work-sync:tables:user:user-2", '[{"name":"Private"}]');
 
   assert.deepEqual(collectUserStorage("user-1"), {
     "work-sync:tables": '[{"name":"Shared"}]',
     "work-sync:todos": '[{"title":"Follow up"}]',
+    "work-sync:todo-lists": '[{"id":"launch","title":"Launch"}]',
   });
 });

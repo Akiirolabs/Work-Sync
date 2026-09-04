@@ -470,6 +470,17 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(globalCss, /\.ms-todo-item \{ flex: 0 0 auto; \}/);
 });
 
+test("To Do organizes tasks into saved lists while keeping an all-task Overview", () => {
+  assert.match(todoModel, /TODO_LIST_STORAGE_KEY = "work-sync:todo-lists"/);
+  assert.match(todoModel, /listId\?: string/);
+  assert.match(todoPage, /<span>Folders<\/span><select aria-label="Select To Do list"/);
+  assert.match(todoPage, /<option value="">Overview<\/option>/);
+  assert.match(todoPage, /\+ Create task list/);
+  assert.match(todoPage, /listId: activeListId/);
+  assert.match(todoPage, /localStorage\.setItem\(userStorageKey\(TODO_LIST_STORAGE_KEY\)/);
+  assert.match(globalCss, /\.ms-todo-list-picker \{/);
+});
+
 test("two Macro Panel entrances expose no more than six Vault shortcuts", () => {
   assert.match(appShell, /<MacroPanels onAgent=/);
   assert.match(macroPanels, /const LIMIT = 6/);

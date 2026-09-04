@@ -1,11 +1,13 @@
 export const TODO_STORAGE_KEY = "work-sync:todos";
+export const TODO_LIST_STORAGE_KEY = "work-sync:todo-lists";
 export const TODO_STORAGE_EVENT = "work-sync:todo-updated";
 export const AO_TODO_COMMAND_KEY = "work-sync:ao-todo-command";
 export const AO_TODO_COMMAND_EVENT = "work-sync:ao-todo-command";
 
 export type TodoPriority = "normal" | "high";
 export type TodoSubtask = { id: string; title: string; description?: string; completed: boolean; subtasks?: TodoSubtask[] };
-export type TodoItem = { id: string; title: string; description?: string; subtasks?: TodoSubtask[]; completed: boolean; priority: TodoPriority; dueDate?: string; createdAt: string };
+export type TodoList = { id: string; title: string; createdAt: string };
+export type TodoItem = { id: string; title: string; description?: string; subtasks?: TodoSubtask[]; completed: boolean; priority: TodoPriority; dueDate?: string; createdAt: string; listId?: string };
 export type AOTodoCommand = { action: string; title?: string; taskId?: string; taskTitle?: string; description?: string; subtaskTitle?: string; subtaskDescription?: string; subtasks?: string[]; dueDate?: string; commands?: AOTodoCommand[] };
 
 const makeId = () => crypto.randomUUID();
