@@ -306,6 +306,14 @@ test("Timeline uses real To Do sources below Calendar and preserves branched day
   assert.doesNotMatch(historyPage, /Back to Tomlog|Fixed documents|Markdown preview/);
 });
 
+test("Timeline events open their day document with event context", () => {
+  assert.match(historyPage, /function openCalendarEvent\(event: CalendarEvent\)/);
+  assert.match(historyPage, /setDayEventId\(event\?\.id \?\? null\)/);
+  assert.match(historyPage, /className="ms-day-event-context"/);
+  assert.match(historyPage, /else openCalendarEvent\(entry\)/);
+  assert.match(globalCss, /\.ms-day-task-context, \.ms-day-event-context/);
+});
+
 test("Workspace menus and Timeline lists remain reachable without changing calendar behavior", () => {
   assert.match(workspacePage, /aria-haspopup="menu"/);
   assert.match(workspacePage, /data-workspace-note-actions/);
@@ -376,7 +384,7 @@ test("AO preset browser is gated behind Presets and every preset can be saved", 
   assert.match(aoMenu, /macroMode === "presets"/);
   assert.match(aoMenu, /aria-label="Presets information"/);
   assert.match(aoMenu, /aria-label="Text preset information"/);
-  assert.match(aoMenu, /<VaultIcon \/><b>Create macro<\/b><em>›<\/em>/);
+  assert.match(aoMenu, /<MacroIcon name="macro" className=\{styles\.menuIcon\} \/><b>Create macro<\/b><MacroIcon name="chevron"/);
   assert.match(aoMenu, /saveBuiltIn\(macro\)/);
   assert.match(aoMenu, /\? "Saved" : "Save"/);
   assert.match(aoMenu, /macroId: macro\.id/);
@@ -393,7 +401,7 @@ test("AO builds reusable multi-step macros and stores them in Vault", () => {
 });
 
 test("Vault uses its atom as the information affordance and keeps navigation arrow behavior", () => {
-  assert.match(aoMenu, /<VaultIcon info \/><b>Vault<\/b><em>›<\/em>/);
+  assert.match(aoMenu, /<VaultIcon info \/><b>Vault<\/b><MacroIcon name="chevron"/);
   assert.match(aoMenu, /className=\{`\$\{styles\.vaultIcon\}\$\{info \? ` \$\{styles\.vaultInfo\}`/);
   assert.match(aoCss, /\.vaultInfo:hover::after/);
   assert.doesNotMatch(aoMenu, /<span className=\{styles\.infoMark\}[^>]*aria-label="Vault information"/);
@@ -404,9 +412,9 @@ test("Vault manages typed entries and a six-item draggable Main Macro row", () =
   assert.match(aoMenu, /className=\{styles\.vaultItems\}/);
   assert.match(aoCss, /\.vaultItems \{ max-height: 371px; overflow-y: auto/);
   assert.match(aoMenu, /data-vault-chevron/);
-  assert.match(aoMenu, /isTextPreset\(preset\) \? "T" : "M"/);
+  assert.match(aoMenu, /<MacroIcon name=\{isTextPreset\(preset\) \? "text" : "macro"\}/);
   assert.match(aoMenu, /Add to Main Macro/);
-  assert.match(aoMenu, /macroTextIcon\(preset\)/);
+  assert.match(aoMenu, /macroIconFor\(preset\.macroId, Boolean\(preset\.steps\?\.length\)\)/);
   assert.doesNotMatch(aoMenu, /MAIN_MACRO_ICONS|mainIconPrompt|chooseMainIcon/);
   assert.match(aoMenu, /icon: undefined/);
   assert.match(aoMenu, /VAULT_CATEGORIES/);
@@ -421,8 +429,8 @@ test("Vault manages typed entries and a six-item draggable Main Macro row", () =
   assert.match(aoMenu, /Delete<\/button>/);
 });
 
-test("macro cards use fast explicit text-symbol icons and responsive hover targets", () => {
-  assert.match(macroPanels, /macroTextIcon\(item\)/);
+test("macro cards use fast explicit vector icons and responsive hover targets", () => {
+  assert.match(macroPanels, /<MacroIcon name=\{macroIconFor\(item\.macroId/);
   assert.match(macroPanels, /<small role="tooltip">\{item\.label\}<\/small>/);
   assert.doesNotMatch(macroPanels, /title=\{item\.label\}/);
   assert.match(macroPanelsCss, /\.radialButtons button::before \{[^}]*inset: -5px/);
@@ -444,7 +452,9 @@ test("AO commands are consumed once by their destination pages", () => {
 
 test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(appShell, /label: "To Do", href: "\/todo"/);
-  assert.match(todoPage, /createTodo\(title, "normal", undefined, description\)/);
+  assert.match(todoPage, /createTodo\(title, "normal", dueDate \|\| undefined, description\)/);
+  assert.match(todoPage, /aria-label="New task due date"/);
+  assert.match(todoPage, /className="ms-todo-title-row"/);
   assert.match(todoPage, /className="ms-todo-disclosure"/);
   assert.match(todoPage, /expandedTasks\[item\.id\] && <div className="ms-todo-detail"/);
   assert.match(globalCss, /\.ms-todo-disclosure\[aria-expanded="true"\]/);

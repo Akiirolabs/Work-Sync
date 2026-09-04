@@ -58,6 +58,6 @@ export function AgentSideChat({ open, onClose }: { open: boolean; onClose: () =>
       <div ref={chatEnd} />
     </div>
     {error && <p className={styles.error}>{error}</p>}
-    <form className={styles.composer} onSubmit={(event) => { event.preventDefault(); void send(); }}><textarea aria-label="Message Agent" value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} placeholder="Message Agent…" rows={2} autoFocus /><button type="submit" disabled={!draft.trim() || busy}>{busy ? "…" : "Send"}</button></form>
+    <form className={styles.composer} onSubmit={(event) => { event.preventDefault(); void send(); }}><textarea aria-label="Message Agent" value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} placeholder="Message Agent…" rows={2} /><button type="submit" disabled={!draft.trim() || busy}>{busy ? "…" : "Send"}</button></form>
   </aside>;
 }

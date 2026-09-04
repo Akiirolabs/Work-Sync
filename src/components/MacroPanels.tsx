@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { AO_MACROS_CHANGED_EVENT, AO_MACROS_KEY, AO_OPEN_MACRO_MENU_EVENT, AO_RUN_MAIN_MACRO_EVENT, macroTextIcon, type AOMacroPreset } from "@/lib/ao-macro";
+import { AO_MACROS_CHANGED_EVENT, AO_MACROS_KEY, AO_OPEN_MACRO_MENU_EVENT, AO_RUN_MAIN_MACRO_EVENT, type AOMacroPreset } from "@/lib/ao-macro";
 import { userStorageKey } from "@/lib/user-storage";
+import { MacroIcon, macroIconFor } from "./MacroIcon";
 import styles from "./MacroPanels.module.css";
 
 const LIMIT = 6;
@@ -33,7 +34,7 @@ function MacroButtons({ items, radial = false, close, onShowTooltip, onHideToolt
     onPointerEnter={(event) => onShowTooltip?.(event.currentTarget, item.label)} onPointerLeave={onHideTooltip}
     onFocus={(event) => onShowTooltip?.(event.currentTarget, item.label)} onBlur={onHideTooltip}
     onClick={() => { window.dispatchEvent(new CustomEvent(AO_RUN_MAIN_MACRO_EVENT, { detail: { presetId: item.id } })); close?.(); onHideTooltip?.(); }}
-  ><span aria-hidden>{macroTextIcon(item)}</span>{!radial && <small role="tooltip">{item.label}</small>}</button>)}</div>;
+  ><MacroIcon name={macroIconFor(item.macroId, Boolean(item.steps?.length))} className={styles.macroIcon} />{!radial && <small role="tooltip">{item.label}</small>}</button>)}</div>;
 }
 
 export function MacroPanels({ onAgent }: { onAgent: () => void }) {
@@ -112,7 +113,7 @@ export function MacroPanels({ onAgent }: { onAgent: () => void }) {
       <button type="button" aria-expanded={compactOpen} onClick={() => { refresh(); setCompactOpen((value) => !value); }}>Macro Panel</button>
       <button type="button" onClick={onAgent}>Agent</button>
     </div>
-    {compactOpen && <section className={styles.compact} role="dialog" aria-label="Macro Panel shortcuts"><header><strong>Main Macros</strong><button type="button" aria-label="Open full Macro menu" onClick={() => window.dispatchEvent(new Event(AO_OPEN_MACRO_MENU_EVENT))}>Vault ›</button></header><MacroButtons items={items} close={() => setCompactOpen(false)} /></section>}
+    {compactOpen && <section className={styles.compact} role="dialog" aria-label="Macro Panel shortcuts"><header><strong>Main Macros</strong><button type="button" aria-label="Open full Macro menu" onClick={() => window.dispatchEvent(new Event(AO_OPEN_MACRO_MENU_EVENT))}>Vault <MacroIcon name="chevron" /></button></header><MacroButtons items={items} close={() => setCompactOpen(false)} /></section>}
     <button type="button" className={styles.dot} aria-label="Toggle circular Macro Panel" aria-expanded={radialOpen} title="Macro Panel · Ctrl+M" onClick={toggleRadial} />
     {radialOpen && <section ref={radial} className={`${styles.radial}${dragging ? ` ${styles.dragging}` : ""}`} style={radialPosition ? { left: radialPosition.left, top: radialPosition.top } as CSSProperties : undefined} role="dialog" aria-label="Circular Macro Panel"><button type="button" className={styles.radialCenter} aria-label="Move circular Macro Panel" onPointerDown={beginDrag}>AO</button><MacroButtons items={items} radial onShowTooltip={showRadialTooltip} onHideTooltip={() => setRadialTooltip(null)} /></section>}
     {radialTooltip && createPortal(<div className={styles.radialTooltip} style={{ left: radialTooltip.left, top: radialTooltip.top }} role="tooltip">{radialTooltip.label}</div>, document.body)}
