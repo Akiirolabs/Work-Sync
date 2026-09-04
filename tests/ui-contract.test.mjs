@@ -460,6 +460,8 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(todoPage, /createTodo\(title, "normal", dueDate \|\| undefined, description\)/);
   assert.match(todoPage, /aria-label="New task due date"/);
   assert.match(todoPage, /className="ms-todo-title-row"/);
+  assert.match(todoPage, /className="ms-todo-menu-date"/);
+  assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\] \{ min-width: 0; padding-right: 3px;/);
   assert.match(todoPage, /className="ms-todo-disclosure"/);
   assert.match(todoPage, /expandedTasks\[item\.id\] && <div className="ms-todo-detail"/);
   assert.match(globalCss, /\.ms-todo-disclosure\[aria-expanded="true"\]/);

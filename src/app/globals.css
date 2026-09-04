@@ -351,8 +351,10 @@
 .ms-todo-actions > button.ms-todo-delete { font-size: 17px; }
 .ms-todo-actions > button.ms-todo-delete:hover { background: #342429; color: #ef8175; }
 .ms-todo-menu { position: absolute; z-index: 30; top: 39px; right: 7px; width: 245px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 9px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2026; box-shadow: 0 14px 36px rgba(0,0,0,.62); }
-.ms-todo-menu label { display: flex; flex-direction: column; gap: 4px; color: var(--ms-text-dim); font: 9px var(--ms-font-sans); }
-.ms-todo-menu input { width: 100%; height: 32px; box-sizing: border-box; border: 1px solid var(--ms-edge); border-radius: 5px; outline: 0; padding: 0 7px; color-scheme: dark; background: #0d1217; color: var(--ms-text); font: 10px var(--ms-font-sans); }
+.ms-todo-menu label { min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--ms-text-dim); font: 9px var(--ms-font-sans); }
+.ms-todo-menu input { width: 100%; min-width: 0; max-width: 100%; height: 32px; box-sizing: border-box; border: 1px solid var(--ms-edge); border-radius: 5px; outline: 0; padding: 0 7px; color-scheme: dark; background: #0d1217; color: var(--ms-text); font: 10px var(--ms-font-sans); }
+.ms-todo-menu-date { overflow: hidden; }
+.ms-todo-menu-date input[type="date"] { min-width: 0; padding-right: 3px; }
 .ms-todo-menu input:focus { border-color: var(--ms-accent-soft); }
 .ms-todo-menu > div { display: flex; justify-content: flex-end; gap: 5px; }
 .ms-todo-menu button { height: 29px; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0 9px; background: var(--ms-bg-2); color: var(--ms-text); font: 9px var(--ms-font-sans); cursor: pointer; }
