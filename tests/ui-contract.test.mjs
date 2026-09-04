@@ -559,7 +559,7 @@ test("Agent is a simple authenticated streaming text side chat", () => {
   assert.match(appShell, /src="\/ao-agent\.png"/);
   assert.match(appShell, /aria-label="Open AO Agent menu"/);
   assert.match(globalCss, /\.ms-ao-agent-launcher \{ position: fixed; z-index: 649; right: 15px; bottom: 15px; \}/);
-  assert.match(globalCss, /\.ms-ao-agent-button \{ width: 40px; height: 40px;/);
+  assert.match(globalCss, /\.ms-ao-agent-button \{ width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; box-shadow: none;/);
   assert.match(agentChatRoute, /requestUserId\(req\)/);
   assert.match(agentChatRoute, /model: "gpt-5-mini"/);
   assert.match(agentChatRoute, /https:\/\/api\.openai\.com\/v1\/responses/);
