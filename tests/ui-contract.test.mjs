@@ -22,6 +22,7 @@ const sourceFindRoute = await readFile(new URL("../src/app/api/v1/sources/find/r
 const clientApi = await readFile(new URL("../src/lib/client-api.ts", import.meta.url), "utf8");
 const macroPanels = await readFile(new URL("../src/components/MacroPanels.tsx", import.meta.url), "utf8");
 const macroPanelsCss = await readFile(new URL("../src/components/MacroPanels.module.css", import.meta.url), "utf8");
+const macroIcons = await readFile(new URL("../src/components/MacroIcon.tsx", import.meta.url), "utf8");
 const agentChat = await readFile(new URL("../src/components/AgentSideChat.tsx", import.meta.url), "utf8");
 const agentChatCss = await readFile(new URL("../src/components/AgentSideChat.module.css", import.meta.url), "utf8");
 const agentChatRoute = await readFile(new URL("../src/app/api/v1/agent/chat/route.ts", import.meta.url), "utf8");
@@ -384,7 +385,7 @@ test("AO preset browser is gated behind Presets and every preset can be saved", 
   assert.match(aoMenu, /macroMode === "presets"/);
   assert.match(aoMenu, /aria-label="Presets information"/);
   assert.match(aoMenu, /aria-label="Text preset information"/);
-  assert.match(aoMenu, /<MacroIcon name="macro" className=\{styles\.menuIcon\} \/><b>Create macro<\/b><MacroIcon name="chevron"/);
+  assert.match(aoMenu, /<VaultIcon \/><b>Create macro<\/b><MacroIcon name="chevron"/);
   assert.match(aoMenu, /saveBuiltIn\(macro\)/);
   assert.match(aoMenu, /\? "Saved" : "Save"/);
   assert.match(aoMenu, /macroId: macro\.id/);
@@ -418,6 +419,7 @@ test("Vault manages typed entries and a six-item draggable Main Macro row", () =
   assert.match(aoMenu, /Choose Macro Panel icon for/);
   assert.match(aoMenu, /setPresetIcon\(menuPreset, icon\.name\)/);
   assert.match(aoMenu, /MACRO_ICON_OPTIONS/);
+  for (const label of ["Code", "Terminal", "Database", "Cloud", "Code branch", "Build", "Tools", "Book", "Study", "Lab", "Idea"]) assert.match(macroIcons, new RegExp(label));
   assert.doesNotMatch(aoMenu, /MAIN_MACRO_ICONS|mainIconPrompt|chooseMainIcon/);
   assert.match(aoMenu, /icon: undefined/);
   assert.match(aoMenu, /VAULT_CATEGORIES/);

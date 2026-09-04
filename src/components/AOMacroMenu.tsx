@@ -293,9 +293,9 @@ export function AOMacroMenu() {
       </div>}
       {view === "macro" && !selected && macroMode === "home" && <div className={styles.list}>
         {notice && <p className={styles.notice}>{notice}</p>}
-        <button type="button" onClick={() => setMacroMode("presets")}><span className={styles.infoMark} tabIndex={0} aria-label="Presets information" data-tip="Browse, configure and save built-in app shortcuts."><MacroIcon name="folder" /></span><b>Presets</b><MacroIcon name="chevron" className={styles.chevron} /></button>
-        <button type="button" onClick={() => beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!)}><span className={styles.infoMark} tabIndex={0} aria-label="Text preset information" data-tip="Save reusable text in Vault for notes, pages and macros."><MacroIcon name="text" /></span><b>Create text preset</b><MacroIcon name="chevron" className={styles.chevron} /></button>
-        <button type="button" onClick={() => { setBuilderName(""); setBuilderSteps([]); setMacroMode("builder"); }}><MacroIcon name="macro" className={styles.menuIcon} /><b>Create macro</b><MacroIcon name="chevron" className={styles.chevron} /></button>
+        <button type="button" onClick={() => setMacroMode("presets")}><span className={styles.infoMark} tabIndex={0} aria-label="Presets information" data-tip="Browse, configure and save built-in app shortcuts."><MacroIcon name="info" /></span><b>Presets</b><MacroIcon name="chevron" className={styles.chevron} /></button>
+        <button type="button" onClick={() => beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!)}><span className={styles.infoMark} tabIndex={0} aria-label="Text preset information" data-tip="Save reusable text in Vault for notes, pages and macros."><MacroIcon name="info" /></span><b>Create text preset</b><MacroIcon name="chevron" className={styles.chevron} /></button>
+        <button type="button" onClick={() => { setBuilderName(""); setBuilderSteps([]); setMacroMode("builder"); }}><VaultIcon /><b>Create macro</b><MacroIcon name="chevron" className={styles.chevron} /></button>
         <hr /><button type="button" onClick={() => showView("vault")}><VaultIcon /><b>Open Vault</b><MacroIcon name="chevron" className={styles.chevron} /></button>
       </div>}
       {view === "macro" && !selected && macroMode === "presets" && <div className={styles.macroBrowser}>
