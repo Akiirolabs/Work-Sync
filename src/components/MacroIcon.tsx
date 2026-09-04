@@ -2,6 +2,16 @@ import type { SVGProps } from "react";
 
 export type MacroIconName = "add" | "back" | "calendar" | "check" | "chevron" | "close" | "computer" | "delete" | "document" | "folder" | "history" | "info" | "macro" | "pin" | "route" | "search" | "settings" | "sources" | "table" | "text" | "todo" | "turbo" | "vault" | "verify";
 
+export const MACRO_ICON_OPTIONS: ReadonlyArray<{ name: MacroIconName; label: string }> = [
+  { name: "macro", label: "Macro" }, { name: "document", label: "Document" }, { name: "text", label: "Text" }, { name: "todo", label: "To Do" },
+  { name: "table", label: "Table" }, { name: "folder", label: "Folder" }, { name: "vault", label: "Vault" }, { name: "computer", label: "Computer" },
+  { name: "calendar", label: "Calendar" }, { name: "history", label: "History" }, { name: "route", label: "Route" }, { name: "turbo", label: "Turbo" },
+  { name: "verify", label: "Verify" }, { name: "sources", label: "Sources" }, { name: "settings", label: "Settings" }, { name: "search", label: "Search" },
+  { name: "check", label: "Check" }, { name: "pin", label: "Pin" }, { name: "add", label: "Add" },
+];
+
+export function isMacroIconName(value?: string): value is MacroIconName { return MACRO_ICON_OPTIONS.some((icon) => icon.name === value); }
+
 export function MacroIcon({ name, className, ...props }: { name: MacroIconName; className?: string } & SVGProps<SVGSVGElement>) {
   const common = { className, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true, ...props };
   switch (name) {
@@ -32,7 +42,8 @@ export function MacroIcon({ name, className, ...props }: { name: MacroIconName; 
   }
 }
 
-export function macroIconFor(macroId?: string, custom = false): MacroIconName {
+export function macroIconFor(macroId?: string, custom = false, selectedIcon?: string): MacroIconName {
+  if (isMacroIconName(selectedIcon)) return selectedIcon;
   if (custom) return "macro";
   if (macroId?.startsWith("workspace-")) return "document";
   if (macroId?.startsWith("todo-")) return "todo";

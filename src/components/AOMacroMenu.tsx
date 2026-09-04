@@ -13,7 +13,7 @@ import {
 import { decodePageCell, type WorkTable } from "@/lib/table-model";
 import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, TODO_STORAGE_KEY, type AOTodoCommand, type TodoItem } from "@/lib/todo-model";
 import { userStorageKey } from "@/lib/user-storage";
-import { MacroIcon, macroIconFor, type MacroIconName } from "./MacroIcon";
+import { MACRO_ICON_OPTIONS, MacroIcon, macroIconFor, type MacroIconName } from "./MacroIcon";
 import styles from "./AOMacroMenu.module.css";
 
 type View = "main" | "macro" | "route" | "turbo" | "vault" | "preferences";
@@ -112,10 +112,11 @@ export function AOMacroMenu() {
   function toggleMainPreset(preset: AOMacroPreset) {
     const currentMain = presets.filter((item) => item.main);
     if (!preset.main && currentMain.length >= MAIN_MACRO_LIMIT) { setNotice(`Main Macro is limited to ${MAIN_MACRO_LIMIT} shortcuts.`); setVaultMenu(null); return; }
-    if (!preset.main) { const nextOrder = currentMain.reduce((highest, item) => Math.max(highest, item.mainOrder ?? 0), -1) + 1; savePresets(presets.map((item) => item.id === preset.id ? { ...item, main: true, mainOrder: nextOrder, icon: undefined } : item)); setNotice(`${preset.label} added to Main Macro.`); setVaultMenu(null); return; }
+    if (!preset.main) { const nextOrder = currentMain.reduce((highest, item) => Math.max(highest, item.mainOrder ?? 0), -1) + 1; savePresets(presets.map((item) => item.id === preset.id ? { ...item, main: true, mainOrder: nextOrder, icon: undefined } : item)); setNotice(`${preset.label} added to Main Macro. Choose its icon below.`); return; }
     savePresets(presets.map((item) => item.id === preset.id ? { ...item, main: false, mainOrder: undefined, icon: undefined } : item));
     setNotice(`${preset.label} removed from Main Macro.`); setVaultMenu(null);
   }
+  function setPresetIcon(preset: AOMacroPreset, icon: MacroIconName) { savePresets(presets.map((item) => item.id === preset.id ? { ...item, icon } : item)); setNotice(`${preset.label} now uses the ${MACRO_ICON_OPTIONS.find((item) => item.name === icon)?.label ?? "selected"} icon.`); }
   function deleteVaultPreset(preset: AOMacroPreset) { savePresets(presets.filter((item) => item.id !== preset.id)); setNotice(`${preset.label} deleted.`); setVaultMenu(null); }
   function reorderMainPreset(sourceId: string, targetId: string) {
     const ordered = presets.filter((item) => item.main).sort((a, b) => (a.mainOrder ?? 0) - (b.mainOrder ?? 0)); const from = ordered.findIndex((item) => item.id === sourceId); const to = ordered.findIndex((item) => item.id === targetId);
@@ -315,7 +316,7 @@ export function AOMacroMenu() {
       {view === "vault" && !customToRun && <div className={styles.vault}>
         <label className={styles.search}><MacroIcon name="search" /><input aria-label="Search Vault" value={vaultQuery} onChange={(event) => setVaultQuery(event.target.value)} placeholder="Search saved macros…" /></label>
         <div className={styles.vaultMainHeader}><strong>Main Macro</strong><span>{mainItems.length}/{MAIN_MACRO_LIMIT}</span></div>
-        {mainItems.length ? <div className={styles.mainMacros} aria-label="Main Macro shortcuts">{mainItems.map((preset) => <button type="button" key={preset.id} draggable onMouseEnter={(event) => showMainTooltip(event.currentTarget, preset.label)} onMouseLeave={() => setMainTooltip(null)} onFocus={(event) => showMainTooltip(event.currentTarget, preset.label)} onBlur={() => setMainTooltip(null)} onDragStart={(event) => { setMainTooltip(null); event.dataTransfer.setData("text/main-macro", preset.id); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/main-macro"); if (source) reorderMainPreset(source, preset.id); }} onClick={() => launchPreset(preset)} aria-label={`Run ${preset.label}`}><MacroIcon name={macroIconFor(preset.macroId, Boolean(preset.steps?.length))} className={styles.mainMacroIcon} /></button>)}</div> : <p className={styles.mainEmpty}>Choose up to six shortcuts from Vault.</p>}
+        {mainItems.length ? <div className={styles.mainMacros} aria-label="Main Macro shortcuts">{mainItems.map((preset) => <button type="button" key={preset.id} draggable onMouseEnter={(event) => showMainTooltip(event.currentTarget, preset.label)} onMouseLeave={() => setMainTooltip(null)} onFocus={(event) => showMainTooltip(event.currentTarget, preset.label)} onBlur={() => setMainTooltip(null)} onDragStart={(event) => { setMainTooltip(null); event.dataTransfer.setData("text/main-macro", preset.id); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/main-macro"); if (source) reorderMainPreset(source, preset.id); }} onClick={() => launchPreset(preset)} aria-label={`Run ${preset.label}`}><MacroIcon name={macroIconFor(preset.macroId, Boolean(preset.steps?.length), preset.icon)} className={styles.mainMacroIcon} /></button>)}</div> : <p className={styles.mainEmpty}>Choose up to six shortcuts from Vault.</p>}
         <div className={styles.categories}>{VAULT_CATEGORIES.map((item) => <button type="button" key={item} className={!vaultTextOnly && vaultCategory === item ? styles.active : ""} onClick={() => { setVaultTextOnly(false); setVaultCategory(item); }}>{item}</button>)}</div>
         {vaultRecent && <p className={styles.notice}>Recently used macros</p>}{notice && <p className={styles.notice}>{notice}</p>}
         <div className={styles.vaultTextActions}><button type="button" onClick={() => { setView("macro"); setMacroMode("home"); beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!); }}>Create text preset</button><button type="button" className={vaultTextOnly ? styles.active : ""} onClick={() => { setVaultTextOnly(true); setVaultRecent(false); }}>View saved text</button></div>
@@ -324,6 +325,7 @@ export function AOMacroMenu() {
       {menuPreset && vaultMenu && createPortal(<div className={styles.vaultActions} style={{ left: vaultMenu.left, top: vaultMenu.top }} role="menu" aria-label={`Manage ${menuPreset.label}`} data-vault-actions>
 
         <button type="button" onClick={() => toggleMainPreset(menuPreset)}><MacroIcon name={menuPreset.main ? "pin" : "add"} />{menuPreset.main ? "Remove from Main Macro" : "Add to Main Macro"}</button>
+        {menuPreset.main && <><p>Macro Panel icon</p><div className={styles.mainIconGrid} role="group" aria-label={`Choose Macro Panel icon for ${menuPreset.label}`}>{MACRO_ICON_OPTIONS.map((icon) => <button type="button" key={icon.name} className={menuPreset.icon === icon.name ? styles.active : ""} aria-label={`Use ${icon.label} icon`} aria-pressed={menuPreset.icon === icon.name} onClick={() => setPresetIcon(menuPreset, icon.name)}><MacroIcon name={icon.name} /></button>)}</div></>}
         <hr /><button type="button" className={styles.danger} onClick={() => deleteVaultPreset(menuPreset)}><MacroIcon name="delete" />Delete</button>
       </div>, document.body)}
       {mainTooltip && createPortal(<div className={styles.mainMacroTooltip} style={{ left: mainTooltip.left, top: mainTooltip.top }} role="tooltip">{mainTooltip.label}</div>, document.body)}

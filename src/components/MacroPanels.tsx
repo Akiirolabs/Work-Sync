@@ -34,7 +34,7 @@ function MacroButtons({ items, radial = false, close, onShowTooltip, onHideToolt
     onPointerEnter={(event) => onShowTooltip?.(event.currentTarget, item.label)} onPointerLeave={onHideTooltip}
     onFocus={(event) => onShowTooltip?.(event.currentTarget, item.label)} onBlur={onHideTooltip}
     onClick={() => { window.dispatchEvent(new CustomEvent(AO_RUN_MAIN_MACRO_EVENT, { detail: { presetId: item.id } })); close?.(); onHideTooltip?.(); }}
-  ><MacroIcon name={macroIconFor(item.macroId, Boolean(item.steps?.length))} className={styles.macroIcon} />{!radial && <small role="tooltip">{item.label}</small>}</button>)}</div>;
+  ><MacroIcon name={macroIconFor(item.macroId, Boolean(item.steps?.length), item.icon)} className={styles.macroIcon} />{!radial && <small role="tooltip">{item.label}</small>}</button>)}</div>;
 }
 
 export function MacroPanels({ onAgent }: { onAgent: () => void }) {

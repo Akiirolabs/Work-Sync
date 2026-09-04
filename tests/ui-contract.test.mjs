@@ -414,7 +414,10 @@ test("Vault manages typed entries and a six-item draggable Main Macro row", () =
   assert.match(aoMenu, /data-vault-chevron/);
   assert.match(aoMenu, /<MacroIcon name=\{isTextPreset\(preset\) \? "text" : "macro"\}/);
   assert.match(aoMenu, /Add to Main Macro/);
-  assert.match(aoMenu, /macroIconFor\(preset\.macroId, Boolean\(preset\.steps\?\.length\)\)/);
+  assert.match(aoMenu, /macroIconFor\(preset\.macroId, Boolean\(preset\.steps\?\.length\), preset\.icon\)/);
+  assert.match(aoMenu, /Choose Macro Panel icon for/);
+  assert.match(aoMenu, /setPresetIcon\(menuPreset, icon\.name\)/);
+  assert.match(aoMenu, /MACRO_ICON_OPTIONS/);
   assert.doesNotMatch(aoMenu, /MAIN_MACRO_ICONS|mainIconPrompt|chooseMainIcon/);
   assert.match(aoMenu, /icon: undefined/);
   assert.match(aoMenu, /VAULT_CATEGORIES/);

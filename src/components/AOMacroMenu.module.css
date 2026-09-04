@@ -111,7 +111,8 @@
 .vaultActions { position: fixed; z-index: 2147483647; width: 218px; box-sizing: border-box; padding: 7px; border: 1px solid #39434c; border-radius: 8px; background: #1b2026; color: #e5e9ed; box-shadow: 0 16px 42px rgba(0,0,0,.65); }
 .vaultActions > p { margin: 2px 4px 6px; color: #7f8992; font: 9px var(--ms-font-mono); text-transform: uppercase; letter-spacing: .05em; }
 .mainIconGrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; margin-bottom: 7px; }
-.mainIconGrid button { height: 27px; border: 1px solid transparent; border-radius: 5px; background: #11161b; color: #aeb8c0; font: 10px var(--ms-font-mono); cursor: pointer; }
+.mainIconGrid button { height: 27px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 5px; background: #11161b; color: #edf3f6; cursor: pointer; }
+.mainIconGrid button svg { width: 14px; height: 14px; }
 .mainIconGrid button:hover, .mainIconGrid button.active { border-color: var(--ms-accent-soft); background: #28323a; color: #e7ebef; }
 .vaultActions > button { width: 100%; height: 33px; display: grid; grid-template-columns: 25px 1fr; align-items: center; border: 0; border-radius: 5px; background: transparent; color: #dfe5e9; text-align: left; font: 10px var(--ms-font-sans); cursor: pointer; }
 .vaultActions > button:hover { background: #30373e; }
