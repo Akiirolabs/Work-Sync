@@ -483,6 +483,11 @@ test("To Do organizes tasks into saved lists while keeping an all-task Overview"
   assert.match(todoPage, /Choose a folder to see the To Dos it contains/);
   assert.match(todoPage, /Unfiled To Dos/);
   assert.match(globalCss, /\.ms-todo-folder-overview \{/);
+  assert.match(todoPage, /aria-label="Folder options"/);
+  assert.match(todoPage, /Rename folder/);
+  assert.match(todoPage, /aria-label="Rename task list"/);
+  assert.match(todoPage, /function renameTaskList/);
+  assert.match(globalCss, /\.ms-todo-folder-menu \{/);
 });
 
 test("Workspace note actions import and export CSV and Word documents", () => {

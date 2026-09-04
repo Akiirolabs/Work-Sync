@@ -285,9 +285,16 @@
 }
 .ms-todo-list-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; margin-bottom: 10px; }
 .ms-todo-list-bar .ms-muted { min-width: 0; margin: 0; overflow: hidden; color: var(--ms-text-dim); font-size: 10px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.ms-todo-folder-actions { position: relative; display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; }
 .ms-todo-list-picker { height: 31px; display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; min-width: 0; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0 6px 0 8px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .ms-todo-list-picker select { min-width: 96px; max-width: min(230px, 43vw); border: 0; outline: 0; padding: 0 14px 0 0; background: transparent; color: var(--ms-text-bright); font: 600 11px var(--ms-font-sans); cursor: pointer; }
 .ms-todo-list-picker:focus-within { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
+.ms-todo-folder-more { width: 29px; height: 29px; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0; background: var(--ms-bg-2); color: var(--ms-text-bright); font: 18px/1 var(--ms-font-sans); cursor: pointer; }
+.ms-todo-folder-more:hover:not(:disabled), .ms-todo-folder-more[aria-expanded="true"] { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
+.ms-todo-folder-more:disabled { opacity: .4; cursor: not-allowed; }
+.ms-todo-folder-menu { position: absolute; z-index: 1000; top: 35px; right: 0; width: 142px; padding: 5px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2127; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
+.ms-todo-folder-menu button { width: 100%; height: 30px; border: 0; border-radius: 5px; padding: 0 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
+.ms-todo-folder-menu button:hover, .ms-todo-folder-menu button:focus-visible { background: #303840; outline: 0; }
 .ms-todo-new-list { display: flex; align-items: center; gap: 7px; margin: -2px 0 10px; }
 .ms-todo-new-list input { min-width: 0; flex: 1; height: 31px; box-sizing: border-box; border: 1px solid var(--ms-edge); border-radius: 5px; outline: 0; padding: 0 9px; background: #10151a; color: var(--ms-text); font: 11px var(--ms-font-sans); }
 .ms-todo-new-list input:focus { border-color: var(--ms-accent-soft); }
