@@ -70,6 +70,12 @@ export function applyTableMacro(tables: WorkTable[], activeId: string, command: 
       return { ...applied, openPage: applied.openPage ?? result.openPage, openColumn: applied.openColumn ?? result.openColumn, focusCell: applied.focusCell ?? result.focusCell, filter: applied.filter ?? result.filter, summary: applied.summary ?? result.summary };
     }, { tables, activeId });
   }
+  if (command.action === "agent-output-page") {
+    let next = newTable(tables.length + 1, "AO Agent output"); const title = command.title?.trim() || "AO Agent output";
+    next = addColumn(next, "page"); const firstColumn = next.columns[0]!; const pageColumn = next.columns.at(-1)!;
+    next = updateCell(next, next.rows[0]!.id, firstColumn.id, title); next = updateCell(next, next.rows[0]!.id, pageColumn.id, encodePageCell(title, wrapExternalValue(command.text?.trim() ?? "")));
+    return { tables: [...tables, next], activeId: next.id, openPage: { rowId: next.rows[0]!.id, columnId: pageColumn.id } };
+  }
   if (["add-table", "table-create", "table-template"].includes(command.action)) {
     let next = newTable(tables.length + 1, command.name, command.template);
     if (command.action === "add-table" && command.text?.trim()) { next = { ...next, name: "Turbo" }; next = updateCell(next, next.rows[0]!.id, next.columns[0]!.id, command.text.trim()); }

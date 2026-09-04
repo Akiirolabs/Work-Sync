@@ -41,6 +41,17 @@ test("creates a page column, stores its title, and requests the scoped page moda
   assert.equal(decodePageCell(table.rows[0].cells[pageColumn.id]).title, "Trial 42");
 });
 
+test("Agent output opens as a dedicated page in a new Tables workspace", () => {
+  const initial = makeTable(1);
+  const result = applyTableMacro([initial], initial.id, { action: "agent-output-page", title: "Release summary", text: "The release is ready." });
+  const table = result.tables.at(-1);
+  const pageColumn = table.columns.at(-1);
+  assert.equal(table.name, "AO Agent output");
+  assert.equal(pageColumn.type, "page");
+  assert.deepEqual(result.openPage, { rowId: table.rows[0].id, columnId: pageColumn.id });
+  assert.equal(decodePageCell(table.rows[0].cells[pageColumn.id]).body, "The release is ready.");
+});
+
 test("chained row-page macros can create a missing Page column automatically", () => {
   const initial = makeTable(1);
   const result = applyTableMacro([initial], initial.id, { action: "row-page", tableId: initial.id, columnId: "__new_page__", name: "Trial", title: "Trial page" });

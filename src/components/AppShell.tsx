@@ -21,16 +21,16 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [agentOpen, setAgentOpen] = useState(false);
+  const [agentLauncherOpen, setAgentLauncherOpen] = useState(false);
+  const [agentLauncherHidden, setAgentLauncherHidden] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
 
   return (
-    <Shell statusContent={<MacroPanels onAgent={() => setAgentOpen((value) => !value)} />} topRight={<AccountSettings />}>
+    <Shell statusContent={<MacroPanels onAgent={() => { setAgentLauncherOpen(false); setAgentOpen((value) => !value); }} />} topRight={<AccountSettings />}>
       <AOMacroMenu />
       <AgentSideChat open={agentOpen} onClose={() => setAgentOpen(false)} />
-      {!agentOpen && <button type="button" className="ms-ao-agent-button" aria-label="Open AO Agent" title="AO Agent" onClick={() => setAgentOpen(true)}>
-        <img src="/ao-agent.png" alt="" />
-        <span>AO Agent</span>
-      </button>}
+      {!agentOpen && !agentLauncherHidden && <div className="ms-ao-agent-launcher"><button type="button" className="ms-ao-agent-button" aria-label="Open AO Agent menu" title="AO Agent" aria-expanded={agentLauncherOpen} onClick={() => setAgentLauncherOpen((value) => !value)}><img src="/ao-agent.png" alt="" /></button>{agentLauncherOpen && <section className="ms-ao-agent-menu" role="dialog" aria-label="AO Agent menu"><header><strong>AO Agent</strong></header><button type="button" onClick={() => { setAgentLauncherOpen(false); setAgentOpen(true); }}>Open side chat</button><button type="button" onClick={() => { setAgentLauncherOpen(false); setAgentLauncherHidden(true); }}>Hide AO Agent</button></section>}</div>}
+      {!agentOpen && agentLauncherHidden && <button type="button" className="ms-ao-agent-restore" aria-label="Show AO Agent" onClick={() => { setAgentLauncherHidden(false); setAgentLauncherOpen(true); }}>‹</button>}
       <Rail
         label="Navigate"
         collapsed={railCollapsed}

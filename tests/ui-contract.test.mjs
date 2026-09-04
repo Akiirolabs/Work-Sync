@@ -33,6 +33,7 @@ const verifyNoteRoute = await readFile(new URL("../src/app/api/v1/verify-note/ro
 const historyPage = await readFile(new URL("../src/app/(shell)/history/page.tsx", import.meta.url), "utf8");
 const connectPage = await readFile(new URL("../src/app/(shell)/connect/page.tsx", import.meta.url), "utf8");
 const aoCatalog = await readFile(new URL("../src/lib/ao-catalog.ts", import.meta.url), "utf8");
+const aoMacro = await readFile(new URL("../src/lib/ao-macro.ts", import.meta.url), "utf8");
 const todoModel = await readFile(new URL("../src/lib/todo-model.ts", import.meta.url), "utf8");
 const markdownPreview = await readFile(new URL("../src/components/MarkdownPreview.tsx", import.meta.url), "utf8");
 
@@ -552,17 +553,27 @@ test("circular Macro Panel stays open across navigation and moves from its AO ce
 
 test("Agent is a simple authenticated streaming text side chat", () => {
   assert.match(appShell, /className="ms-ao-agent-button"/);
+  assert.match(appShell, /className="ms-ao-agent-menu"/);
+  assert.match(appShell, /Hide AO Agent/);
+  assert.match(appShell, /className="ms-ao-agent-restore"/);
   assert.match(appShell, /src="\/ao-agent\.png"/);
-  assert.match(appShell, /aria-label="Open AO Agent"/);
-  assert.match(globalCss, /\.ms-ao-agent-button \{ position: fixed; z-index: 649; right: 15px; bottom: 15px;/);
+  assert.match(appShell, /aria-label="Open AO Agent menu"/);
+  assert.match(globalCss, /\.ms-ao-agent-launcher \{ position: fixed; z-index: 649; right: 15px; bottom: 15px; \}/);
+  assert.match(globalCss, /\.ms-ao-agent-button \{ width: 40px; height: 40px;/);
   assert.match(agentChatRoute, /requestUserId\(req\)/);
   assert.match(agentChatRoute, /model: "gpt-5-mini"/);
   assert.match(agentChatRoute, /https:\/\/api\.openai\.com\/v1\/responses/);
   assert.match(agentChatRoute, /tools: \[\]/);
   assert.match(agentChatRoute, /stream: true/);
-  assert.match(agentChat, /aria-label="Agent side chat"/);
+  assert.match(agentChat, /aria-label="AO Agent side chat"/);
+  assert.match(agentChat, /Open AO Agent chat history/);
+  assert.match(agentChat, /Send an Agent output/);
+  assert.match(agentChat, /Select an Agent response to send/);
+  assert.match(agentChat, /Workspace Notes.*To Do.*Tables page.*Verify/);
+  assert.match(aoMacro, /agent-output-page/);
+  assert.match(verifyPage, /work-sync:agent-verify-context/);
   assert.match(agentChat, /aria-label="Agent conversation"/);
-  assert.match(agentChat, /aria-label="Message Agent"/);
+  assert.match(agentChat, /aria-label="Message AO Agent"/);
   assert.match(agentChat, /response\.output_text\.delta/);
   assert.match(agentChat, /scrollIntoView/);
   assert.match(agentChat, /gpt-5-mini · text chat · no tools/);
