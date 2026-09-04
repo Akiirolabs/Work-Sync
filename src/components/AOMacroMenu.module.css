@@ -48,6 +48,8 @@
 .saved button:hover { background: #33262a; color: #db756b; }
 
 .vaultIcon { width: 18px; height: 18px; display: grid; place-items: center; color: #e7ebef; }
+.vaultIcon svg { width: 18px; height: 18px; overflow: visible; fill: none; stroke: currentColor; stroke-width: .8; }
+.vaultIcon svg circle { fill: currentColor; stroke: none; }
 .vaultInfo { position: relative; }
 .vaultInfo::after { content: attr(data-tip); position: absolute; z-index: 5; left: 25px; top: 50%; width: 205px; padding: 7px 8px; border: 1px solid #394149; border-radius: 6px; background: #0d1115; color: #cbd2d8; box-shadow: 0 8px 22px rgba(0,0,0,.45); font: 10px/1.4 var(--ms-font-sans); text-align: left; opacity: 0; pointer-events: none; transform: translateY(-50%) translateX(-3px); transition: opacity .12s ease, transform .12s ease; }
 .vaultInfo:hover::after, .vaultInfo:focus::after { opacity: 1; transform: translateY(-50%) translateX(0); }

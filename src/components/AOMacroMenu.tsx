@@ -33,7 +33,7 @@ const WORKSPACE_TEMPLATES: Record<string, string> = {
 };
 
 function AOLogo() { return <span className={styles.logo} aria-hidden><svg viewBox="0 0 32 32" focusable="false"><path d="M3.75 22.5 9.25 8.75l5.5 13.75M5.9 17h6.7" /><rect x="18" y="8.75" width="10" height="13.75" rx="5" /></svg></span>; }
-function VaultIcon({ info = false }: { info?: boolean }) { return <MacroIcon name="vault" className={`${styles.vaultIcon}${info ? ` ${styles.vaultInfo}` : ""}`} tabIndex={info ? 0 : undefined} aria-label={info ? "Vault information" : undefined} data-tip={info ? "See, run and manage all saved text and custom macros." : undefined} aria-hidden={info ? undefined : true} />; }
+function VaultIcon({ info = false }: { info?: boolean }) { return <span className={`${styles.vaultIcon}${info ? ` ${styles.vaultInfo}` : ""}`} tabIndex={info ? 0 : undefined} aria-label={info ? "Vault information" : undefined} data-tip={info ? "See, run and manage all saved text and custom macros." : undefined} aria-hidden={info ? undefined : true}><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" /><ellipse cx="12" cy="12" rx="9" ry="3.5" /><ellipse cx="12" cy="12" rx="9" ry="3.5" transform="rotate(60 12 12)" /><ellipse cx="12" cy="12" rx="9" ry="3.5" transform="rotate(120 12 12)" /></svg></span>; }
 
 export function AOMacroMenu() {
   const router = useRouter(); const pathname = usePathname(); const rootRef = useRef<HTMLDivElement>(null);
@@ -293,8 +293,8 @@ export function AOMacroMenu() {
       </div>}
       {view === "macro" && !selected && macroMode === "home" && <div className={styles.list}>
         {notice && <p className={styles.notice}>{notice}</p>}
-        <button type="button" onClick={() => setMacroMode("presets")}><span className={styles.infoMark} tabIndex={0} aria-label="Presets information" data-tip="Browse, configure and save built-in app shortcuts."><MacroIcon name="info" /></span><b>Presets</b><MacroIcon name="chevron" className={styles.chevron} /></button>
-        <button type="button" onClick={() => beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!)}><span className={styles.infoMark} tabIndex={0} aria-label="Text preset information" data-tip="Save reusable text in Vault for notes, pages and macros."><MacroIcon name="info" /></span><b>Create text preset</b><MacroIcon name="chevron" className={styles.chevron} /></button>
+        <button type="button" onClick={() => setMacroMode("presets")}><span className={styles.infoMark} tabIndex={0} aria-label="Presets information" data-tip="Browse, configure and save built-in app shortcuts.">i</span><b>Presets</b><MacroIcon name="chevron" className={styles.chevron} /></button>
+        <button type="button" onClick={() => beginMacro(AO_MACRO_CATALOG.find((item) => item.id === "vault-create")!)}><span className={styles.infoMark} tabIndex={0} aria-label="Text preset information" data-tip="Save reusable text in Vault for notes, pages and macros.">i</span><b>Create text preset</b><MacroIcon name="chevron" className={styles.chevron} /></button>
         <button type="button" onClick={() => { setBuilderName(""); setBuilderSteps([]); setMacroMode("builder"); }}><VaultIcon /><b>Create macro</b><MacroIcon name="chevron" className={styles.chevron} /></button>
         <hr /><button type="button" onClick={() => showView("vault")}><VaultIcon /><b>Open Vault</b><MacroIcon name="chevron" className={styles.chevron} /></button>
       </div>}
