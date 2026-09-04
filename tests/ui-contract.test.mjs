@@ -464,8 +464,10 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(todoPage, /createPortal\(<form className="ms-todo-menu"/);
   assert.match(todoPage, /style=\{\{ left: taskMenu\.left, top: taskMenu\.top \}\}/);
   assert.match(globalCss, /\.ms-todo-menu \{ position: fixed; z-index: 2147483640;/);
-  assert.match(globalCss, /\.ms-todo-menu \{ width: min\(320px, calc\(100vw - 20px\)\); max-width: calc\(100vw - 20px\); \}/);
-  assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\] \{ width: 100%; min-width: 0; padding-right: 7px;/);
+  assert.match(globalCss, /\.ms-todo-menu \{ width: min\(320px, calc\(100vw - 20px\)\); max-width: calc\(100vw - 20px\); min-width: 0; \}/);
+  assert.match(globalCss, /\.ms-todo-menu-date \{ width: 100%; max-width: 100%; \}/);
+  assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\] \{ display: block; width: 100%; min-width: 0; max-width: 100%; min-inline-size: 0; inline-size: 100%; max-inline-size: 100%; padding-right: 7px;/);
+  assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\]::\-webkit\-datetime\-edit, \.ms-todo-menu-date input\[type="date"\]::\-webkit\-datetime\-edit-fields-wrapper \{ padding: 0; \}/);
   assert.match(todoPage, /className="ms-todo-disclosure"/);
   assert.match(todoPage, /expandedTasks\[item\.id\] && <div className="ms-todo-detail"/);
   assert.match(globalCss, /\.ms-todo-disclosure\[aria-expanded="true"\]/);
