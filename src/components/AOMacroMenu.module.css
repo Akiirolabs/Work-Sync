@@ -20,6 +20,7 @@
 .list > button { width: 100%; min-height: 39px; display: grid; grid-template-columns: 32px 1fr auto; align-items: center; border: 0; border-radius: 7px; padding: 0 8px; background: transparent; color: #e5e9ed; text-align: left; cursor: pointer; }
 .list > button:hover, .list > button.active { background: #2d3339; }
 .list > button > svg, .list > button .chevron { width: 16px; height: 16px; color: #edf2f5; }
+.list > button .preferencesGear { width: 18px; height: 18px; color: #f5f8fa; fill: currentColor; }
 .list > button .infoMark { position: relative; width: 16px; height: 16px; display: grid; place-items: center; box-sizing: border-box; border: 1px solid #717d87; border-radius: 50%; color: #aeb7c0; font: 500 italic 10px/1 var(--ms-font-sans); }
 .infoMark::after { content: attr(data-tip); position: absolute; z-index: 3; left: 23px; top: 50%; width: 205px; padding: 7px 8px; border: 1px solid #394149; border-radius: 6px; background: #0d1115; color: #cbd2d8; box-shadow: 0 8px 22px rgba(0,0,0,.45); font: 10px/1.4 var(--ms-font-sans); text-align: left; opacity: 0; pointer-events: none; transform: translateY(-50%) translateX(-3px); transition: opacity .12s ease, transform .12s ease; }
 .infoMark:hover::after, .infoMark:focus::after { opacity: 1; transform: translateY(-50%) translateX(0); }

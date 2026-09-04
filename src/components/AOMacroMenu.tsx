@@ -34,6 +34,7 @@ const WORKSPACE_TEMPLATES: Record<string, string> = {
 
 function AOLogo() { return <span className={styles.logo} aria-hidden><svg viewBox="0 0 32 32" focusable="false"><path d="M3.75 22.5 9.25 8.75l5.5 13.75M5.9 17h6.7" /><rect x="18" y="8.75" width="10" height="13.75" rx="5" /></svg></span>; }
 function VaultIcon({ info = false }: { info?: boolean }) { return <span className={`${styles.vaultIcon}${info ? ` ${styles.vaultInfo}` : ""}`} tabIndex={info ? 0 : undefined} aria-label={info ? "Vault information" : undefined} data-tip={info ? "See, run and manage all saved text and custom macros." : undefined} aria-hidden={info ? undefined : true}><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" /><ellipse cx="12" cy="12" rx="9" ry="3.5" /><ellipse cx="12" cy="12" rx="9" ry="3.5" transform="rotate(60 12 12)" /><ellipse cx="12" cy="12" rx="9" ry="3.5" transform="rotate(120 12 12)" /></svg></span>; }
+function PreferencesGear() { return <svg className={styles.preferencesGear} viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94a7.3 7.3 0 0 0 .05-.94 7.3 7.3 0 0 0-.05-.94l2.03-1.58-1.92-3.32-2.39.96a6.9 6.9 0 0 0-1.63-.94L14.87 3h-3.84l-.36 2.18a6.9 6.9 0 0 0-1.63.94l-2.39-.96-1.92 3.32 2.03 1.58a7.3 7.3 0 0 0-.05.94c0 .32.02.63.05.94l-2.03 1.58 1.92 3.32 2.39-.96c.5.4 1.05.72 1.63.94l.36 2.18h3.84l.36-2.18c.58-.22 1.13-.54 1.63-.94l2.39.96 1.92-3.32-2.03-1.58ZM12 15.25A3.25 3.25 0 1 1 12 8.75a3.25 3.25 0 0 1 0 6.5Z" /></svg>; }
 
 export function AOMacroMenu() {
   const router = useRouter(); const pathname = usePathname(); const rootRef = useRef<HTMLDivElement>(null);
@@ -289,7 +290,7 @@ export function AOMacroMenu() {
         <button type="button" onClick={() => showView("route")}><span className={styles.infoMark} tabIndex={0} aria-label="Route information" data-tip="Jump directly to a destination in Work Sync."><MacroIcon name="route" /></span><b>Route</b><MacroIcon name="chevron" className={styles.chevron} /></button>
         <button type="button" onClick={() => showView("turbo")}><span className={styles.infoMark} tabIndex={0} aria-label="Turbo information" data-tip="Send written input to Workspace or a new table."><MacroIcon name="turbo" /></span><b>Turbo</b><MacroIcon name="chevron" className={styles.chevron} /></button>
         <button type="button" onClick={() => showView("vault")}><VaultIcon info /><b>Vault</b><MacroIcon name="chevron" className={styles.chevron} /></button>
-        <hr /><button type="button" onClick={() => showView("preferences")}><MacroIcon name="settings" className={styles.menuIcon} /><b>Preferences</b><MacroIcon name="chevron" className={styles.chevron} /></button>
+        <hr /><button type="button" onClick={() => showView("preferences")}><PreferencesGear /><b>Preferences</b><MacroIcon name="chevron" className={styles.chevron} /></button>
       </div>}
       {view === "macro" && !selected && macroMode === "home" && <div className={styles.list}>
         {notice && <p className={styles.notice}>{notice}</p>}

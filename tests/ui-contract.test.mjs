@@ -368,6 +368,8 @@ test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () 
   assert.match(aoMenu, /AO_MACROS_KEY/);
   assert.match(aoMenu, /AO_TABLE_COMMAND_KEY/);
   assert.match(aoMenu, /AO_WORKSPACE_TEXT_KEY/);
+  assert.match(aoMenu, /function PreferencesGear\(\)/);
+  assert.match(aoMenu, /<PreferencesGear \/>/);
   assert.match(aoMenu, /document\.addEventListener\("pointerdown", dismiss\)/);
   assert.match(aoMenu, /event\.key !== "Escape"/);
   assert.doesNotMatch(aoMenu, /<span>M<\/span>|<span>R<\/span>|<span>T<\/span>/);
