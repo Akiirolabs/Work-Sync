@@ -15,8 +15,11 @@ type Note = {
   createdAt: string;
   updatedAt: string;
 };
+type WorkspaceProject = { id: string; title: string };
 
 const DRAFT_KEY = "work-sync:workspace-draft";
+const PROJECTS_KEY = "work-sync:workspace-projects";
+const NOTE_PROJECTS_KEY = "work-sync:workspace-note-projects";
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -83,7 +86,12 @@ export default function WorkspacePage() {
   const persistedNote = useRef<{ id: string | null; body: string }>({ id: null, body: "" });
   const [ready, setReady] = useState(false);
   const [noteMenuOpen, setNoteMenuOpen] = useState(false);
+  const [projects, setProjects] = useState<WorkspaceProject[]>([]);
+  const [noteProjects, setNoteProjects] = useState<Record<string, string>>({});
+  const [activeProjectId, setActiveProjectId] = useState("all");
   const importInput = useRef<HTMLInputElement>(null);
+
+  const visibleSaved = activeProjectId === "all" ? saved : saved.filter((note) => activeProjectId === "unassigned" ? !noteProjects[note.id] : noteProjects[note.id] === activeProjectId);
 
   const load = useCallback(async () => {
     setSaved(await api<Note[]>("/api/v1/notes"));
@@ -117,6 +125,14 @@ export default function WorkspacePage() {
     if (!ready) return;
     localStorage.setItem(userStorageKey(DRAFT_KEY), JSON.stringify({ body, activeId }));
   }, [body, activeId, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try { const stored = JSON.parse(localStorage.getItem(userStorageKey(PROJECTS_KEY)) ?? "[]") as WorkspaceProject[]; setProjects(Array.isArray(stored) ? stored.filter((project) => typeof project?.id === "string" && typeof project?.title === "string") : []); } catch { setProjects([]); }
+    try { const stored = JSON.parse(localStorage.getItem(userStorageKey(NOTE_PROJECTS_KEY)) ?? "{}") as Record<string, string>; setNoteProjects(stored && typeof stored === "object" ? stored : {}); } catch { setNoteProjects({}); }
+  }, [ready]);
+  useEffect(() => { if (ready) localStorage.setItem(userStorageKey(PROJECTS_KEY), JSON.stringify(projects)); }, [projects, ready]);
+  useEffect(() => { if (ready) localStorage.setItem(userStorageKey(NOTE_PROJECTS_KEY), JSON.stringify(noteProjects)); }, [noteProjects, ready]);
 
   useEffect(() => {
     if (!ready) return;
@@ -178,7 +194,7 @@ export default function WorkspacePage() {
     setBusy(true); setError(null);
     try {
       if (activeId) { const updated = await api<Note>(`/api/v1/notes/${activeId}`, { method: "PATCH", body: JSON.stringify({ body }) }); persistedNote.current = { id: updated.id, body: updated.body }; setSaved((prev) => [updated, ...prev.filter((note) => note.id !== updated.id)]); }
-      else { creating.current = true; const created = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body }) }); const draftMeta = localStorage.getItem(userStorageKey("work-sync:line-meta:draft")); if (draftMeta) localStorage.setItem(userStorageKey(`work-sync:line-meta:${created.id}`), draftMeta); persistedNote.current = { id: created.id, body: created.body }; setSaved((prev) => [created, ...prev]); setActiveId(created.id); }
+      else { creating.current = true; const created = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body }) }); const draftMeta = localStorage.getItem(userStorageKey("work-sync:line-meta:draft")); if (draftMeta) localStorage.setItem(userStorageKey(`work-sync:line-meta:${created.id}`), draftMeta); persistedNote.current = { id: created.id, body: created.body }; setSaved((prev) => [created, ...prev]); setActiveId(created.id); if (activeProjectId !== "all" && activeProjectId !== "unassigned") setNoteProjects((current) => ({ ...current, [created.id]: activeProjectId })); }
     } catch (e) { setError(e instanceof ApiError && e.status === 401 ? "Sign in to save notes." : e instanceof Error ? e.message : "Save failed"); }
     finally { creating.current = false; setBusy(false); }
   }
@@ -197,12 +213,26 @@ export default function WorkspacePage() {
     try {
       await api(`/api/v1/notes/${activeId}`, { method: "DELETE" });
       setSaved((prev) => prev.filter((n) => n.id !== activeId));
+      setNoteProjects((current) => { const next = { ...current }; delete next[activeId]; return next; });
       newNote();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setBusy(false);
     }
+  }
+
+  function createProject() {
+    const title = window.prompt("Name this project")?.trim();
+    if (!title) return;
+    const project = { id: crypto.randomUUID(), title: title.slice(0, 80) };
+    setProjects((current) => [...current, project]);
+    setActiveProjectId(project.id);
+  }
+  function assignCurrentNote(projectId: string) {
+    if (!activeId) return;
+    setNoteProjects((current) => { const next = { ...current }; if (projectId) next[activeId] = projectId; else delete next[activeId]; return next; });
+    setNoteMenuOpen(false);
   }
 
   function exportCsv() {
@@ -236,20 +266,26 @@ export default function WorkspacePage() {
       actions={
         <div className="ms-row">
           <div className="ms-workspace-note-actions" data-workspace-note-actions>
+            <label className="ms-workspace-project-picker">
+              <span>Projects</span>
+              <select aria-label="Select Workspace project" value={activeProjectId} onChange={(event) => { if (event.target.value === "new") createProject(); else setActiveProjectId(event.target.value); }}>
+                <option value="all">All notes</option><option value="unassigned">Unassigned</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}<option value="new">New project…</option>
+              </select>
+            </label>
             <label className="ms-workspace-note-picker">
             <span>Notes</span>
             <select aria-label="Select Workspace note" value={activeId ?? ""} onChange={(event) => { const note = saved.find((item) => item.id === event.target.value); if (note) openNote(note); else newNote(); }}>
               <option value="">New note</option>
-              {saved.map((note) => <option key={note.id} value={note.id}>{note.title}</option>)}
+              {visibleSaved.map((note) => <option key={note.id} value={note.id}>{note.title}</option>)}
             </select>
             </label>
             <button type="button" className="ms-workspace-note-more" aria-label="Workspace note options" aria-haspopup="menu" aria-expanded={noteMenuOpen} onClick={() => setNoteMenuOpen((open) => !open)}>⋯</button>
-            {noteMenuOpen && <div className="ms-workspace-note-menu" role="menu"><button type="button" onClick={() => { void saveCurrentNote(); setNoteMenuOpen(false); }} disabled={busy || !body.trim()}>Save</button><button type="button" onClick={() => { setNoteMenuOpen(false); window.requestAnimationFrame(() => importInput.current?.click()); }} disabled={busy}>Import CSV or Word…</button><button type="button" onClick={exportCsv} disabled={!body.trim()}>Export CSV</button><button type="button" onClick={() => { void exportDocx(); }} disabled={!body.trim()}>Export Word (.docx)</button><button type="button" className="is-danger" onClick={() => { void deleteNote(); setNoteMenuOpen(false); }} disabled={busy || !activeId}>Delete</button></div>}
+            {noteMenuOpen && <div className="ms-workspace-note-menu" role="menu"><button type="button" className="ms-workspace-menu-new" onClick={() => { newNote(); setNoteMenuOpen(false); }} disabled={busy}>New</button><button type="button" onClick={() => { void saveCurrentNote(); setNoteMenuOpen(false); }} disabled={busy || !body.trim()}>Save to cloud</button><label className="ms-workspace-project-assignment">Add to project<select aria-label="Add current note to project" value={activeId ? noteProjects[activeId] ?? "" : ""} onChange={(event) => assignCurrentNote(event.target.value)} disabled={!activeId}><option value="">No project</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select></label><button type="button" onClick={() => { setNoteMenuOpen(false); window.requestAnimationFrame(() => importInput.current?.click()); }} disabled={busy}>Import CSV or Word…</button><button type="button" onClick={exportCsv} disabled={!body.trim()}>Export CSV</button><button type="button" onClick={() => { void exportDocx(); }} disabled={!body.trim()}>Export Word (.docx)</button><button type="button" className="is-danger" onClick={() => { void deleteNote(); setNoteMenuOpen(false); }} disabled={busy || !activeId}>Delete</button></div>}
           </div>
-          <button type="button" className="ms-btn" onClick={newNote} disabled={busy}>
+          <button type="button" className="ms-btn ms-workspace-new" onClick={newNote} disabled={busy}>
             New
           </button>
-          <span className="ms-muted">{busy ? "Saving…" : "Saved to cloud"}</span>
+          <span className="ms-muted ms-workspace-save-status">{busy ? "Saving…" : "Saved to cloud"}</span>
         </div>
       }
     >

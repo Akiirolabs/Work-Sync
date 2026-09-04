@@ -7,16 +7,27 @@ import { userStorageKey } from "@/lib/user-storage";
 import { AO_WORKSPACE_LINE_COMMAND_EVENT, AO_WORKSPACE_LINE_COMMAND_KEY, type AOWorkspaceLineCommand } from "@/lib/ao-macro";
 
 type BlockKind = "text" | "h1" | "h2" | "h3" | "h4" | "bullets" | "numbered" | "todo" | "code" | "quote";
-type Line = { id: string; text: string; kind: BlockKind; comments: string[]; accent: boolean; align: "left" | "center" | "right" };
+type TableData = { cells: string[]; header: boolean };
+type Line = { id: string; text: string; kind: BlockKind; comments: string[]; accent: boolean; align: "left" | "center" | "right"; table?: TableData };
 
 const makeLine = (text = ""): Line => ({ id: crypto.randomUUID(), text, kind: "text", comments: [], accent: false, align: "left" });
+
+function tableCells(value: string) { return value.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim()); }
+const tableDivider = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/;
 
 function markdownLines(value: string): Line[] {
   let inCodeBlock = false;
   const lines: Line[] = [];
-  for (const raw of value.replace(/\r/g, "").split("\n")) {
+  const rawLines = value.replace(/\r/g, "").split("\n");
+  for (let index = 0; index < rawLines.length; index += 1) {
+    const raw = rawLines[index]!;
     if (/^```/.test(raw.trim())) { inCodeBlock = !inCodeBlock; continue; }
     if (inCodeBlock) { lines.push({ ...makeLine(raw), kind: "code" }); continue; }
+    if (raw.includes("|") && tableDivider.test(rawLines[index + 1] ?? "")) {
+      const cells = tableCells(raw); lines.push({ ...makeLine(cells.join(" | ")), table: { cells, header: true } }); index += 2;
+      while (index < rawLines.length && rawLines[index]!.includes("|")) { const rowCells = tableCells(rawLines[index]!); lines.push({ ...makeLine(rowCells.join(" | ")), table: { cells: rowCells, header: false } }); index += 1; }
+      index -= 1; continue;
+    }
     const heading = raw.match(/^(#{1,4})\s+(.+)$/);
     if (heading) { lines.push({ ...makeLine(heading[2]!), kind: `h${heading[1]!.length}` as BlockKind }); continue; }
     const todo = raw.match(/^- \[([ xX])\]\s+(.+)$/);
@@ -30,6 +41,18 @@ function markdownLines(value: string): Line[] {
     lines.push(makeLine(raw));
   }
   return lines.length ? lines : [makeLine()];
+}
+
+function linesToMarkdown(lines: Line[]) {
+  const output: string[] = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    if (!line.table) { output.push(line.text); continue; }
+    const cells = line.table.cells;
+    if (line.table.header) { output.push(`| ${cells.join(" | ")} |`, `| ${cells.map(() => "---").join(" | ")} |`); }
+    else output.push(`| ${cells.join(" | ")} |`);
+  }
+  return output.join("\n");
 }
 
 function hasMarkdownStructure(value: string) { return /^(#{1,4}\s+|[-*]\s+|\d+\.\s+|- \[[ xX]\]\s+|>\s?|```)/m.test(value) || /\n\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*(?:\n|$)/.test(value); }
@@ -48,7 +71,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   const continuousTextarea = useRef<HTMLTextAreaElement | null>(null);
   const linesRef = useRef(lines);
   const appliedExternalValue = useRef<string | null>(null);
-  const joined = useMemo(() => lines.map((line) => line.text).join("\n"), [lines]);
+  const joined = useMemo(() => linesToMarkdown(lines), [lines]);
 
   useEffect(() => {
     const base = markdownLines(value);
@@ -61,7 +84,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   }, [storageKey]);
 
   useEffect(() => {
-    const currentJoined = (continuousSelection ? linesRef.current : lines).map((line) => line.text).join("\n");
+    const currentJoined = linesToMarkdown(continuousSelection ? linesRef.current : lines);
     if (loadedKey === storageKey && value !== currentJoined && appliedExternalValue.current !== value) {
       const incoming = markdownLines(value); const structured = hasMarkdownStructure(value);
       const next = incoming.map((line, i) => {
@@ -97,7 +120,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     return () => document.removeEventListener("pointerdown", dismissLineMenu);
   }, [active]);
 
-  function commit(next: Line[]) { linesRef.current = next; setLines(next); onChange(next.map((line) => line.text).join("\n")); }
+  function commit(next: Line[]) { linesRef.current = next; setLines(next); onChange(linesToMarkdown(next)); }
   function update(id: string, patch: Partial<Line>) { if (continuousSelection && patch.text !== undefined && editors.current[id]) editors.current[id]!.textContent = patch.text; commit(linesRef.current.map((line) => line.id === id ? { ...line, ...patch } : line)); }
   function selectionOffsets(editor: HTMLDivElement) {
     const selection = window.getSelection();
@@ -148,6 +171,24 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     const current = linesRef.current; const at = current.findIndex((line) => line.id === id); const fresh = makeLine(); const next = [...current];
     next.splice(at + (offset > 0 ? 1 : 0), 0, fresh); commit(next); setActive(null); focusSoon(fresh.id);
   }
+  function insertTable(id: string) {
+    const current = linesRef.current; const at = current.findIndex((line) => line.id === id);
+    const header = { ...makeLine("Column 1 | Column 2 | Column 3"), table: { cells: ["Column 1", "Column 2", "Column 3"], header: true } };
+    const firstRow = { ...makeLine(" |  | "), table: { cells: ["", "", ""], header: false } };
+    const secondRow = { ...makeLine(" |  | "), table: { cells: ["", "", ""], header: false } };
+    const next = [...current]; next.splice(at + 1, 0, header, firstRow, secondRow); commit(next); setActive(null);
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>(`[data-table-cell="${header.id}-0"]`)?.focus());
+  }
+  function updateTableCell(id: string, cellIndex: number, text: string) {
+    const next = linesRef.current.map((line) => line.id !== id || !line.table ? line : (() => { const cells = [...line.table.cells]; cells[cellIndex] = text; return { ...line, text: cells.join(" | "), table: { ...line.table, cells } }; })());
+    commit(next);
+  }
+  function addTableRow(id: string) {
+    const current = linesRef.current; const at = current.findIndex((line) => line.id === id); const columns = current[at]?.table?.cells.length ?? 3;
+    const row = { ...makeLine(Array.from({ length: columns }, () => "").join(" | ")), table: { cells: Array.from({ length: columns }, () => ""), header: false } };
+    const next = [...current]; next.splice(at + 1, 0, row); commit(next);
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>(`[data-table-cell="${row.id}-0"]`)?.focus());
+  }
   function remove(id: string) {
     const current = linesRef.current; if (current.length === 1) return update(id, { text: "" });
     const at = current.findIndex((line) => line.id === id); const next = current.filter((line) => line.id !== id); const target = next[Math.max(0, at - 1)]; commit(next); setActive(null); if (target) focusSoon(target.id);
@@ -185,7 +226,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
       <button type="button" contentEditable={false} className={`ms-line-toggle${active === line.id ? " is-active" : ""}`} onClick={() => { setActive(active === line.id ? null : line.id); setCommenting(false); }} aria-label={`Actions for line ${index + 1}`}>⋮⋮</button>
       <span className="ms-line-prefix" contentEditable={false} aria-hidden>{line.kind === "bullets" ? "•" : line.kind === "numbered" ? `${index + 1}.` : line.kind === "todo" ? "□" : line.kind === "quote" ? "❞" : ""}</span>
       {continuousSelection && <span className="ms-line-display" style={{ textAlign: line.align }} aria-hidden>{line.text.startsWith("|") && line.text.endsWith("|") ? <span className={`ms-markdown-row${/^\|(?:\s*---\s*\|)+$/.test(line.text) ? " is-divider" : ""}`}>{line.text.slice(1, -1).split("|").map((cell, cellIndex) => <span key={cellIndex}>{cell.trim()}</span>)}</span> : line.text}</span>}
-      {!continuousSelection && <div ref={(el) => { editors.current[line.id] = el; }} contentEditable suppressContentEditableWarning data-placeholder={index === 0 ? "Write a note…" : ""} onInput={(e) => onLineInput(e, line)} onKeyDown={(e) => onKey(e, line)} onPaste={(e) => onPaste(e, line)} style={{ textAlign: line.align }} aria-label={`Line ${index + 1}`}>{line.text}</div>}
+      {!continuousSelection && line.table ? <div className={`ms-editor-table-row${line.table.header ? " is-header" : ""}`} role="row">{line.table.cells.map((cell, cellIndex) => <input key={cellIndex} data-table-cell={`${line.id}-${cellIndex}`} aria-label={`${line.table!.header ? "Table header" : "Table row"} ${index + 1}, column ${cellIndex + 1}`} value={cell} onChange={(event) => updateTableCell(line.id, cellIndex, event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTableRow(line.id); } }} />)}</div> : !continuousSelection && <div ref={(el) => { editors.current[line.id] = el; }} contentEditable suppressContentEditableWarning data-placeholder={index === 0 ? "Write a note…" : ""} onInput={(e) => onLineInput(e, line)} onKeyDown={(e) => onKey(e, line)} onPaste={(e) => onPaste(e, line)} style={{ textAlign: line.align }} aria-label={`Line ${index + 1}`}>{line.text}</div>}
       {line.comments.length > 0 && <button className="ms-comment-count" contentEditable={false} type="button" onClick={() => { setActive(line.id); setCommenting(true); }} title={line.comments.join("\n")}>▱ {line.comments.length}</button>}
       {active === line.id && <div className="ms-line-menu" contentEditable={false} role="menu">
         <button className="ms-menu-item ms-menu-ask" onClick={() => setActive(null)}><span className="ms-menu-glyph"><LiquidChromeOrb size={16} title="Ask AI" /></span><span>Ask AI</span><span className="ms-menu-chevron">›</span></button>
@@ -209,6 +250,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
         <div className="ms-menu-rule" />
         <button className="ms-menu-item" onClick={() => insert(line.id, -1)}><Glyph>↑</Glyph><span>Insert above</span></button>
         <button className="ms-menu-item" onClick={() => insert(line.id, 1)}><Glyph>↓</Glyph><span>Insert below</span></button>
+        <button className="ms-menu-item" onClick={() => insertTable(line.id)}><Glyph>▦</Glyph><span>Table</span></button>
         <button className="ms-menu-item" onClick={() => { void navigator.clipboard.writeText(line.text); setActive(null); }}><Glyph>▣</Glyph><span>Copy</span></button>
         <button className="ms-menu-item is-danger" onClick={() => remove(line.id)}><Glyph>♜</Glyph><span>Delete</span></button>
         <div className="ms-menu-rule" /><p className="ms-menu-meta">Line {index + 1} · edited just now</p>

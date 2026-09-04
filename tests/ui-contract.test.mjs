@@ -257,6 +257,23 @@ test("FTR 1012.3 turns pasted Markdown into editable Workspace structure", () =>
   assert.match(editor, /pasteMarkdown\(nextValue/);
 });
 
+test("Workspace tables, projects, and Day Documents use the requested self-contained controls", () => {
+  assert.match(editor, /function tableCells/);
+  assert.match(editor, /function linesToMarkdown/);
+  assert.match(editor, /ms-editor-table-row/);
+  assert.match(editor, /<span>Table<\/span>/);
+  assert.match(workspacePage, /PROJECTS_KEY/);
+  assert.match(workspacePage, /ms-workspace-project-picker/);
+  assert.match(workspacePage, /Add to project/);
+  assert.match(workspacePage, /ms-workspace-menu-new/);
+  assert.match(globalCss, /\.ms-workspace-new, \.ms-workspace-save-status \{ display: none; \}/);
+  assert.match(historyPage, /Select saved Day Document/);
+  assert.match(historyPage, /ms-day-document-meta/);
+  assert.match(historyPage, /ms-calendar-document-dot/);
+  assert.match(historyPage, /withoutLegacyDayHeading/);
+  assert.doesNotMatch(historyPage, /Workspace Note:/);
+});
+
 test("FTR 1012.4 restores the heading caret after the formatted line settles", () => {
   assert.match(editor, /A second frame restores the native caret/);
   assert.match(editor, /requestAnimationFrame\(\(\) => \{[\s\S]*requestAnimationFrame\(\(\) => \{/);
