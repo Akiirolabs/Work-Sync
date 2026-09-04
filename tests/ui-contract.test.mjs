@@ -231,6 +231,12 @@ test("FTR 1010 provides structured findings, retained histories, Vault isolation
   assert.match(globalCss, /\.ms-calendar-grid/);
 });
 
+test("Calendar is the named destination for the timeline route", () => {
+  assert.match(appShell, /\{ id: "history", label: "Calendar", href: "\/history" \}/);
+  assert.match(aoMenu, /\{ label: "Calendar", href: "\/history", icon: "calendar" \}/);
+  assert.doesNotMatch(appShell, /label: "History", href: "\/history"/);
+});
+
 test("FTR 1011 selects existing objects and keeps mobile rail labels visible", () => {
   assert.match(aoCatalog, /key: "taskId", label: "Existing task", type: "todo"/);
   assert.doesNotMatch(aoCatalog, /text\("taskTitle", "Existing task"/);

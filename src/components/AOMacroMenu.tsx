@@ -25,7 +25,7 @@ const DRAFT_KEY = "work-sync:workspace-draft";
 const TABLES_KEY = "work-sync:tables";
 const MAIN_MACRO_LIMIT = 6;
 
-const ROUTES: ReadonlyArray<{ label: string; href: string; icon: MacroIconName }> = [{ label: "Workspace", href: "/", icon: "document" }, { label: "To Do", href: "/todo", icon: "todo" }, { label: "Tables", href: "/tables", icon: "table" }, { label: "Sources", href: "/sources", icon: "sources" }, { label: "Verify", href: "/verify", icon: "verify" }, { label: "History", href: "/history", icon: "history" }, { label: "Connect", href: "/connect", icon: "computer" }];
+const ROUTES: ReadonlyArray<{ label: string; href: string; icon: MacroIconName }> = [{ label: "Workspace", href: "/", icon: "document" }, { label: "To Do", href: "/todo", icon: "todo" }, { label: "Tables", href: "/tables", icon: "table" }, { label: "Sources", href: "/sources", icon: "sources" }, { label: "Verify", href: "/verify", icon: "verify" }, { label: "Calendar", href: "/history", icon: "calendar" }, { label: "Connect", href: "/connect", icon: "computer" }];
 const VAULT_CATEGORIES = ["All", "Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Custom"] as const;
 const WORKSPACE_TEMPLATES: Record<string, string> = {
   meeting: "| Attendees | Agenda | Decisions | Follow-Up |\n| --- | --- | --- | --- |\n|  |  |  |  |",
