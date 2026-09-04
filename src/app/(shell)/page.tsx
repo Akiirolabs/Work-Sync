@@ -1,7 +1,8 @@
 "use client";
 
 import { Workspace } from "@/ui";
-import { useCallback, useEffect, useRef, useState } from "react";
+import JSZip from "jszip";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { api, ApiError } from "@/lib/client-api";
 import { userStorageKey } from "@/lib/user-storage";
 import { LineEditor } from "@/components/LineEditor";
@@ -17,6 +18,62 @@ type Note = {
 
 const DRAFT_KEY = "work-sync:workspace-draft";
 
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+function escapeXml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [[]]; let cell = ""; let quoted = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]; const next = text[index + 1];
+    if (char === '"' && quoted && next === '"') { cell += '"'; index += 1; }
+    else if (char === '"') quoted = !quoted;
+    else if (char === "," && !quoted) { rows[rows.length - 1]!.push(cell); cell = ""; }
+    else if ((char === "\n" || char === "\r") && !quoted) { if (char === "\r" && next === "\n") index += 1; rows[rows.length - 1]!.push(cell); rows.push([]); cell = ""; }
+    else cell += char;
+  }
+  rows[rows.length - 1]!.push(cell);
+  return rows.filter((row) => row.some((value) => value.trim()));
+}
+
+function csvAsWorkspaceText(text: string, fallbackTitle: string) {
+  const rows = parseCsv(text); if (!rows.length) return "";
+  const headers = rows[0]!.map((value) => value.trim()); const bodyIndex = headers.findIndex((value) => /^(body|content|note)$/i.test(value));
+  if (bodyIndex >= 0) return rows.slice(1).map((row) => row[bodyIndex] ?? "").filter(Boolean).join("\n\n");
+  const escaped = (value: string) => value.replace(/\|/g, "\\|").replace(/\n/g, "<br />");
+  return [`# ${fallbackTitle}`, "", `| ${headers.map(escaped).join(" | ")} |`, `| ${headers.map(() => "---").join(" | ")} |`, ...rows.slice(1).map((row) => `| ${headers.map((_, index) => escaped(row[index] ?? "")).join(" | ")} |`)].join("\n");
+}
+
+async function docxAsWorkspaceText(file: File) {
+  const archive = await JSZip.loadAsync(await file.arrayBuffer()); const documentXml = await archive.file("word/document.xml")?.async("string");
+  if (!documentXml) throw new Error("This Word document does not contain readable document text.");
+  const xml = new DOMParser().parseFromString(documentXml, "application/xml");
+  return Array.from(xml.getElementsByTagName("w:p")).map((paragraph) => Array.from(paragraph.getElementsByTagName("w:t")).map((part) => part.textContent ?? "").join("")).join("\n").trim();
+}
+
+async function createDocx(body: string) {
+  const paragraphs = body.split(/\r?\n/).map((line) => line ? `<w:p><w:r><w:t xml:space="preserve">${escapeXml(line)}</w:t></w:r></w:p>` : "<w:p/>").join("");
+  const archive = new JSZip();
+  archive.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="${DOCX_MIME}.main+xml"/></Types>`);
+  archive.folder("_rels")?.file(".rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  archive.folder("word")?.file("document.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraphs}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>`);
+  return archive.generateAsync({ type: "blob", mimeType: DOCX_MIME });
+}
+
+function downloadFile(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = name; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function safeFileName(value: string) {
+  return (value.trim() || "workspace-note").replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "workspace-note";
+}
+
 export default function WorkspacePage() {
   const [body, setBody] = useState("");
   const [saved, setSaved] = useState<Note[]>([]);
@@ -26,6 +83,7 @@ export default function WorkspacePage() {
   const persistedNote = useRef<{ id: string | null; body: string }>({ id: null, body: "" });
   const [ready, setReady] = useState(false);
   const [noteMenuOpen, setNoteMenuOpen] = useState(false);
+  const importInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setSaved(await api<Note[]>("/api/v1/notes"));
@@ -147,6 +205,30 @@ export default function WorkspacePage() {
     }
   }
 
+  function exportCsv() {
+    const name = safeFileName(saved.find((note) => note.id === activeId)?.title ?? body.split("\n")[0] ?? "workspace-note");
+    downloadFile(new Blob([`title,body\n${csvCell(name)},${csvCell(body)}\n`], { type: "text/csv;charset=utf-8" }), `${name}.csv`);
+    setNoteMenuOpen(false);
+  }
+
+  async function exportDocx() {
+    const name = safeFileName(saved.find((note) => note.id === activeId)?.title ?? body.split("\n")[0] ?? "workspace-note");
+    try { downloadFile(await createDocx(body), `${name}.docx`); } catch (e) { setError(e instanceof Error ? e.message : "Unable to export this Word document."); }
+    setNoteMenuOpen(false);
+  }
+
+  async function importNoteFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]; event.target.value = ""; if (!file) return;
+    setBusy(true); setError(null);
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      const imported = extension === "docx" ? await docxAsWorkspaceText(file) : extension === "csv" ? csvAsWorkspaceText(await file.text(), file.name.replace(/\.csv$/i, "") || "Imported CSV") : await file.text();
+      if (!imported.trim()) throw new Error("This file did not contain any readable text.");
+      persistedNote.current = { id: null, body: "" }; setActiveId(null); setBody(imported); setNoteMenuOpen(false);
+    } catch (e) { setError(e instanceof Error ? e.message : "Unable to import that file."); }
+    finally { setBusy(false); }
+  }
+
   return (
     <Workspace
       title="Workspace"
@@ -162,7 +244,7 @@ export default function WorkspacePage() {
             </select>
             </label>
             <button type="button" className="ms-workspace-note-more" aria-label="Workspace note options" aria-haspopup="menu" aria-expanded={noteMenuOpen} onClick={() => setNoteMenuOpen((open) => !open)}>⋯</button>
-            {noteMenuOpen && <div className="ms-workspace-note-menu" role="menu"><button type="button" onClick={() => { void saveCurrentNote(); setNoteMenuOpen(false); }} disabled={busy || !body.trim()}>Save</button><button type="button" className="is-danger" onClick={() => { void deleteNote(); setNoteMenuOpen(false); }} disabled={busy || !activeId}>Delete</button></div>}
+            {noteMenuOpen && <div className="ms-workspace-note-menu" role="menu"><button type="button" onClick={() => { void saveCurrentNote(); setNoteMenuOpen(false); }} disabled={busy || !body.trim()}>Save</button><button type="button" onClick={() => { setNoteMenuOpen(false); window.requestAnimationFrame(() => importInput.current?.click()); }} disabled={busy}>Import CSV or Word…</button><button type="button" onClick={exportCsv} disabled={!body.trim()}>Export CSV</button><button type="button" onClick={() => { void exportDocx(); }} disabled={!body.trim()}>Export Word (.docx)</button><button type="button" className="is-danger" onClick={() => { void deleteNote(); setNoteMenuOpen(false); }} disabled={busy || !activeId}>Delete</button></div>}
           </div>
           <button type="button" className="ms-btn" onClick={newNote} disabled={busy}>
             New
@@ -172,6 +254,7 @@ export default function WorkspacePage() {
       }
     >
       {error ? <p className="ms-sev-critical">{error}</p> : null}
+      <input ref={importInput} className="ms-visually-hidden" type="file" accept=".csv,.docx,.txt,.md,text/csv,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(event) => { void importNoteFile(event); }} />
       <div className="ms-notes-layout">
         <div className="ms-panel ms-notes-field">
           <LineEditor value={body} onChange={setBody} storageKey={activeId ?? "draft"} />

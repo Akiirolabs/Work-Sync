@@ -479,6 +479,21 @@ test("To Do organizes tasks into saved lists while keeping an all-task Overview"
   assert.match(todoPage, /listId: activeListId/);
   assert.match(todoPage, /localStorage\.setItem\(userStorageKey\(TODO_LIST_STORAGE_KEY\)/);
   assert.match(globalCss, /\.ms-todo-list-picker \{/);
+  assert.match(todoPage, /overviewMode === "folders"/);
+  assert.match(todoPage, /Choose a folder to see the To Dos it contains/);
+  assert.match(todoPage, /Unfiled To Dos/);
+  assert.match(globalCss, /\.ms-todo-folder-overview \{/);
+});
+
+test("Workspace note actions import and export CSV and Word documents", () => {
+  assert.match(workspacePage, /import JSZip from "jszip"/);
+  assert.match(workspacePage, /Import CSV or Word/);
+  assert.match(workspacePage, /Export CSV/);
+  assert.match(workspacePage, /Export Word \(\.docx\)/);
+  assert.match(workspacePage, /accept="\.csv,\.docx,\.txt,\.md/);
+  assert.match(workspacePage, /docxAsWorkspaceText/);
+  assert.match(workspacePage, /createDocx/);
+  assert.match(globalCss, /\.ms-visually-hidden \{/);
 });
 
 test("two Macro Panel entrances expose no more than six Vault shortcuts", () => {
