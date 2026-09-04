@@ -27,6 +27,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <Shell statusContent={<MacroPanels onAgent={() => setAgentOpen((value) => !value)} />} topRight={<AccountSettings />}>
       <AOMacroMenu />
       <AgentSideChat open={agentOpen} onClose={() => setAgentOpen(false)} />
+      {!agentOpen && <button type="button" className="ms-ao-agent-button" aria-label="Open AO Agent" title="AO Agent" onClick={() => setAgentOpen(true)}>
+        <img src="/ao-agent.png" alt="" />
+        <span>AO Agent</span>
+      </button>}
       <Rail
         label="Navigate"
         collapsed={railCollapsed}

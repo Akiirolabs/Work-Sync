@@ -466,7 +466,7 @@ test("To Do is a functional left-panel destination with task macros", () => {
   assert.match(globalCss, /\.ms-todo-menu \{ position: fixed; z-index: 2147483640;/);
   assert.match(globalCss, /\.ms-todo-menu \{ width: min\(320px, calc\(100vw - 20px\)\); max-width: calc\(100vw - 20px\); min-width: 0; \}/);
   assert.match(globalCss, /\.ms-todo-menu-date \{ width: 100%; max-width: 100%; \}/);
-  assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\] \{ display: block; width: 100%; min-width: 0; max-width: 100%; min-inline-size: 0; inline-size: 100%; max-inline-size: 100%; padding-right: 7px;/);
+  assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\] \{ display: block; width: calc\(100% - 18px\); min-width: 0; max-width: calc\(100% - 18px\); min-inline-size: 0; inline-size: calc\(100% - 18px\); max-inline-size: calc\(100% - 18px\); padding-right: 7px;/);
   assert.match(globalCss, /\.ms-todo-menu-date input\[type="date"\]::\-webkit\-datetime\-edit, \.ms-todo-menu-date input\[type="date"\]::\-webkit\-datetime\-edit-fields-wrapper \{ padding: 0; \}/);
   assert.match(todoPage, /className="ms-todo-disclosure"/);
   assert.match(todoPage, /expandedTasks\[item\.id\] && <div className="ms-todo-detail"/);
@@ -551,6 +551,10 @@ test("circular Macro Panel stays open across navigation and moves from its AO ce
 });
 
 test("Agent is a simple authenticated streaming text side chat", () => {
+  assert.match(appShell, /className="ms-ao-agent-button"/);
+  assert.match(appShell, /src="\/ao-agent\.png"/);
+  assert.match(appShell, /aria-label="Open AO Agent"/);
+  assert.match(globalCss, /\.ms-ao-agent-button \{ position: fixed; z-index: 649; right: 15px; bottom: 15px;/);
   assert.match(agentChatRoute, /requestUserId\(req\)/);
   assert.match(agentChatRoute, /model: "gpt-5-mini"/);
   assert.match(agentChatRoute, /https:\/\/api\.openai\.com\/v1\/responses/);
