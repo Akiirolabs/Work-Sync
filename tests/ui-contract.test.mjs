@@ -576,6 +576,15 @@ test("circular Macro Panel stays open across navigation and moves from its AO ce
   assert.match(rail, /<Link key=\{item\.id\}/);
 });
 
+test("the circular Macro Panel uses a reduced-motion-safe liquid chrome center", () => {
+  assert.match(macroPanels, /className=\{styles\.liquidChrome\}/);
+  assert.doesNotMatch(macroPanels, /aria-label="Move circular Macro Panel"[^>]*>AO</);
+  assert.match(macroPanelsCss, /\.liquidChrome \{/);
+  assert.match(macroPanelsCss, /@keyframes liquidChromeFlow/);
+  assert.match(macroPanelsCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(macroPanelsCss, /\.radialButtons button/);
+});
+
 test("Agent is a simple authenticated streaming text side chat", () => {
   assert.match(appShell, /className="ms-ao-agent-button"/);
   assert.match(appShell, /className="ms-ao-agent-menu"/);
