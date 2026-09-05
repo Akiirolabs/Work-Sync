@@ -584,6 +584,7 @@ test("the circular Macro Panel uses a reduced-motion-safe liquid chrome center",
   for (const animation of ["liquidChromeFlow", "liquidChromeSheet", "liquidChromeReflection"]) assert.match(macroPanelsCss, new RegExp(`@keyframes ${animation}`));
   assert.match(macroPanelsCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(macroPanelsCss, /\.radialButtons button/);
+  assert.match(macroPanelsCss, /0 0 22px rgba\(76,169,216,.15\)/);
 });
 
 test("Agent is a simple authenticated streaming text side chat", () => {
