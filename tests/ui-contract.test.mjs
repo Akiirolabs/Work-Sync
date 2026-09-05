@@ -578,9 +578,10 @@ test("circular Macro Panel stays open across navigation and moves from its AO ce
 
 test("the circular Macro Panel uses a reduced-motion-safe liquid chrome center", () => {
   assert.match(macroPanels, /className=\{styles\.liquidChrome\}/);
+  for (const layer of ["liquidVolume", "liquidSheet", "liquidReflection"]) assert.match(macroPanels, new RegExp(`styles\\.${layer}`));
   assert.doesNotMatch(macroPanels, /aria-label="Move circular Macro Panel"[^>]*>AO</);
   assert.match(macroPanelsCss, /\.liquidChrome \{/);
-  assert.match(macroPanelsCss, /@keyframes liquidChromeFlow/);
+  for (const animation of ["liquidChromeFlow", "liquidChromeSheet", "liquidChromeReflection"]) assert.match(macroPanelsCss, new RegExp(`@keyframes ${animation}`));
   assert.match(macroPanelsCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(macroPanelsCss, /\.radialButtons button/);
 });
