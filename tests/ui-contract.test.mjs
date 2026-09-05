@@ -457,6 +457,13 @@ test("AO preset browser is gated behind Presets and saved presets can be revoked
   assert.match(aoMenu, /macroId: macro\.id/);
 });
 
+test("Create Text Preset retains its Macro Key info mark without adding one to Vault Text", () => {
+  assert.match(aoMenu, /aria-label="Text preset information"[^>]*>i<\/span><b>Create Text Preset<\/b>/);
+  const vaultTextControls = aoMenu.slice(aoMenu.indexOf("styles.vaultTextActions"), aoMenu.indexOf("styles.vaultTextActions") + 500);
+  assert.match(vaultTextControls, />Create Text Preset<\/button>/);
+  assert.doesNotMatch(vaultTextControls, /Text preset information|<MacroIcon/);
+});
+
 test("Macro Key keeps removed actions out, labels fixed or empty steps, and restricts Route destinations", () => {
   assert.match(aoMenu, /HIDDEN_CATALOG_ACTIONS/);
   assert.match(aoMenu, /!HIDDEN_CATALOG_ACTIONS\.has\(item\.action\)/);
