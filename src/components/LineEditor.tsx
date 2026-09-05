@@ -47,7 +47,11 @@ function linesToMarkdown(lines: Line[]) {
   const output: string[] = [];
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!;
-    if (!line.table) { output.push(line.text); continue; }
+    if (!line.table) {
+      const prefix: Partial<Record<BlockKind, string>> = { h1: "# ", h2: "## ", h3: "### ", h4: "#### ", bullets: "- ", numbered: "1. ", todo: "- [ ] ", quote: "> " };
+      output.push(line.kind === "code" ? `\`\`\`\n${line.text}\n\`\`\`` : `${prefix[line.kind] ?? ""}${line.text}`);
+      continue;
+    }
     const cells = line.table.cells;
     if (line.table.header) { output.push(`| ${cells.join(" | ")} |`, `| ${cells.map(() => "---").join(" | ")} |`); }
     else output.push(`| ${cells.join(" | ")} |`);
@@ -106,7 +110,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     function consume() {
       const raw = localStorage.getItem(userStorageKey(AO_WORKSPACE_LINE_COMMAND_KEY)); if (!raw) return;
       localStorage.removeItem(userStorageKey(AO_WORKSPACE_LINE_COMMAND_KEY));
-      try { const command = JSON.parse(raw) as AOWorkspaceLineCommand; const text = command.text.trim(); if (!text) return; const current = linesRef.current; if (command.action === "add-comment") { let at = 0; for (let index = current.length - 1; index >= 0; index -= 1) if (current[index]!.text.trim()) { at = index; break; } commit(current.map((line, index) => index === at ? { ...line, comments: [...line.comments, text] } : line)); return; } const kind: BlockKind = command.action === "add-code" ? "code" : command.action === "add-heading" ? command.kind ?? "h2" : "text"; commit([...current, ...text.split("\n").map((part) => ({ ...makeLine(part), kind }))]); } catch { /* ignore invalid macro input */ }
+      try { const command = JSON.parse(raw) as AOWorkspaceLineCommand; const text = command.text.trim(); if (!text) return; const current = linesRef.current; if (command.action === "add-comment") { const headingAt = current.findIndex((line) => /^h[1-4]$/.test(line.kind)); const contentAt = headingAt >= 0 ? current.findIndex((line, index) => index > headingAt && Boolean(line.text.trim())) : -1; const fallbackAt = current.findIndex((line) => Boolean(line.text.trim())); const at = contentAt >= 0 ? contentAt : headingAt >= 0 ? headingAt : fallbackAt >= 0 ? fallbackAt : 0; commit(current.map((line, index) => index === at ? { ...line, comments: [...line.comments, text] } : line)); return; } const kind: BlockKind = command.action === "add-code" ? "code" : command.action === "add-heading" ? command.kind ?? "h2" : "text"; commit([...current, ...text.split("\n").map((part) => ({ ...makeLine(part), kind }))]); } catch { /* ignore invalid macro input */ }
     }
     consume(); window.addEventListener(AO_WORKSPACE_LINE_COMMAND_EVENT, consume); return () => window.removeEventListener(AO_WORKSPACE_LINE_COMMAND_EVENT, consume);
   }, []);

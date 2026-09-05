@@ -5,6 +5,8 @@ import { LiquidChromeOrb } from "@/ui";
 import { hydrateUserStorage, setActiveStorageUser, startUserStorageSync } from "@/lib/user-storage";
 
 type User = { id: string; name: string; email: string };
+type Theme = "dark" | "light";
+const THEME_KEY = "work-sync:theme";
 
 export function AccountSettings() {
   const [open, setOpen] = useState(false);
@@ -12,6 +14,7 @@ export function AccountSettings() {
   const [mode, setMode] = useState<"signin" | "create">("signin");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [theme, setTheme] = useState<Theme>("dark");
   const dialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -29,6 +32,14 @@ export function AccountSettings() {
     return () => stopSync?.();
   }, []);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
+  useEffect(() => {
+    const saved = localStorage.getItem(THEME_KEY);
+    setTheme(saved === "light" ? "light" : "dark");
+  }, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError("");
@@ -75,6 +86,7 @@ export function AccountSettings() {
           <button className="ms-btn ms-btn-primary" disabled={busy}>{busy ? "Please wait…" : mode === "signin" ? "Log in" : "Create account"}</button>
         </form>
       </>}
+      <section className="ms-theme-settings" aria-label="Appearance settings"><div><strong>Appearance</strong><p>{theme === "dark" ? "Dark Mode keeps the current Work Sync visual mode." : "Light Mode uses a brighter inverse palette."}</p></div><div role="group" aria-label="Choose color theme"><button type="button" className={theme === "dark" ? "is-active" : ""} aria-pressed={theme === "dark"} onClick={() => setTheme("dark")}>Dark Mode</button><button type="button" className={theme === "light" ? "is-active" : ""} aria-pressed={theme === "light"} onClick={() => setTheme("light")}>Light Mode</button></div></section>
     </dialog>
   </>;
 }

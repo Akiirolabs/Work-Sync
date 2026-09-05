@@ -14,6 +14,7 @@ export const AO_TABLE_COMMAND_EVENT = "work-sync:ao-table-command";
 export const AO_WORKSPACE_TEXT_EVENT = "work-sync:ao-workspace-text";
 export const AO_WORKSPACE_OPEN_EVENT = "work-sync:ao-workspace-open";
 export const AO_WORKSPACE_LINE_COMMAND_EVENT = "work-sync:ao-workspace-line-command";
+export const AO_WORKSPACE_PROJECTS_EVENT = "work-sync:workspace-projects";
 export const AO_MACROS_CHANGED_EVENT = "work-sync:ao-macros-changed";
 export const AO_RUN_MAIN_MACRO_EVENT = "work-sync:run-main-macro";
 export const AO_OPEN_MACRO_MENU_EVENT = "work-sync:open-macro-menu";
@@ -26,7 +27,7 @@ export type AOMacroPreset = { id: string; label: string; text: string; macroId?:
 export type AOTableMacroResult = { tables: WorkTable[]; activeId: string; openPage?: { rowId: string; columnId: string }; openColumn?: string; focusCell?: { rowId: string; columnId: string }; filter?: { columnId: string; query: string }; summary?: string };
 
 const MACRO_TEXT_ICONS: Record<string, string> = {
-  "workspace-new": "+N", "workspace-new-preset": "N+", "workspace-meeting": "MT", "workspace-project": "PJ", "workspace-open": "ON", "workspace-duplicate": "DN", "workspace-append": "A+", "workspace-prepend": "+A", "workspace-section": "D+", "workspace-save-new": "SN", "workspace-add-text": "TX", "workspace-add-comment": "CM", "workspace-add-heading": "H#", "workspace-add-code": "</>",
+  "workspace-new": "+N", "workspace-new-preset": "N+", "workspace-meeting": "MT", "workspace-project": "PJ", "workspace-open": "ON", "workspace-prepend": "+A", "workspace-add-comment": "CM", "workspace-add-heading": "H#", "workspace-add-code": "</>",
   "todo-add": "+T", "todo-add-detailed": "TD", "todo-add-with-subtask": "T+", "todo-add-high-with-subtask": "!T", "todo-add-subtask": "+S", "todo-set-description": "DS", "todo-add-high": "!T", "todo-add-today": "T0", "todo-add-due": "DT", "todo-open": "OT", "todo-from-note": "N>T", "todo-from-note-content": "N+T", "todo-complete-next": "OK", "todo-clear-completed": "CL",
   "table-blank": "+TB", "table-template": "TB", "table-open": "OTB", "table-rename": "RTB", "table-duplicate": "DTB", "table-project": "PT", "table-meeting": "MTB", "table-lab": "LAB", "table-content": "CAL", "table-issues": "ISS",
   "row-add": "+R", "row-many": "R+", "row-named": "NR", "row-duplicate": "DR", "row-page": "R>P", "row-preset": "PR", "row-empty": "ER",

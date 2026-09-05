@@ -159,10 +159,8 @@ test("signed-out Workspace suppresses the raw Unauthorized error", () => {
   assert.match(clientApi, /Sign in to continue\./);
 });
 
-test("save-and-create macro persists both existing and unsaved Workspace drafts", () => {
-  assert.match(aoMenu, /if \(draft\.activeId\) await api<Note>\(`\/api\/v1\/notes\/\$\{draft\.activeId\}`/);
-  assert.match(aoMenu, /else await api<Note>\("\/api\/v1\/notes"/);
-  assert.match(aoMenu, /return createWorkspaceNote\(get\("title"\)\)/);
+test("removed Workspace macros no longer appear in the preset catalog or executor", () => {
+  for (const action of ["workspace-duplicate", "workspace-append", "workspace-section", "workspace-save-new", "workspace-add-text"]) assert.doesNotMatch(aoMenu, new RegExp(`macro\\.action === "${action}"`));
 });
 
 test("table FTR-1001 interactions are implemented", () => {
@@ -405,7 +403,7 @@ test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () 
   assert.match(aoMenu, /value: "__new_page__"/);
 });
 
-test("AO preset browser is gated behind Presets and every preset can be saved", () => {
+test("AO preset browser is gated behind Presets and saved presets can be revoked", () => {
   assert.match(aoMenu, /macroMode === "home"/);
   assert.match(aoMenu, /setMacroMode\("presets"\)/);
   assert.match(aoMenu, /macroMode === "presets"/);
@@ -413,7 +411,7 @@ test("AO preset browser is gated behind Presets and every preset can be saved", 
   assert.match(aoMenu, /aria-label="Text preset information"/);
   assert.match(aoMenu, /<VaultIcon \/><b>Create macro<\/b><MacroIcon name="chevron"/);
   assert.match(aoMenu, /saveBuiltIn\(macro\)/);
-  assert.match(aoMenu, /\? "Saved" : "Save"/);
+  assert.match(aoMenu, /\? "Unsave" : "Save"/);
   assert.match(aoMenu, /macroId: macro\.id/);
 });
 
@@ -608,7 +606,8 @@ test("Agent is a simple authenticated streaming text side chat", () => {
   assert.match(agentChat, /Open AO Agent chat history/);
   assert.match(agentChat, /Send an Agent output/);
   assert.match(agentChat, /Select an Agent response to send/);
-  assert.match(agentChat, /Workspace Notes.*To Do.*Tables page.*Verify/);
+  assert.match(agentChat, /Current Note.*New Note.*Choose Note/);
+  assert.match(agentChat, /Append to selected note/);
   assert.match(aoMacro, /agent-output-page/);
   assert.match(verifyPage, /work-sync:agent-verify-context/);
   assert.match(agentChat, /aria-label="Agent conversation"/);

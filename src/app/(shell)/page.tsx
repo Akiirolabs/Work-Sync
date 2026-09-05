@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "reac
 import { api, ApiError } from "@/lib/client-api";
 import { userStorageKey } from "@/lib/user-storage";
 import { LineEditor } from "@/components/LineEditor";
-import { AO_WORKSPACE_OPEN_EVENT, AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY } from "@/lib/ao-macro";
+import { AO_WORKSPACE_OPEN_EVENT, AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_PROJECTS_EVENT, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY } from "@/lib/ao-macro";
 
 type Note = {
   id: string;
@@ -128,8 +128,11 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     if (!ready) return;
-    try { const stored = JSON.parse(localStorage.getItem(userStorageKey(PROJECTS_KEY)) ?? "[]") as WorkspaceProject[]; setProjects(Array.isArray(stored) ? stored.filter((project) => typeof project?.id === "string" && typeof project?.title === "string") : []); } catch { setProjects([]); }
-    try { const stored = JSON.parse(localStorage.getItem(userStorageKey(NOTE_PROJECTS_KEY)) ?? "{}") as Record<string, string>; setNoteProjects(stored && typeof stored === "object" ? stored : {}); } catch { setNoteProjects({}); }
+    function syncProjects() {
+      try { const stored = JSON.parse(localStorage.getItem(userStorageKey(PROJECTS_KEY)) ?? "[]") as WorkspaceProject[]; setProjects(Array.isArray(stored) ? stored.filter((project) => typeof project?.id === "string" && typeof project?.title === "string") : []); } catch { setProjects([]); }
+      try { const stored = JSON.parse(localStorage.getItem(userStorageKey(NOTE_PROJECTS_KEY)) ?? "{}") as Record<string, string>; setNoteProjects(stored && typeof stored === "object" ? stored : {}); } catch { setNoteProjects({}); }
+    }
+    syncProjects(); window.addEventListener(AO_WORKSPACE_PROJECTS_EVENT, syncProjects); return () => window.removeEventListener(AO_WORKSPACE_PROJECTS_EVENT, syncProjects);
   }, [ready]);
   useEffect(() => { if (ready) localStorage.setItem(userStorageKey(PROJECTS_KEY), JSON.stringify(projects)); }, [projects, ready]);
   useEffect(() => { if (ready) localStorage.setItem(userStorageKey(NOTE_PROJECTS_KEY), JSON.stringify(noteProjects)); }, [noteProjects, ready]);

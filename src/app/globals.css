@@ -223,6 +223,7 @@
 .ms-account-form > .ms-btn { align-self: flex-end; padding: 6px 13px; }
 .ms-form-error { margin: 0; color: var(--ms-danger); font-size: var(--ms-fs-meta); }
 .ms-account-card { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; border: 1px solid var(--ms-edge-soft); background: var(--ms-bg-1); padding: 12px; }
+.ms-theme-settings { display: grid; gap: 9px; margin-top: 14px; border-top: 1px solid var(--ms-edge-soft); padding-top: 13px; }.ms-theme-settings p { margin: 2px 0 0; color: var(--ms-text-dim); font-size: 11px; }.ms-theme-settings > div:last-child { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }.ms-theme-settings button { border: 1px solid var(--ms-edge); border-radius: 5px; padding: 7px 8px; background: var(--ms-bg-2); color: var(--ms-text); cursor: pointer; font: 11px var(--ms-font-sans); }.ms-theme-settings button:hover, .ms-theme-settings button.is-active { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); color: var(--ms-text-bright); }
 .ms-account-card strong { color: var(--ms-text-bright); }
 .ms-account-card p { margin: 2px 0 0; color: var(--ms-text-dim); font-size: var(--ms-fs-meta); }
 
@@ -387,7 +388,8 @@
 .ms-subtask > button { width: 25px; height: 25px; border: 0; border-radius: 4px; background: transparent; color: var(--ms-text-dim); cursor: pointer; }
 .ms-subtask > button:hover { background: #342429; color: #ef8175; }
 .ms-subtask.is-done strong { color: var(--ms-text-dim); text-decoration: line-through; }
-.ms-subtask-menu { top: 31px; right: 4px; }
+.ms-subtask-menu { max-width: calc(100vw - 20px); }
+html[data-theme="light"] input[type="date"] { color-scheme: light; }
 .ms-subtask-menu textarea { min-height: 64px; resize: vertical; }
 .ms-nested-subtask { min-height: 30px; margin-left: 36px; display: grid; grid-template-columns: 20px 1fr 25px; align-items: center; gap: 5px; padding: 2px 5px; border-left: 1px solid var(--ms-accent-soft); background: #0c1116; font-size: 9px; }
 .ms-nested-subtask button { border: 0; background: transparent; color: var(--ms-text-dim); cursor: pointer; }

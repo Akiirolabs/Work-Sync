@@ -7,7 +7,7 @@ import { api } from "@/lib/client-api";
 import { AO_MACRO_CATALOG, AO_MACRO_CATEGORIES, type AOMacroDefinition, type AOMacroField } from "@/lib/ao-catalog";
 import {
   AO_MACROS_KEY, AO_MACROS_CHANGED_EVENT, AO_OPEN_MACRO_MENU_EVENT, AO_OPEN_VAULT_EVENT, AO_RUN_MAIN_MACRO_EVENT, AO_TABLE_COMMAND_EVENT, AO_TABLE_COMMAND_KEY, AO_WORKSPACE_OPEN_EVENT,
-  AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY, AO_WORKSPACE_LINE_COMMAND_EVENT, AO_WORKSPACE_LINE_COMMAND_KEY,
+  AO_WORKSPACE_OPEN_KEY, AO_WORKSPACE_PROJECTS_EVENT, AO_WORKSPACE_TEXT_EVENT, AO_WORKSPACE_TEXT_KEY, AO_WORKSPACE_LINE_COMMAND_EVENT, AO_WORKSPACE_LINE_COMMAND_KEY,
   type AOCustomMacroStep, type AOMacroPreset, type AOTableCommand, type AOWorkspaceLineCommand,
 } from "@/lib/ao-macro";
 import { decodePageCell, type WorkTable } from "@/lib/table-model";
@@ -235,7 +235,7 @@ export function AOMacroMenu() {
     return { action: macro.action, title: note?.title ?? context.title?.trim(), taskId: context.taskId?.trim(), taskTitle: task?.title ?? context.taskTitle?.trim(), description: context.description?.trim(), subtaskTitle: context.subtaskTitle?.trim(), subtaskDescription: context.subtaskDescription?.trim(), subtasks: macro.action === "todo-from-note-content" ? noteLines : undefined, dueDate: context.dueDate?.trim() };
   }
   function saveBuiltIn(macro: AOMacroDefinition) {
-    if (presets.some((item) => item.macroId === macro.id)) { setNotice(`${macro.label} is already saved.`); return; }
+    if (presets.some((item) => item.macroId === macro.id)) { savePresets(presets.filter((item) => item.macroId !== macro.id)); setNotice(`${macro.label} removed from Vault.`); return; }
     savePresets([...presets, { id: crypto.randomUUID(), label: macro.label, text: "", macroId: macro.id, createdAt: new Date().toISOString() }]); setNotice(`${macro.label} saved to Vault.`);
   }
   function addBuilderStep() {
@@ -261,22 +261,10 @@ export function AOMacroMenu() {
     if (macro.action === "workspace-new-preset") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return createWorkspaceNote(get("title"), chosenPreset.text); }
     if (macro.action === "workspace-template") return createWorkspaceNote(get("title"), WORKSPACE_TEMPLATES[macro.value ?? ""] ?? "");
     if (macro.action === "workspace-open") { const found = notes.find((item) => item.id === get("noteId")); if (!found) throw new Error("Choose a saved note."); return openWorkspaceNote(found); }
-    if (macro.action === "workspace-duplicate") { const draft = currentDraft(); return createWorkspaceNote(get("title"), draft.body ?? ""); }
-    if (macro.action === "workspace-append") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return updateCurrent((body) => body.trim() ? `${body.trimEnd()}\n${chosenPreset.text}` : chosenPreset.text); }
     if (macro.action === "workspace-prepend") { if (!chosenPreset) throw new Error("Choose a saved text preset."); touchPreset(chosenPreset.id); return updateCurrent((body) => body.trim() ? `${chosenPreset.text}\n${body.trimStart()}` : chosenPreset.text); }
-    if (macro.action === "workspace-section") return updateCurrent((body) => `${body.trimEnd()}\n\n## ${get("title")} · ${new Date().toLocaleDateString()}`.trim());
-    if (macro.action === "workspace-add-text") return sendWorkspaceLineCommand({ action: "add-text", text: get("text") });
     if (macro.action === "workspace-add-comment") return sendWorkspaceLineCommand({ action: "add-comment", text: get("comment") });
     if (macro.action === "workspace-add-heading") return sendWorkspaceLineCommand({ action: "add-heading", text: get("text"), kind: get("heading") as "h1" | "h2" | "h3" | "h4" });
     if (macro.action === "workspace-add-code") return sendWorkspaceLineCommand({ action: "add-code", text: get("text") });
-    if (macro.action === "workspace-save-new") {
-      const draft = currentDraft();
-      if (draft.body?.trim()) {
-        if (draft.activeId) await api<Note>(`/api/v1/notes/${draft.activeId}`, { method: "PATCH", body: JSON.stringify({ body: draft.body }) });
-        else await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body: draft.body }) });
-      }
-      return createWorkspaceNote(get("title"));
-    }
   }
 
   function writeScoped(key: string, value: unknown) { localStorage.setItem(userStorageKey(key), JSON.stringify(value)); }
@@ -315,7 +303,7 @@ export function AOMacroMenu() {
     if (macro.action === "flow-note-project") {
       if (!selectedNote || !projects.some((item) => item.id === get("projectId"))) throw new Error("Choose both a saved note and Project.");
       let assignments: Record<string, string> = {}; try { assignments = JSON.parse(localStorage.getItem(userStorageKey(NOTE_PROJECTS_KEY)) ?? "{}"); } catch { /* start clean */ }
-      writeScoped(NOTE_PROJECTS_KEY, { ...assignments, [selectedNote.id]: get("projectId") }); setNotice(`${selectedNote.title} added to the selected Project.`); setSelected(null); return;
+      writeScoped(NOTE_PROJECTS_KEY, { ...assignments, [selectedNote.id]: get("projectId") }); window.dispatchEvent(new Event(AO_WORKSPACE_PROJECTS_EVENT)); setNotice(`${selectedNote.title} added to the selected Project.`); setSelected(null); if (pathname !== "/") router.push("/"); return;
     }
     if (macro.action === "flow-project-note") {
       const project: WorkspaceProject = { id: crypto.randomUUID(), title: get("projectName") || "New project", createdAt: new Date().toISOString() };
@@ -427,7 +415,7 @@ export function AOMacroMenu() {
       {view === "macro" && !selected && macroMode === "presets" && <div className={styles.macroBrowser}>
         <label className={styles.search}><MacroIcon name="search" /><input aria-label="Search macros" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${AO_MACRO_CATALOG.length} presets…`} /></label>
         <div className={styles.categories}>{AO_MACRO_CATEGORIES.map((item) => <button type="button" key={item} className={category === item ? styles.active : ""} onClick={() => setCategory(item)}>{item}</button>)}</div>
-        {notice && <p className={styles.notice}>{notice}</p>}<div className={styles.macroResults}>{filteredMacros.map((macro) => <div className={styles.macroResultRow} key={macro.id}><button type="button" onClick={() => beginMacro(macro)}><span>{macro.label}</span><small>{macro.description}</small><MacroIcon name="chevron" className={styles.chevron} /></button><button type="button" className={styles.savePreset} onClick={() => saveBuiltIn(macro)}>{presets.some((item) => item.macroId === macro.id) ? "Saved" : "Save"}</button></div>)}</div>
+        {notice && <p className={styles.notice}>{notice}</p>}<div className={styles.macroResults}>{filteredMacros.map((macro) => <div className={styles.macroResultRow} key={macro.id}><button type="button" onClick={() => beginMacro(macro)}><span>{macro.label}</span><small>{macro.description}</small><MacroIcon name="chevron" className={styles.chevron} /></button><button type="button" className={styles.savePreset} onClick={() => saveBuiltIn(macro)}>{presets.some((item) => item.macroId === macro.id) ? "Unsave" : "Save"}</button></div>)}</div>
       </div>}
       {view === "macro" && !selected && macroMode === "builder" && <div className={styles.builder}>
         <label>Macro name<input value={builderName} onChange={(event) => setBuilderName(event.target.value)} placeholder="My workflow" /></label>
