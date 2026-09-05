@@ -187,6 +187,15 @@ test("Workspace project assignment opens the destination project and uses bare c
   assert.doesNotMatch(globalCss, /\.ms-note-more \{[^}]*border: 1px/);
 });
 
+test("portrait mobile Workspace places note actions beneath the Notes selector without changing persistence", () => {
+  assert.match(globalCss, /@media \(max-width: 700px\) and \(orientation: portrait\)/);
+  assert.match(globalCss, /grid-template-areas: "project notes" "\. actions"/);
+  assert.match(globalCss, /\.ms-workspace-note-more \{ grid-area: actions; justify-self: end; \}/);
+  assert.match(globalCss, /\.ms-workspace-note-menu \{ top: calc\(100% \+ 4px\); \}/);
+  assert.match(workspacePage, /api<Note>\(`\/api\/v1\/notes\/\$\{noteIdToSave\}`/);
+  assert.match(workspacePage, /localStorage\.setItem\(userStorageKey\(NOTE_PROJECTS_KEY\)/);
+});
+
 test("Verify macros refresh and expose the user's Workspace note selector", () => {
   assert.match(aoMenu, /function beginMacro[\s\S]*refreshNotes\(\)\.then\(\(freshNotes\)/);
   assert.match(aoMenu, /aria-label=\{selected\.action === "flow-verify-context" && field\.type === "note" \? "Workspace note to verify" : field\.label\}/);

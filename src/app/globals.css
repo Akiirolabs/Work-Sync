@@ -618,6 +618,14 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
   .ms-workspace-note-more { flex: 0 0 18px; }
 }
 
+@media (max-width: 700px) and (orientation: portrait) {
+  .ms-workspace-note-actions { display: grid; grid-template-columns: minmax(0, 118px) minmax(0, 1fr); grid-template-areas: "project notes" ". actions"; column-gap: 4px; row-gap: 3px; }
+  .ms-workspace-project-picker { grid-area: project; }
+  .ms-workspace-note-picker { grid-area: notes; width: 100%; }
+  .ms-workspace-note-more { grid-area: actions; justify-self: end; }
+  .ms-workspace-note-menu { top: calc(100% + 4px); }
+}
+
 .ms-notes-open {
   flex: 1;
   width: 100%;
