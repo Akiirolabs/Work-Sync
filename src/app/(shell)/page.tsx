@@ -3,7 +3,7 @@
 import { Workspace } from "@/ui";
 import JSZip from "jszip";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api, ApiError } from "@/lib/client-api";
 import { userStorageKey } from "@/lib/user-storage";
 import { LineEditor } from "@/components/LineEditor";
@@ -100,6 +100,9 @@ export default function WorkspacePage() {
   const [activeProjectId, setActiveProjectId] = useState("all");
   const importInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedProjectId = searchParams.get("project");
+  const requestedNoteId = searchParams.get("note");
 
   const visibleSaved = activeProjectId === "all" ? saved : saved.filter((note) => activeProjectId === "unassigned" ? !noteProjects[note.id] : noteProjects[note.id] === activeProjectId);
   const activeNoteLabel = activeId ? noteLabel(saved.find((note) => note.id === activeId)?.title ?? "New note") : "New note";
@@ -215,6 +218,13 @@ export default function WorkspacePage() {
     setBody(note.body);
     setError(null);
   }
+
+  useEffect(() => {
+    if (!requestedProjectId || !projects.some((project) => project.id === requestedProjectId)) return;
+    setActiveProjectId(requestedProjectId);
+    const requestedNote = saved.find((note) => note.id === requestedNoteId && noteProjects[note.id] === requestedProjectId);
+    if (requestedNote) openNote(requestedNote);
+  }, [requestedNoteId, requestedProjectId, projects, saved, noteProjects]);
 
   async function saveCurrentNote() {
     const bodyToSave = bodyRef.current;

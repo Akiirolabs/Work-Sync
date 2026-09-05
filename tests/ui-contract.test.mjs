@@ -187,6 +187,16 @@ test("Workspace project assignment opens the destination project and uses bare c
   assert.doesNotMatch(globalCss, /\.ms-note-more \{[^}]*border: 1px/);
 });
 
+test("Verify macros refresh and expose the user's Workspace note selector", () => {
+  assert.match(aoMenu, /function beginMacro[\s\S]*refreshNotes\(\)\.then\(\(freshNotes\)/);
+  assert.match(aoMenu, /aria-label=\{selected\.action === "flow-verify-context" && field\.type === "note" \? "Workspace note to verify" : field\.label\}/);
+  assert.match(aoMenu, /No Workspace notes available/);
+  assert.match(aoMenu, /router\.push\(`\/\?project=\$\{encodeURIComponent\(projectId\)\}&note=\$\{encodeURIComponent\(selectedNote\.id\)\}`\)/);
+  assert.match(workspacePage, /const requestedProjectId = searchParams\.get\("project"\)/);
+  assert.match(workspacePage, /setActiveProjectId\(requestedProjectId\)/);
+  assert.match(workspacePage, /requestedNoteId && noteProjects\[note\.id\] === requestedProjectId/);
+});
+
 test("cloud storage sync absorbs transient network failures and backs off retries", () => {
   assert.match(userStorage, /catch \{[\s\S]*retry quietly instead of producing an unhandled rejection/);
   assert.match(userStorage, /Math\.min\(retryDelay \* 2, 30_000\)/);
