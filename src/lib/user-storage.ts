@@ -14,14 +14,17 @@ let lastUploaded = "";
 let lastUploadedUser = "";
 let knownServerRevision = "";
 
-async function refreshServerRevision(): Promise<void> {
+async function refreshServerRevision(): Promise<boolean> {
   try {
     const response = await fetch("/api/v1/sync-revision", { cache: "no-store" });
-    if (!response.ok) return;
+    if (!response.ok) return false;
     const revision = ((await response.json()) as { revision?: string | null }).revision ?? "";
-    if (knownServerRevision && revision && revision !== knownServerRevision) window.dispatchEvent(new Event("work-sync:server-objects-updated"));
+    const changed = Boolean(knownServerRevision && revision && revision !== knownServerRevision);
     knownServerRevision = revision;
+    if (changed) window.dispatchEvent(new Event("work-sync:server-objects-updated"));
+    return changed;
   } catch { /* temporary network loss is handled by the next poll */ }
+  return false;
 }
 
 export function collectUserStorage(userId: string): Record<string, string> {
@@ -112,9 +115,17 @@ export function startUserStorageSync(userId: string): () => void {
   };
   schedule();
   const flush = () => { void uploadUserStorage(userId); };
-  const refresh = () => { void hydrateUserStorage(userId).then((changed) => { if (changed) window.dispatchEvent(new Event("work-sync:user-state-updated")); }); };
+  const refresh = () => {
+    void refreshServerRevision().then((serverChanged) => {
+      if (!serverChanged) return;
+      // Do not replace in-progress local edits with a remote snapshot. The
+      // queued upload wins, and a later revision poll will reconcile it.
+      if (userId === lastUploadedUser && JSON.stringify(collectUserStorage(userId)) !== lastUploaded) return;
+      void hydrateUserStorage(userId).then((changed) => { if (changed) window.dispatchEvent(new Event("work-sync:user-state-updated")); });
+    });
+  };
   void refreshServerRevision();
-  const refreshTimer = window.setInterval(() => { refresh(); void refreshServerRevision(); }, 2_000);
+  const refreshTimer = window.setInterval(refresh, 2_000);
   const onVisibility = () => { if (document.visibilityState === "visible") refresh(); };
   window.addEventListener("pagehide", flush);
   document.addEventListener("visibilitychange", onVisibility);

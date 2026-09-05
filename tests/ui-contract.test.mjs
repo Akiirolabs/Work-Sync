@@ -136,6 +136,7 @@ test("device-local account data is synchronized through an owned server record",
 test("account hydration does not create a reload loop", () => {
   assert.match(account, /Reloading here can[\s\S]*fetch\/reload loop/);
   assert.match(account, /if \(nextUser\) stopSync = startUserStorageSync\(nextUser\.id\)/);
+  assert.doesNotMatch(account, /work-sync:server-objects-updated/);
 });
 
 test("cloud storage sync absorbs transient network failures and backs off retries", () => {

@@ -176,6 +176,14 @@ export default function WorkspacePage() {
     return () => window.removeEventListener(AO_WORKSPACE_OPEN_EVENT, consumeAOOpen);
   }, [ready, load]);
 
+  useEffect(() => {
+    // A remote change updates the saved-note selector without remounting the
+    // editor or replacing its current body. This keeps an unsaved note stable.
+    function refreshSavedNotes() { void load().catch(() => { /* retain the current list while offline */ }); }
+    window.addEventListener("work-sync:server-objects-updated", refreshSavedNotes);
+    return () => window.removeEventListener("work-sync:server-objects-updated", refreshSavedNotes);
+  }, [load]);
+
   useEffect(() => { function dismiss(event: PointerEvent) { if (!(event.target instanceof Element && event.target.closest("[data-workspace-note-actions]"))) setNoteMenuOpen(false); } document.addEventListener("pointerdown", dismiss); return () => document.removeEventListener("pointerdown", dismiss); }, []);
 
   function newNote() {

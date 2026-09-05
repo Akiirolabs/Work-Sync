@@ -31,11 +31,6 @@ export function AccountSettings() {
     });
     return () => stopSync?.();
   }, []);
-  useEffect(() => {
-    const refreshProfileObjects = () => window.location.reload();
-    window.addEventListener("work-sync:server-objects-updated", refreshProfileObjects);
-    return () => window.removeEventListener("work-sync:server-objects-updated", refreshProfileObjects);
-  }, []);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
   useEffect(() => {
     const saved = localStorage.getItem(THEME_KEY);
