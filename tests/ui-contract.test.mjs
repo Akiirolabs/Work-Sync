@@ -139,6 +139,15 @@ test("account hydration does not create a reload loop", () => {
   assert.doesNotMatch(account, /work-sync:server-objects-updated/);
 });
 
+test("Workspace background saves remain visually silent and retain the new-note editor", () => {
+  assert.match(workspacePage, /saveInFlight\.current\) \{ saveQueued\.current = true; return; \}/);
+  assert.match(workspacePage, /Body-only saves do not need to rerender the header\/select controls/);
+  assert.match(workspacePage, /<span className="ms-muted ms-workspace-save-status">Saved to cloud<\/span>/);
+  assert.doesNotMatch(workspacePage, /busy \? "Saving…" : "Saved to cloud"/);
+  assert.match(editor, /loadedKey === "draft" && storageKey !== "draft"/);
+  assert.match(editor, /intact across that metadata-only key change, preserving focus, caret,/);
+});
+
 test("cloud storage sync absorbs transient network failures and backs off retries", () => {
   assert.match(userStorage, /catch \{[\s\S]*retry quietly instead of producing an unhandled rejection/);
   assert.match(userStorage, /Math\.min\(retryDelay \* 2, 30_000\)/);

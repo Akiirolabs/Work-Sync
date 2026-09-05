@@ -78,6 +78,14 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   const joined = useMemo(() => linesToMarkdown(lines), [lines]);
 
   useEffect(() => {
+    // Saving a new draft assigns it a persistent id. Its content and DOM stay
+    // intact across that metadata-only key change, preserving focus, caret,
+    // scroll position, and any open formatting control.
+    if (loadedKey === "draft" && storageKey !== "draft" && linesToMarkdown(linesRef.current) === value) {
+      appliedExternalValue.current = value;
+      setLoadedKey(storageKey);
+      return;
+    }
     const base = markdownLines(value);
     try {
       const saved = JSON.parse(localStorage.getItem(userStorageKey(`work-sync:line-meta:${storageKey}`)) ?? "[]") as Partial<Line>[];

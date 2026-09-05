@@ -82,8 +82,12 @@ export default function WorkspacePage() {
   const [saved, setSaved] = useState<Note[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false); const creating = useRef(false);
+  const [busy, setBusy] = useState(false);
   const persistedNote = useRef<{ id: string | null; body: string }>({ id: null, body: "" });
+  const saveInFlight = useRef(false);
+  const saveQueued = useRef(false);
+  const bodyRef = useRef(body);
+  const activeIdRef = useRef(activeId);
   const [ready, setReady] = useState(false);
   const [noteMenuOpen, setNoteMenuOpen] = useState(false);
   const [projects, setProjects] = useState<WorkspaceProject[]>([]);
@@ -92,6 +96,8 @@ export default function WorkspacePage() {
   const importInput = useRef<HTMLInputElement>(null);
 
   const visibleSaved = activeProjectId === "all" ? saved : saved.filter((note) => activeProjectId === "unassigned" ? !noteProjects[note.id] : noteProjects[note.id] === activeProjectId);
+
+  useEffect(() => { bodyRef.current = body; activeIdRef.current = activeId; }, [body, activeId]);
 
   const load = useCallback(async () => {
     setSaved(await api<Note[]>("/api/v1/notes"));
@@ -188,6 +194,7 @@ export default function WorkspacePage() {
 
   function newNote() {
     persistedNote.current = { id: null, body: "" };
+    activeIdRef.current = null;
     setActiveId(null);
     setBody("");
     setError(null);
@@ -195,19 +202,45 @@ export default function WorkspacePage() {
 
   function openNote(note: Note) {
     persistedNote.current = { id: note.id, body: note.body };
+    activeIdRef.current = note.id;
     setActiveId(note.id);
     setBody(note.body);
     setError(null);
   }
 
   async function saveCurrentNote() {
-    if (!body.trim() || creating.current) return;
-    setBusy(true); setError(null);
+    const bodyToSave = bodyRef.current;
+    const noteIdToSave = activeIdRef.current;
+    if (!bodyToSave.trim()) return;
+    if (saveInFlight.current) { saveQueued.current = true; return; }
+    saveInFlight.current = true;
     try {
-      if (activeId) { const updated = await api<Note>(`/api/v1/notes/${activeId}`, { method: "PATCH", body: JSON.stringify({ body }) }); persistedNote.current = { id: updated.id, body: updated.body }; setSaved((prev) => [updated, ...prev.filter((note) => note.id !== updated.id)]); }
-      else { creating.current = true; const created = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body }) }); const draftMeta = localStorage.getItem(userStorageKey("work-sync:line-meta:draft")); if (draftMeta) localStorage.setItem(userStorageKey(`work-sync:line-meta:${created.id}`), draftMeta); persistedNote.current = { id: created.id, body: created.body }; setSaved((prev) => [created, ...prev]); setActiveId(created.id); if (activeProjectId !== "all" && activeProjectId !== "unassigned") setNoteProjects((current) => ({ ...current, [created.id]: activeProjectId })); }
+      if (noteIdToSave) {
+        const updated = await api<Note>(`/api/v1/notes/${noteIdToSave}`, { method: "PATCH", body: JSON.stringify({ body: bodyToSave }) });
+        persistedNote.current = { id: updated.id, body: updated.body };
+        // Body-only saves do not need to rerender the header/select controls.
+        // Retain their current object until the visible title actually changes.
+        setSaved((current) => {
+          const existing = current.find((note) => note.id === updated.id);
+          if (!existing || existing.title === updated.title) return current;
+          return current.map((note) => note.id === updated.id ? { ...note, title: updated.title, updatedAt: updated.updatedAt } : note);
+        });
+      } else {
+        const created = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ body: bodyToSave }) });
+        const draftMeta = localStorage.getItem(userStorageKey("work-sync:line-meta:draft"));
+        if (draftMeta) localStorage.setItem(userStorageKey(`work-sync:line-meta:${created.id}`), draftMeta);
+        persistedNote.current = { id: created.id, body: created.body };
+        activeIdRef.current = created.id;
+        setSaved((current) => [created, ...current]);
+        setActiveId(created.id);
+        if (activeProjectId !== "all" && activeProjectId !== "unassigned") setNoteProjects((current) => ({ ...current, [created.id]: activeProjectId }));
+      }
+      setError((current) => current ? null : current);
     } catch (e) { setError(e instanceof ApiError && e.status === 401 ? "Sign in to save notes." : e instanceof Error ? e.message : "Save failed"); }
-    finally { creating.current = false; setBusy(false); }
+    finally {
+      saveInFlight.current = false;
+      if (saveQueued.current) { saveQueued.current = false; void saveCurrentNote(); }
+    }
   }
 
   useEffect(() => {
@@ -298,7 +331,7 @@ export default function WorkspacePage() {
           <button type="button" className="ms-btn ms-workspace-new" onClick={newNote} disabled={busy}>
             New
           </button>
-          <span className="ms-muted ms-workspace-save-status">{busy ? "Saving…" : "Saved to cloud"}</span>
+      <span className="ms-muted ms-workspace-save-status">Saved to cloud</span>
         </div>
       }
     >
