@@ -145,4 +145,18 @@
 .customRun ol { max-height: 340px; margin: 0 0 12px; padding-left: 25px; color: #d9dfe4; font-size: 11px; line-height: 2; }
 .customRun > button { width: 100%; min-height: 36px; }
 
-@media (max-width: 520px) { .root { left: 12px; bottom: 12px; } .panel { width: min(292px, calc(100vw - 24px)); bottom: 50px; } .list > button { grid-template-columns: 24px max-content 16px; column-gap: 6px; justify-content: start; padding: 0 7px; } .list > button em { justify-self: start; } }
+@media (max-width: 520px) {
+  .root { left: 12px; bottom: 12px; }
+  .panel { width: min(292px, calc(100vw - 24px)); bottom: 50px; }
+  .list > button { grid-template-columns: 24px max-content 16px; column-gap: 6px; justify-content: start; padding: 0 7px; }
+  .list > button em { justify-self: start; }
+  /* Keep the expanded preset catalog dense and touch-friendly on phones. */
+  .macroBrowser { min-height: 0; }
+  .macroResults { max-height: min(360px, calc(100vh - 210px)); padding-inline: 5px; }
+  .macroResultRow { grid-template-columns: minmax(0, 1fr) 38px; }
+  .macroResultRow > button:first-child { min-height: 42px; grid-template-columns: minmax(0, 1fr) 12px; padding: 5px 7px; }
+  .macroResultRow span { overflow: hidden; font-size: 11px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+  .macroResultRow small { font-size: 8px; line-height: 1.2; }
+  .macroResultRow .chevron { width: 12px; height: 12px; justify-self: end; color: #aeb8c0; }
+  .savePreset { width: 34px; height: 23px; justify-self: center; font-size: 8px; }
+}
