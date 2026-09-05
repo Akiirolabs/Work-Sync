@@ -192,7 +192,8 @@ test("Verify macros refresh and expose the user's Workspace note selector", () =
   assert.match(aoMenu, /aria-label=\{selected\.action === "flow-verify-context" && field\.type === "note" \? "Workspace note to verify" : field\.label\}/);
   assert.match(aoMenu, /No Workspace notes available/);
   assert.match(aoMenu, /router\.push\(`\/\?project=\$\{encodeURIComponent\(projectId\)\}&note=\$\{encodeURIComponent\(selectedNote\.id\)\}`\)/);
-  assert.match(workspacePage, /const requestedProjectId = searchParams\.get\("project"\)/);
+  assert.match(workspacePage, /const query = new URLSearchParams\(window\.location\.search\)/);
+  assert.match(workspacePage, /const requestedProjectId = query\.get\("project"\)/);
   assert.match(workspacePage, /setActiveProjectId\(requestedProjectId\)/);
   assert.match(workspacePage, /requestedNoteId && noteProjects\[note\.id\] === requestedProjectId/);
 });
