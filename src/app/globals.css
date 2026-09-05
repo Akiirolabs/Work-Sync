@@ -145,13 +145,16 @@
 .ms-workspace-project-picker select { min-width: 0; max-width: min(160px, 22vw); border: 0; outline: 0; padding: 0 12px 0 0; background: transparent; color: var(--ms-text-bright); font: 600 10px var(--ms-font-sans); cursor: pointer; }
 .ms-workspace-project-picker:focus-within { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
 .ms-workspace-note-actions { position: relative; display: flex; align-items: center; gap: 4px; }
-.ms-workspace-note-more { width: 29px; height: 29px; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0; background: var(--ms-bg-2); color: var(--ms-text-bright); font: 18px/1 var(--ms-font-sans); cursor: pointer; }
-.ms-workspace-note-more:hover, .ms-workspace-note-more[aria-expanded="true"] { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
+.ms-workspace-note-more { width: 25px; height: 29px; border: 0; padding: 0; background: transparent; color: var(--ms-text-bright); font: 16px/1 var(--ms-font-sans); letter-spacing: 0; cursor: pointer; }
+.ms-workspace-note-more:hover, .ms-workspace-note-more[aria-expanded="true"] { color: var(--ms-accent); }
 .ms-workspace-note-menu { position: absolute; z-index: 1000; top: 35px; right: 0; width: 190px; padding: 5px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2127; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .ms-workspace-note-menu button { width: 100%; height: 30px; border: 0; border-radius: 5px; padding: 0 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
 .ms-workspace-note-menu button:hover:not(:disabled) { background: #303840; }
 .ms-workspace-note-menu button.is-danger:hover:not(:disabled) { color: var(--ms-danger); }
 .ms-workspace-note-menu button:disabled { opacity: .45; cursor: not-allowed; }
+.ms-workspace-saved-note-list { display: grid; gap: 3px; max-height: 178px; margin: 5px 2px; overflow-y: auto; border-top: 1px solid var(--ms-edge-soft); border-bottom: 1px solid var(--ms-edge-soft); padding: 5px 0; }
+.ms-workspace-saved-note-list .ms-saved-note-row { background: var(--ms-bg-1); }
+.ms-workspace-saved-note-list .ms-note-menu { position: absolute; right: 5px; top: 31px; z-index: 1010; }
 .ms-workspace-project-assignment { display: grid; gap: 3px; padding: 6px 8px 8px; color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .ms-workspace-project-assignment select { width: 100%; min-width: 0; border: 1px solid var(--ms-edge); border-radius: 4px; padding: 5px 6px; background: #10171e; color: var(--ms-text); font: 11px var(--ms-font-sans); text-transform: none; }
 .ms-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
@@ -610,7 +613,7 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
   .ms-workspace-project-picker select { max-width: 74px; font-size: 10px; }
   .ms-workspace-note-picker { flex: 1 1 0; }
   .ms-workspace-note-picker select { max-width: none; width: 100%; }
-  .ms-workspace-note-more { flex: 0 0 29px; }
+  .ms-workspace-note-more { flex: 0 0 25px; }
 }
 
 .ms-notes-open {

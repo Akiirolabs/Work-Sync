@@ -148,6 +148,22 @@ test("Workspace background saves remain visually silent and retain the new-note 
   assert.match(editor, /intact across that metadata-only key change, preserving focus, caret,/);
 });
 
+test("theme, Agent, Workspace, and Table controls honor the latest focused UI requirements", () => {
+  assert.match(account, /Dark Mode keeps the current Work Sync visual mode/);
+  assert.match(agentChatCss, /html\[data-theme="light"\]/);
+  assert.match(agentChat, /New Chat/);
+  assert.match(agentChat, /To-Do.*Tables.*Page.*Verify.*Workspace Note/);
+  assert.match(agentChat, /sendDestination !== "workspace"/);
+  assert.match(workspacePage, /Rename current Project/);
+  assert.match(workspacePage, /Send to Verify/);
+  assert.match(workspacePage, /function selectProject/);
+  assert.match(workspacePage, /ms-workspace-saved-note-list/);
+  assert.match(workspacePage, /Options for \$\{noteLabel\(note\.title\)\}/);
+  assert.match(aoMenu, /createWorkspaceNote\(get\("title"\) \|\| project\.title, "", project\.id\)/);
+  assert.doesNotMatch(tablesPage, /\{type === "page" && <em>New<\/em>\}/);
+  assert.match(editor, /const heading = raw\.match/);
+});
+
 test("cloud storage sync absorbs transient network failures and backs off retries", () => {
   assert.match(userStorage, /catch \{[\s\S]*retry quietly instead of producing an unhandled rejection/);
   assert.match(userStorage, /Math\.min\(retryDelay \* 2, 30_000\)/);
@@ -213,8 +229,10 @@ test("FTR 1009.2 updates Workspace controls, table icons, and Vault text actions
   for (const name of ["people", "date", "files", "filter", "group", "appearance", "settings", "comments"]) assert.match(tablesPage, new RegExp(`name="${name}"|${name}:`));
   assert.match(globalCss, /\.ms-ui-icon \{[^}]*color: #fff/);
   assert.match(aoMenu, /className=\{styles\.vaultTextActions\}/);
-  assert.doesNotMatch(aoMenu, /Create text preset/);
+  assert.match(aoMenu, /Create Text Preset/);
   assert.match(aoMenu, /View saved text/);
+  assert.match(aoCatalog, /id: "vault-create"/);
+  assert.match(aoMenu, /macro\.action === "vault-create"/);
   assert.match(aoMenu, /setVaultTextOnly\(true\)/);
   assert.doesNotMatch(aoMenu, /\["All", "Text"/);
 });
@@ -418,7 +436,7 @@ test("AO preset browser is gated behind Presets and saved presets can be revoked
   assert.match(aoMenu, /setMacroMode\("presets"\)/);
   assert.match(aoMenu, /macroMode === "presets"/);
   assert.match(aoMenu, /aria-label="Presets information"/);
-  assert.doesNotMatch(aoMenu, /aria-label="Text preset information"/);
+  assert.match(aoMenu, /aria-label="Text preset information"/);
   assert.match(aoMenu, /<VaultIcon \/><b>Create macro<\/b><MacroIcon name="chevron"/);
   assert.match(aoMenu, /saveBuiltIn\(macro\)/);
   assert.match(aoMenu, /\? "Unsave" : "Save"/);
@@ -426,8 +444,8 @@ test("AO preset browser is gated behind Presets and saved presets can be revoked
 });
 
 test("Macro Key keeps removed actions out, labels fixed or empty steps, and restricts Route destinations", () => {
-  assert.match(aoMenu, /REMOVED_PRESET_ACTIONS/);
-  assert.match(aoMenu, /!REMOVED_PRESET_ACTIONS\.has\(item\.action\)/);
+  assert.match(aoMenu, /HIDDEN_CATALOG_ACTIONS/);
+  assert.match(aoMenu, /!HIDDEN_CATALOG_ACTIONS\.has\(item\.action\)/);
   for (const label of ["Step type", "Fixed", "Empty", "Route destination section", "Route destination page", "Go There", "Create New", "Add to Current", "Add to Page"]) assert.match(aoMenu, new RegExp(label));
   assert.match(aoMenu, /workspace: \["tables", "sources", "verify", "calendar"\]/);
   assert.match(aoMenu, /todo: \["workspace", "tables", "calendar"\]/);

@@ -100,6 +100,7 @@ const pages: AOMacroDefinition[] = [
 ];
 
 const vault: AOMacroDefinition[] = [
+  { id: "vault-create", label: "Create Text Preset", description: "Save reusable text in Vault.", category: "Vault", action: "vault-create", fields: [text("name", "Preset name", "Weekly update"), { key: "text", label: "Preset text", type: "textarea", placeholder: "Reusable text" }] },
   { id: "vault-run", label: "Run saved text preset", description: "Send Vault text to a chosen destination.", category: "Vault", action: "vault-run", fields: [preset, { key: "destination", label: "Destination", type: "destination" }, { key: "destinationNoteId", label: "Destination note", type: "note", optional: true }] },
   { id: "vault-find", label: "Find saved macro", description: "Search all saved Vault entries.", category: "Vault", action: "vault-find" },
   { id: "vault-pin", label: "Pin macro", description: "Keep a Vault entry at the top.", category: "Vault", action: "vault-pin", fields: [preset] },

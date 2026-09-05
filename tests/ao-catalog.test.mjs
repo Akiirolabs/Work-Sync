@@ -24,7 +24,7 @@ test("every catalog preset maps to a supported execution action", () => {
     Rows: new Set(["row-add", "row-many", "row-named", "row-duplicate", "row-page", "row-preset", "row-empty"]),
     Columns: new Set(["column-add", "column-rename", "column-duplicate", "column-change", "column-insert-left", "column-insert-right", "column-hide", "column-show", "column-options", "column-summary", "column-filter"]),
     Pages: new Set(["page-create", "page-open", "page-column-first", "row-page", "page-rename", "page-append", "page-duplicate", "page-fill-empty"]),
-    Vault: new Set(["vault-run", "vault-find", "vault-pin", "vault-duplicate", "vault-rename", "vault-edit", "vault-recent"]),
+    Vault: new Set(["vault-create", "vault-run", "vault-find", "vault-pin", "vault-duplicate", "vault-rename", "vault-edit", "vault-recent"]),
     Flows: new Set(["flow-add-note", "flow-note-project", "flow-project-note", "flow-verify-note", "flow-verify-context", "flow-verify-sources", "flow-todo-workspace", "flow-folder-task-subtask", "flow-folder-select-task", "flow-folder-task-subtask-existing", "flow-folder-task-subtask-details", "flow-finding-day", "flow-sources-day", "flow-sources-workspace", "flow-finding-table", "flow-sources-table", "flow-todo-calendar", "flow-todo-day", "flow-todo-to-day", "flow-note-to-day"]),
   };
 

@@ -57,7 +57,7 @@ function ColumnPicker({ search, onSearch, onSelect, column, hiddenColumns = [], 
     <label><span><TableIcon name="search" /></span><input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="Search" autoFocus /></label>
     <div className="ms-picker-rule" />
     {column ? <><div className="ms-column-name-field"><label htmlFor={`column-name-${column.id}`}>Column name</label><input id={`column-name-${column.id}`} aria-label="Column name" value={column.name} onChange={(event) => onRename?.(event.target.value)} /></div><div className="ms-picker-rule" /><h3>Change property type</h3></> : <>{hiddenColumns.length > 0 && <><h3>Hidden columns</h3><div className="ms-hidden-columns">{hiddenColumns.map((hidden) => <button key={hidden.id} onClick={() => onShow?.(hidden.id)}><span><PropertyIcon type={hidden.type} /></span>{hidden.name}<em>Show</em></button>)}</div><div className="ms-picker-rule" /></>}<h3>Fill column with AI</h3><div className="ms-ai-types"><button>≡ Summary</button><button>☆ Translation</button><button>◇ Category</button><button>✦ Insights</button><button>♨ Custom autofill</button></div><h3>General</h3></>}
-    <div className="ms-type-grid">{types.map(([type, info]) => <button className={column?.type === type ? "is-active" : ""} key={type} onClick={() => onSelect(type)}><span><PropertyIcon type={type} /></span>{info.label}{type === "page" && <em>New</em>}</button>)}</div>
+    <div className="ms-type-grid">{types.map(([type, info]) => <button className={column?.type === type ? "is-active" : ""} key={type} onClick={() => onSelect(type)}><span><PropertyIcon type={type} /></span>{info.label}</button>)}</div>
   </div>;
 }
 

@@ -13,7 +13,7 @@ const UpdateNoteSchema = z.object({
 
 function titleFromBody(body: string, fallback?: string) {
   const line = body.split("\n").find((l) => l.trim());
-  if (line) return line.trim().slice(0, 80);
+  if (line) return line.trim().replace(/^#{1,4}\s+/, "").slice(0, 80);
   if (fallback?.trim()) return fallback.trim().slice(0, 80);
   return "Untitled";
 }

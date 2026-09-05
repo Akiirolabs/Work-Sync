@@ -160,3 +160,11 @@
   .macroResultRow .chevron { width: 12px; height: 12px; justify-self: end; color: #aeb8c0; }
   .savePreset { width: 34px; height: 23px; justify-self: center; font-size: 8px; }
 }
+
+:global(html[data-theme="light"]) .trigger { border-color: var(--ms-edge); background: var(--ms-bg-1); color: var(--ms-text-bright); box-shadow: 0 8px 22px rgba(29, 54, 72, .16); }
+:global(html[data-theme="light"]) .panel, :global(html[data-theme="light"]) .vaultActions { border-color: var(--ms-edge); background: var(--ms-bg-1); color: var(--ms-text); box-shadow: 0 18px 42px rgba(29, 54, 72, .18); }
+:global(html[data-theme="light"]) .saved > div, :global(html[data-theme="light"]) .vaultItem, :global(html[data-theme="light"]) .mainMacros button { background: var(--ms-bg-2); }
+:global(html[data-theme="light"]) .header strong, :global(html[data-theme="light"]) .list > button, :global(html[data-theme="light"]) .macroResultRow > button:first-child, :global(html[data-theme="light"]) .vaultItem > button strong { color: var(--ms-text-bright); }
+:global(html[data-theme="light"]) .list > button:hover, :global(html[data-theme="light"]) .list > button.active, :global(html[data-theme="light"]) .macroResultRow:hover, :global(html[data-theme="light"]) .categories button.active { background: var(--ms-bg-3); }
+:global(html[data-theme="light"]) .form textarea, :global(html[data-theme="light"]) .preferences textarea, :global(html[data-theme="light"]) .preferences input, :global(html[data-theme="light"]) .runner input, :global(html[data-theme="light"]) .runner select, :global(html[data-theme="light"]) .runner textarea, :global(html[data-theme="light"]) .builder input, :global(html[data-theme="light"]) .builder select, :global(html[data-theme="light"]) .builder textarea, :global(html[data-theme="light"]) .search { background: var(--ms-bg-0); color: var(--ms-text); border-color: var(--ms-edge); }
+:global(html[data-theme="light"]) .actions button, :global(html[data-theme="light"]) .save, :global(html[data-theme="light"]) .runner > button, :global(html[data-theme="light"]) .createPreset, :global(html[data-theme="light"]) .vaultTextActions button, :global(html[data-theme="light"]) .builderAdd button, :global(html[data-theme="light"]) .builderSave { background: var(--ms-bg-3); color: var(--ms-text-bright); border-color: var(--ms-edge); }

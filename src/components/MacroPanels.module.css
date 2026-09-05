@@ -57,3 +57,7 @@
   .radialButtons button { left: 47px; top: 47px; width: 30px; height: 30px; transform: rotate(var(--angle)) translateY(-40px) rotate(calc(-1 * var(--angle))); }
   .radialButtons button::before { inset: -7px; }
 }
+
+:global(html[data-theme="light"]) .compact, :global(html[data-theme="light"]) .radial { background: var(--ms-bg-1); border-color: var(--ms-edge); box-shadow: 0 18px 42px rgba(29, 54, 72, .18); }
+:global(html[data-theme="light"]) .grid button, :global(html[data-theme="light"]) .radialButtons button { background: var(--ms-bg-2); color: var(--ms-text-bright); border-color: var(--ms-edge); }
+:global(html[data-theme="light"]) .radial { background: radial-gradient(circle, var(--ms-bg-3) 0 26%, var(--ms-bg-1) 27% 100%); }

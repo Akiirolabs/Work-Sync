@@ -8,3 +8,17 @@
 .noteChoice { display: grid; gap: 5px; margin: 7px 0; color: var(--ms-text-dim); font-size: 9px; }.noteChoice select { width: 100%; min-width: 0; border: 1px solid var(--ms-edge); border-radius: 4px; padding: 6px; background: #101922; color: var(--ms-text); font: 10px var(--ms-font-sans); }.noteChoice button { width: 100%; }
 @media (max-width: 900px) { .panel { position: fixed; z-index: 900; inset: 28px 0 0 auto; width: min(86vw, 340px); max-width: calc(100vw - 46px); } .composer textarea { font-size: 16px; } }
 @media (max-width: 600px) { .panel { top: 28px; bottom: 0; height: calc(100dvh - 28px); max-height: calc(100dvh - 28px); } .composer { padding-bottom: max(14px, env(safe-area-inset-bottom)); } }
+
+/* Theme variables keep the Agent surface genuinely light in Light Mode while
+   leaving the established Dark Mode palette untouched. */
+.panel { background: var(--ms-bg-1); }
+.history, .sendMenu { background: var(--ms-bg-2); }
+.history > header button, .sendMenu button, .selectOutput, .composer button { background: var(--ms-bg-3); color: var(--ms-text-bright); }
+.history > div > button:hover, .currentHistory { background: var(--ms-bg-3) !important; }
+.pickPrompt, .composer textarea, .noteChoice select { background: var(--ms-bg-0); color: var(--ms-text); }
+.chat > div { background: var(--ms-bg-2); }
+.chat .user { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
+.destinationChoices { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
+.destinationChoices button:last-child { grid-column: 1 / -1; }
+.backDestination { margin-top: 7px; }
+:global(html[data-theme="light"]) .panel header nav button:hover, :global(html[data-theme="light"]) .actionActive { background: var(--ms-bg-3) !important; color: var(--ms-text-bright) !important; }
