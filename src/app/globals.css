@@ -144,13 +144,13 @@
 .ms-workspace-note-dropdown { position: absolute; z-index: 1010; top: calc(100% + 5px); left: 0; display: grid; width: min(270px, calc(100vw - 28px)); max-height: min(310px, calc(100vh - 115px)); overflow-y: auto; border: 1px solid var(--ms-edge); border-radius: 7px; padding: 4px; background: var(--ms-bg-1); box-shadow: 0 14px 32px rgba(0,0,0,.46); text-transform: none; }
 .ms-saved-note-row { position: relative; display: flex; align-items: center; min-width: 0; border-radius: 4px; }.ms-saved-note-row.is-active { background: var(--ms-bg-3); }
 .ms-saved-note-open { min-width: 0; flex: 1; height: 31px; overflow: hidden; border: 0; border-radius: 4px; padding: 0 7px; background: transparent; color: var(--ms-text); font: 11px var(--ms-font-sans); text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }.ms-saved-note-open:hover, .ms-saved-note-open[aria-selected="true"] { background: var(--ms-bg-3); color: var(--ms-text-bright); }
-.ms-note-more { flex: 0 0 auto; width: 26px; height: 27px; border: 0; padding: 0; background: transparent; color: var(--ms-text-dim); font: 15px/1 var(--ms-font-sans); letter-spacing: 0; cursor: pointer; }.ms-note-more:hover, .ms-note-more[aria-expanded="true"] { color: var(--ms-accent); }
+.ms-note-more { flex: 0 0 18px; width: 18px; height: 22px; appearance: none; border: 0; border-radius: 0; box-shadow: none; padding: 0; background: transparent; color: var(--ms-text-dim); font: 12px/1 var(--ms-font-sans); letter-spacing: 0; cursor: pointer; }.ms-note-more:hover, .ms-note-more[aria-expanded="true"] { background: transparent; color: var(--ms-accent); }
 .ms-note-menu { position: absolute; z-index: 1020; top: 29px; right: 2px; display: grid; min-width: 108px; border: 1px solid var(--ms-edge); border-radius: 6px; padding: 4px; background: var(--ms-bg-1); box-shadow: 0 10px 24px rgba(0,0,0,.48); }.ms-note-menu button { border: 0; border-radius: 3px; padding: 6px 7px; background: transparent; color: var(--ms-text); text-align: left; font: 11px var(--ms-font-sans); cursor: pointer; }.ms-note-menu button:hover { background: var(--ms-bg-3); }.ms-note-menu button.is-danger:hover { color: var(--ms-danger); }
 .ms-workspace-project-picker { height: 31px; display: inline-flex; align-items: center; gap: 5px; min-width: 0; border: 1px solid var(--ms-edge-soft); border-radius: 5px; padding: 0 5px 0 7px; background: #121920; color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .ms-workspace-project-picker select { min-width: 0; max-width: min(160px, 22vw); border: 0; outline: 0; padding: 0 12px 0 0; background: transparent; color: var(--ms-text-bright); font: 600 10px var(--ms-font-sans); cursor: pointer; }
 .ms-workspace-project-picker:focus-within { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
 .ms-workspace-note-actions { position: relative; display: flex; align-items: center; gap: 4px; }
-.ms-workspace-note-more { width: 25px; height: 29px; border: 0; padding: 0; background: transparent; color: var(--ms-text-bright); font: 16px/1 var(--ms-font-sans); letter-spacing: 0; cursor: pointer; }
+.ms-workspace-note-more { width: 18px; height: 22px; appearance: none; border: 0; border-radius: 0; box-shadow: none; padding: 0; background: transparent; color: var(--ms-text-bright); font: 13px/1 var(--ms-font-sans); letter-spacing: 0; cursor: pointer; }
 .ms-workspace-note-more:hover, .ms-workspace-note-more[aria-expanded="true"] { color: var(--ms-accent); }
 .ms-workspace-note-menu { position: absolute; z-index: 1000; top: 35px; right: 0; width: 190px; padding: 5px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2127; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .ms-workspace-note-menu button { width: 100%; height: 30px; border: 0; border-radius: 5px; padding: 0 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
@@ -615,7 +615,7 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
   .ms-workspace-project-picker select { max-width: 74px; font-size: 10px; }
   .ms-workspace-note-picker { flex: 1 1 0; }
   .ms-workspace-note-select { max-width: none; width: 100%; }
-  .ms-workspace-note-more { flex: 0 0 25px; }
+  .ms-workspace-note-more { flex: 0 0 18px; }
 }
 
 .ms-notes-open {
@@ -656,12 +656,12 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
   align-items: flex-start;
   gap: 2px;
 }
-.ms-saved-note-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 30px; align-items: center; border: 1px solid transparent; border-radius: 5px; background: #10161d; }
+.ms-saved-note-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 20px; align-items: center; border: 1px solid transparent; border-radius: 5px; background: #10161d; }
 .ms-saved-note-row:hover, .ms-saved-note-row.is-active { background: var(--ms-bg-3); }
 .ms-saved-note-open { position: relative; z-index: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; border: 0; padding: 7px 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; pointer-events: auto; }
 .ms-saved-note-open > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ms-note-more { position: relative; z-index: 2; width: 28px; height: 28px; border: 1px solid var(--ms-edge-soft); border-radius: 5px; background: var(--ms-bg-2); color: var(--ms-text-bright); font: 18px/1 var(--ms-font-sans); cursor: pointer; pointer-events: auto; }
-.ms-note-more:hover, .ms-note-more[aria-expanded="true"] { background: #303840; color: #fff; }
+.ms-note-more { position: relative; z-index: 2; width: 18px; height: 22px; appearance: none; border: 0; border-radius: 0; box-shadow: none; padding: 0; background: transparent; color: var(--ms-text-dim); font: 12px/1 var(--ms-font-sans); cursor: pointer; pointer-events: auto; }
+.ms-note-more:hover, .ms-note-more[aria-expanded="true"] { background: transparent; color: var(--ms-accent); }
 .ms-note-menu { position: fixed; z-index: 1000; width: 162px; padding: 5px; border: 1px solid var(--ms-edge); border-radius: 7px; background: #1b2127; box-shadow: 0 12px 30px rgba(0,0,0,.55); }
 .ms-note-menu button { width: 100%; height: 30px; border: 0; border-radius: 5px; padding: 0 8px; background: transparent; color: var(--ms-text); text-align: left; cursor: pointer; }
 .ms-note-menu button:hover { background: #303840; }

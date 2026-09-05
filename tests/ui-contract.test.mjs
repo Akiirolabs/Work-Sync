@@ -178,6 +178,15 @@ test("latest Agent, Workspace, and table refinements preserve destinations and s
   assert.match(globalCss, /\.ms-line-h1[^}]*font-size: 21px/);
 });
 
+test("Workspace project assignment opens the destination project and uses bare compact dot controls", () => {
+  assert.match(aoMenu, /flow-note-project[\s\S]*AO_WORKSPACE_OPEN_KEY/);
+  assert.match(aoMenu, /JSON\.stringify\(\{ id: selectedNote\.id, body: selectedNote\.body, projectId \}\)/);
+  assert.match(workspacePage, /typeof note\.projectId === "string"\) setActiveProjectId\(note\.projectId\)/);
+  assert.match(globalCss, /\.ms-workspace-note-more \{ width: 18px; height: 22px; appearance: none; border: 0/);
+  assert.match(globalCss, /\.ms-note-more \{[^}]*width: 18px; height: 22px; appearance: none; border: 0/);
+  assert.doesNotMatch(globalCss, /\.ms-note-more \{[^}]*border: 1px/);
+});
+
 test("cloud storage sync absorbs transient network failures and backs off retries", () => {
   assert.match(userStorage, /catch \{[\s\S]*retry quietly instead of producing an unhandled rejection/);
   assert.match(userStorage, /Math\.min\(retryDelay \* 2, 30_000\)/);

@@ -175,8 +175,9 @@ export default function WorkspacePage() {
       if (!raw) return;
       localStorage.removeItem(userStorageKey(AO_WORKSPACE_OPEN_KEY));
       try {
-        const note = JSON.parse(raw) as { id?: unknown; body?: unknown };
+        const note = JSON.parse(raw) as { id?: unknown; body?: unknown; projectId?: unknown };
         if (typeof note.id !== "string" || typeof note.body !== "string") return;
+        if (typeof note.projectId === "string") setActiveProjectId(note.projectId);
         persistedNote.current = { id: note.id, body: note.body };
         setActiveId(note.id);
         setBody(note.body);

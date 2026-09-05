@@ -327,9 +327,14 @@ export function AOMacroMenu() {
     const selectedSources = sourceResults.find((item) => item.id === get("sourceResultId"));
     if (macro.action === "flow-add-note") return createWorkspaceNote(get("title"));
     if (macro.action === "flow-note-project") {
-      if (!selectedNote || !projects.some((item) => item.id === get("projectId"))) throw new Error("Choose both a saved note and Project.");
+      const projectId = get("projectId");
+      if (!selectedNote || !projects.some((item) => item.id === projectId)) throw new Error("Choose both a saved note and Project.");
       let assignments: Record<string, string> = {}; try { assignments = JSON.parse(localStorage.getItem(userStorageKey(NOTE_PROJECTS_KEY)) ?? "{}"); } catch { /* start clean */ }
-      writeScoped(NOTE_PROJECTS_KEY, { ...assignments, [selectedNote.id]: get("projectId") }); window.dispatchEvent(new Event(AO_WORKSPACE_PROJECTS_EVENT)); setNotice(`${selectedNote.title} added to the selected Project.`); setSelected(null); if (pathname !== "/") router.push("/"); return;
+      writeScoped(NOTE_PROJECTS_KEY, { ...assignments, [selectedNote.id]: projectId });
+      localStorage.setItem(userStorageKey(AO_WORKSPACE_OPEN_KEY), JSON.stringify({ id: selectedNote.id, body: selectedNote.body, projectId }));
+      window.dispatchEvent(new Event(AO_WORKSPACE_PROJECTS_EVENT));
+      window.dispatchEvent(new Event(AO_WORKSPACE_OPEN_EVENT));
+      setNotice(`${selectedNote.title} added to the selected Project.`); setSelected(null); if (pathname !== "/") router.push("/"); return;
     }
     if (macro.action === "flow-project-note") {
       const project: WorkspaceProject = { id: crypto.randomUUID(), title: get("projectName") || "New project", createdAt: new Date().toISOString() };
