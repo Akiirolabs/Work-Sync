@@ -82,6 +82,7 @@ function migrate(db: DatabaseSync): void {
       id TEXT PRIMARY KEY,
       user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
       title TEXT NOT NULL,
+      title_locked INTEGER NOT NULL DEFAULT 0,
       body TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -130,6 +131,7 @@ function migrate(db: DatabaseSync): void {
     const firstUser = db.prepare("SELECT id FROM users ORDER BY created_at ASC LIMIT 1").get() as { id: string } | undefined;
     if (firstUser) db.prepare("UPDATE workspace_notes SET user_id = ? WHERE user_id IS NULL").run(firstUser.id);
   }
+  if (!noteColumns.some((column) => column.name === "title_locked")) db.exec("ALTER TABLE workspace_notes ADD COLUMN title_locked INTEGER NOT NULL DEFAULT 0");
   db.exec("CREATE INDEX IF NOT EXISTS idx_workspace_notes_user_updated ON workspace_notes(user_id, updated_at)");
 }
 

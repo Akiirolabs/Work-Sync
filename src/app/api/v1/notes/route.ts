@@ -36,7 +36,7 @@ export async function GET(req: Request) {
   const db = getDb();
   const rows = db
     .prepare(
-      `SELECT id, user_id, title, body, created_at, updated_at
+      `SELECT id, user_id, title, title_locked, body, created_at, updated_at
        FROM workspace_notes WHERE user_id IS ? ORDER BY updated_at DESC`,
     )
     .all(userId) as WorkspaceNoteRow[];
@@ -66,8 +66,8 @@ export async function POST(req: Request) {
   const title = titleFromBody(parsed.data.body, parsed.data.title);
   const db = getDb();
   db.prepare(
-    `INSERT INTO workspace_notes (id, user_id, title, body, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO workspace_notes (id, user_id, title, title_locked, body, created_at, updated_at)
+     VALUES (?, ?, ?, 0, ?, ?, ?)`,
   ).run(id, userId, title, parsed.data.body, ts, ts);
 
   return NextResponse.json(

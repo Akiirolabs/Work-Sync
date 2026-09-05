@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { TABLE_ICON_GROUPS, addColumn, addRow, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, moveColumn, normalizeTableIcon, setColumnOptions, showColumn, updateCell } from "../src/lib/table-model.ts";
+import { TABLE_ICON_GROUPS, addColumn, addRow, changeColumnType, decodeFileCell, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodeFileCell, encodePageCell, hideColumn, insertColumn, makeTable, moveColumn, normalizeTableIcon, setColumnOptions, showColumn, updateCell } from "../src/lib/table-model.ts";
 
 test("creates a themed table with five columns and three rows", () => {
   const table = makeTable(1);
@@ -72,6 +72,13 @@ test("stores a renameable page title separately from its body", () => {
   const encoded = encodePageCell("Experiment 42", "First observation\nSecond observation");
   assert.deepEqual(decodePageCell(encoded), { title: "Experiment 42", body: "First observation\nSecond observation" });
   assert.deepEqual(decodePageCell("Legacy title\nLegacy body"), { title: "Legacy title", body: "Legacy title\nLegacy body" });
+});
+
+test("stores compact image previews with a file name and retains legacy file cells", () => {
+  const preview = "data:image/jpeg;base64,thumbnail";
+  assert.deepEqual(decodeFileCell(encodeFileCell("photo.jpg", preview)), { name: "photo.jpg", preview });
+  assert.deepEqual(decodeFileCell("legacy.pdf"), { name: "legacy.pdf" });
+  assert.equal(decodeFileCell(""), null);
 });
 
 test("offers categorized office and lab technology table icons", () => {

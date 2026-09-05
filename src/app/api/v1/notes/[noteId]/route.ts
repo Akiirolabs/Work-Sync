@@ -42,16 +42,18 @@ export async function PATCH(
   const db = getDb();
   const existing = db
     .prepare(
-      `SELECT id, user_id, title, body, created_at, updated_at FROM workspace_notes WHERE id = ? AND user_id IS ?`,
+      `SELECT id, user_id, title, title_locked, body, created_at, updated_at FROM workspace_notes WHERE id = ? AND user_id IS ?`,
     )
     .get(noteId, userId) as WorkspaceNoteRow | undefined;
   if (!existing) return jsonError("Not found", 404);
 
   const ts = nowIso();
-  const title = titleFromBody(parsed.data.body, parsed.data.title);
+  const explicitTitle = parsed.data.title?.trim();
+  const titleLocked = explicitTitle ? 1 : existing.title_locked;
+  const title = explicitTitle ? explicitTitle.slice(0, 200) : titleLocked ? existing.title : titleFromBody(parsed.data.body, existing.title);
   db.prepare(
-    `UPDATE workspace_notes SET title = ?, body = ?, updated_at = ? WHERE id = ? AND user_id IS ?`,
-  ).run(title, parsed.data.body, ts, noteId, userId);
+    `UPDATE workspace_notes SET title = ?, title_locked = ?, body = ?, updated_at = ? WHERE id = ? AND user_id IS ?`,
+  ).run(title, titleLocked, parsed.data.body, ts, noteId, userId);
 
   return NextResponse.json({
     id: noteId,

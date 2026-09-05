@@ -45,13 +45,16 @@ function markdownLines(value: string): Line[] {
 
 function linesToMarkdown(lines: Line[]) {
   const output: string[] = [];
+  let numberedOrdinal = 0;
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!;
     if (!line.table) {
-      const prefix: Partial<Record<BlockKind, string>> = { h1: "# ", h2: "## ", h3: "### ", h4: "#### ", bullets: "- ", numbered: "1. ", todo: "- [ ] ", quote: "> " };
+      numberedOrdinal = line.kind === "numbered" ? numberedOrdinal + 1 : 0;
+      const prefix: Partial<Record<BlockKind, string>> = { h1: "# ", h2: "## ", h3: "### ", h4: "#### ", bullets: "- ", numbered: `${numberedOrdinal}. `, todo: "- [ ] ", quote: "> " };
       output.push(line.kind === "code" ? `\`\`\`\n${line.text}\n\`\`\`` : `${prefix[line.kind] ?? ""}${line.text}`);
       continue;
     }
+    numberedOrdinal = 0;
     const cells = line.table.cells;
     if (line.table.header) { output.push(`| ${cells.join(" | ")} |`, `| ${cells.map(() => "---").join(" | ")} |`); }
     else output.push(`| ${cells.join(" | ")} |`);
@@ -76,6 +79,13 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
   const linesRef = useRef(lines);
   const appliedExternalValue = useRef<string | null>(null);
   const joined = useMemo(() => linesToMarkdown(lines), [lines]);
+  const numberedOrdinals = useMemo(() => {
+    let ordinal = 0;
+    return lines.map((line) => {
+      if (line.kind !== "numbered") { ordinal = 0; return 0; }
+      ordinal += 1; return ordinal;
+    });
+  }, [lines]);
 
   useEffect(() => {
     // Saving a new draft assigns it a persistent id. Its content and DOM stay
@@ -236,7 +246,7 @@ export function LineEditor({ value, onChange, storageKey, continuousSelection = 
     {continuousSelection && <textarea ref={continuousTextarea} className="ms-continuous-textarea" aria-label="Continuous line editor" value={value} onChange={(event) => updateContinuousValue(event.target.value)} onMouseMove={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const index = Math.floor((event.clientY - rect.top + event.currentTarget.scrollTop - 4) / 27); setHoveredContinuousLine(linesRef.current[index]?.id ?? null); }} onMouseLeave={() => setHoveredContinuousLine(null)} onScroll={(event) => { setContinuousScrollTop(event.currentTarget.scrollTop); setHoveredContinuousLine(null); }} onPaste={(event) => { const textarea = event.currentTarget; const pasted = event.clipboardData.getData("text/plain"); if (!pasted) return; event.preventDefault(); const start = textarea.selectionStart; const end = textarea.selectionEnd; const nextValue = value.slice(0, start) + pasted + value.slice(end); if (hasMarkdownStructure(pasted)) pasteMarkdown(nextValue, start + markdownLines(pasted).map((line) => line.text).join("\n").length); else { const wrapped = wrapExternalText(pasted).join("\n"); updateContinuousValue(value.slice(0, start) + wrapped + value.slice(end)); requestAnimationFrame(() => { textarea.focus(); textarea.setSelectionRange(start + wrapped.length, start + wrapped.length); }); } }} wrap="off" placeholder="Write a note…" />}
     {lines.map((line, index) => <div className={`ms-editor-line ms-line-${line.kind}${line.accent ? " is-accent" : ""}${continuousSelection && hoveredContinuousLine === line.id ? " is-hovered" : ""}`} style={continuousSelection ? { position: "absolute", top: 6 + index * 27 - continuousScrollTop, left: 25, right: 4, pointerEvents: "none" } : undefined} key={line.id}>
       <button type="button" contentEditable={false} className={`ms-line-toggle${active === line.id ? " is-active" : ""}`} onClick={() => { setActive(active === line.id ? null : line.id); setCommenting(false); }} aria-label={`Actions for line ${index + 1}`}>⋮⋮</button>
-      <span className="ms-line-prefix" contentEditable={false} aria-hidden>{line.kind === "bullets" ? "•" : line.kind === "numbered" ? `${index + 1}.` : line.kind === "todo" ? "□" : line.kind === "quote" ? "❞" : ""}</span>
+      <span className="ms-line-prefix" contentEditable={false} aria-hidden>{line.kind === "bullets" ? "•" : line.kind === "numbered" ? `${numberedOrdinals[index]}.` : line.kind === "todo" ? "□" : line.kind === "quote" ? "❞" : ""}</span>
       {continuousSelection && <span className="ms-line-display" style={{ textAlign: line.align }} aria-hidden>{line.text.startsWith("|") && line.text.endsWith("|") ? <span className={`ms-markdown-row${/^\|(?:\s*---\s*\|)+$/.test(line.text) ? " is-divider" : ""}`}>{line.text.slice(1, -1).split("|").map((cell, cellIndex) => <span key={cellIndex}>{cell.trim()}</span>)}</span> : line.text}</span>}
       {!continuousSelection && line.table ? <div className={`ms-editor-table-row${line.table.header ? " is-header" : ""}`} role="row">{line.table.cells.map((cell, cellIndex) => <input key={cellIndex} data-table-cell={`${line.id}-${cellIndex}`} aria-label={`${line.table!.header ? "Table header" : "Table row"} ${index + 1}, column ${cellIndex + 1}`} value={cell} onChange={(event) => updateTableCell(line.id, cellIndex, event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTableRow(line.id); } }} />)}</div> : !continuousSelection && <div ref={(el) => { editors.current[line.id] = el; }} contentEditable suppressContentEditableWarning data-placeholder={index === 0 ? "Write a note…" : ""} onInput={(e) => onLineInput(e, line)} onKeyDown={(e) => onKey(e, line)} onPaste={(e) => onPaste(e, line)} style={{ textAlign: line.align }} aria-label={`Line ${index + 1}`}>{line.text}</div>}
       {line.comments.length > 0 && <button className="ms-comment-count" contentEditable={false} type="button" onClick={() => { setActive(line.id); setCommenting(true); }} title={line.comments.join("\n")}>▱ {line.comments.length}</button>}

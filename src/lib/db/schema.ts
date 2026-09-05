@@ -62,6 +62,7 @@ export type WorkspaceNoteRow = {
   id: string;
   user_id: string | null;
   title: string;
+  title_locked: number;
   body: string;
   created_at: string;
   updated_at: string;

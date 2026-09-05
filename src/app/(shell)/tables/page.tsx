@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties, type DragEvent, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { TABLE_ICON_GROUPS, TYPE_INFO, addColumn as addColumnModel, addRow as addRowModel, changeColumnType, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodePageCell, hideColumn, insertColumn, makeTable, moveColumn, normalizeTableIcon, setColumnOptions, showColumn, updateCell as updateCellModel, type Column, type ColumnType, type Row, type SelectOption, type WorkTable } from "@/lib/table-model";
+import { TABLE_ICON_GROUPS, TYPE_INFO, addColumn as addColumnModel, addRow as addRowModel, changeColumnType, decodeFileCell, decodePageCell, deleteColumn, duplicateColumn, duplicateTable, encodeFileCell, encodePageCell, hideColumn, insertColumn, makeTable, moveColumn, normalizeTableIcon, setColumnOptions, showColumn, updateCell as updateCellModel, type Column, type ColumnType, type Row, type SelectOption, type WorkTable } from "@/lib/table-model";
 import { LineEditor } from "@/components/LineEditor";
 import { AO_MACROS_KEY, AO_TABLE_COMMAND_EVENT, AO_TABLE_COMMAND_KEY, applyTableMacro, saveMacroPretext, type AOMacroPreset, type AOTableCommand } from "@/lib/ao-macro";
 import { userStorageKey } from "@/lib/user-storage";
@@ -39,6 +39,18 @@ function selectedLabels(value: string | boolean | undefined, multiple: boolean):
 }
 function encodeSelected(labels: string[], multiple: boolean) { return multiple ? JSON.stringify(labels) : labels[0] ?? ""; }
 
+async function imageThumbnail(file: File): Promise<string | undefined> {
+  if (!file.type.startsWith("image/")) return undefined;
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => { const next = new Image(); next.onload = () => resolve(next); next.onerror = () => reject(new Error("Unable to preview that image.")); next.src = url; });
+    const scale = Math.min(1, 112 / Math.max(image.naturalWidth, image.naturalHeight)); const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", .78);
+  } finally { URL.revokeObjectURL(url); }
+}
+
 function Cell({ row, column, onChange, onEnter, onOpenPage, onOpenSelect }: { row: Row; column: Column; onChange: (value: string | boolean) => void; onEnter: () => void; onOpenPage: () => void; onOpenSelect: (target: HTMLButtonElement) => void }) {
   const value = row.cells[column.id] ?? "";
   if (column.type === "checkbox") return <label className="ms-grid-check"><input type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} /><span /></label>;
@@ -46,7 +58,10 @@ function Cell({ row, column, onChange, onEnter, onOpenPage, onOpenSelect }: { ro
   if (column.type === "date") return <input type="date" value={String(value)} onChange={(e) => onChange(e.target.value)} onKeyDown={enter} />;
   if (column.type === "single" || column.type === "multiple") { const labels = selectedLabels(value, column.type === "multiple"); return <button type="button" className="ms-select-cell" onClick={(event) => onOpenSelect(event.currentTarget)}>{labels.length ? labels.map((label) => { const option = column.options?.find((item) => item.label === label); return <span key={label} style={{ "--select-color": option?.color ?? SELECT_COLORS[8] } as CSSProperties}>{label}</span>; }) : <em>Select…</em>}</button>; }
   if (column.type === "people") return <input value={String(value)} onChange={(e) => onChange(e.target.value)} onKeyDown={enter} placeholder="Empty" />;
-  if (column.type === "files") return <label className="ms-cell-upload">{String(value) || "+ Add file"}<input type="file" aria-label={`Add file to ${column.name}`} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) onChange(file.name); }} /></label>;
+  if (column.type === "files") {
+    const fileCell = decodeFileCell(value);
+    return <label className={`ms-cell-upload${fileCell?.preview ? " has-preview" : ""}`}>{fileCell?.preview ? <img src={fileCell.preview} alt={`Preview of ${fileCell.name}`} /> : null}<span>{fileCell?.name || "+ Add file"}</span><input type="file" aria-label={`Add file to ${column.name}`} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (!file) return; void imageThumbnail(file).then((preview) => onChange(encodeFileCell(file.name, preview))).catch(() => onChange(encodeFileCell(file.name))); }} /></label>;
+  }
   if (column.type === "page") { const page = decodePageCell(value); return <button className="ms-page-cell" type="button" onClick={onOpenPage}><span>▤</span>{page.title || "Open page"}</button>; }
   return <input type={column.type === "number" || column.type === "currency" || column.type === "percent" ? "number" : column.type === "email" ? "email" : column.type === "url" ? "url" : "text"} value={String(value)} onChange={(e) => onChange(e.target.value)} onKeyDown={enter} />;
 }

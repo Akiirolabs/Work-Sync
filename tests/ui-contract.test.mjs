@@ -152,16 +152,30 @@ test("theme, Agent, Workspace, and Table controls honor the latest focused UI re
   assert.match(account, /Dark Mode keeps the current Work Sync visual mode/);
   assert.match(agentChatCss, /html\[data-theme="light"\]/);
   assert.match(agentChat, /New Chat/);
-  assert.match(agentChat, /To-Do.*Tables.*Page.*Verify.*Workspace Note/);
+  assert.match(agentChat, /To-Do.*Tables.*Page.*Verify.*Calendar.*Workspace Note/);
   assert.match(agentChat, /sendDestination !== "workspace"/);
   assert.match(workspacePage, /Rename current Project/);
   assert.match(workspacePage, /Send to Verify/);
   assert.match(workspacePage, /function selectProject/);
-  assert.match(workspacePage, /ms-workspace-saved-note-list/);
+  assert.match(workspacePage, /ms-workspace-note-dropdown/);
   assert.match(workspacePage, /Options for \$\{noteLabel\(note\.title\)\}/);
   assert.match(aoMenu, /createWorkspaceNote\(get\("title"\) \|\| project\.title, "", project\.id\)/);
   assert.doesNotMatch(tablesPage, /\{type === "page" && <em>New<\/em>\}/);
   assert.match(editor, /const heading = raw\.match/);
+});
+
+test("latest Agent, Workspace, and table refinements preserve destinations and structured content", () => {
+  assert.match(agentChat, /AGENT_CALENDAR_CONTEXT_KEY/);
+  assert.match(agentChat, /dispatchDestination\("calendar"\)/);
+  assert.match(historyPage, /AGENT_CALENDAR_CONTEXT_KEY/);
+  assert.match(historyPage, /setCalendarEvents/);
+  assert.match(noteRoute, /titleLocked = explicitTitle \? 1 : existing\.title_locked/);
+  assert.match(workspacePage, /ms-note-more/);
+  assert.match(workspacePage, /Options for \$\{noteLabel\(note\.title\)\}/);
+  assert.match(editor, /numberedOrdinals/);
+  assert.match(tablesPage, /imageThumbnail/);
+  assert.match(tablesPage, /encodeFileCell\(file\.name, preview\)/);
+  assert.match(globalCss, /\.ms-line-h1[^}]*font-size: 21px/);
 });
 
 test("cloud storage sync absorbs transient network failures and backs off retries", () => {

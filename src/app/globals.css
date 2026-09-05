@@ -138,9 +138,14 @@
   gap: var(--ms-space-2);
   flex-wrap: wrap;
 }
-.ms-workspace-note-picker { height: 31px; display: inline-flex; align-items: center; gap: 6px; min-width: 0; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0 6px 0 8px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
-.ms-workspace-note-picker select { min-width: 0; max-width: min(230px, 35vw); border: 0; outline: 0; padding: 0 14px 0 0; background: transparent; color: var(--ms-text-bright); font: 600 11px var(--ms-font-sans); cursor: pointer; }
+.ms-workspace-note-picker { position: relative; height: 31px; display: inline-flex; align-items: center; gap: 6px; min-width: 0; border: 1px solid var(--ms-edge); border-radius: 5px; padding: 0 6px 0 8px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
+.ms-workspace-note-select { min-width: 0; max-width: min(230px, 35vw); display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; border: 0; padding: 0; outline: 0; background: transparent; color: var(--ms-text-bright); font: 600 11px var(--ms-font-sans); cursor: pointer; }.ms-workspace-note-select > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.ms-workspace-note-select > span:last-child { color: var(--ms-text-dim); font-size: 12px; }
 .ms-workspace-note-picker:focus-within { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
+.ms-workspace-note-dropdown { position: absolute; z-index: 1010; top: calc(100% + 5px); left: 0; display: grid; width: min(270px, calc(100vw - 28px)); max-height: min(310px, calc(100vh - 115px)); overflow-y: auto; border: 1px solid var(--ms-edge); border-radius: 7px; padding: 4px; background: var(--ms-bg-1); box-shadow: 0 14px 32px rgba(0,0,0,.46); text-transform: none; }
+.ms-saved-note-row { position: relative; display: flex; align-items: center; min-width: 0; border-radius: 4px; }.ms-saved-note-row.is-active { background: var(--ms-bg-3); }
+.ms-saved-note-open { min-width: 0; flex: 1; height: 31px; overflow: hidden; border: 0; border-radius: 4px; padding: 0 7px; background: transparent; color: var(--ms-text); font: 11px var(--ms-font-sans); text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }.ms-saved-note-open:hover, .ms-saved-note-open[aria-selected="true"] { background: var(--ms-bg-3); color: var(--ms-text-bright); }
+.ms-note-more { flex: 0 0 auto; width: 26px; height: 27px; border: 0; padding: 0; background: transparent; color: var(--ms-text-dim); font: 15px/1 var(--ms-font-sans); letter-spacing: 0; cursor: pointer; }.ms-note-more:hover, .ms-note-more[aria-expanded="true"] { color: var(--ms-accent); }
+.ms-note-menu { position: absolute; z-index: 1020; top: 29px; right: 2px; display: grid; min-width: 108px; border: 1px solid var(--ms-edge); border-radius: 6px; padding: 4px; background: var(--ms-bg-1); box-shadow: 0 10px 24px rgba(0,0,0,.48); }.ms-note-menu button { border: 0; border-radius: 3px; padding: 6px 7px; background: transparent; color: var(--ms-text); text-align: left; font: 11px var(--ms-font-sans); cursor: pointer; }.ms-note-menu button:hover { background: var(--ms-bg-3); }.ms-note-menu button.is-danger:hover { color: var(--ms-danger); }
 .ms-workspace-project-picker { height: 31px; display: inline-flex; align-items: center; gap: 5px; min-width: 0; border: 1px solid var(--ms-edge-soft); border-radius: 5px; padding: 0 5px 0 7px; background: #121920; color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .ms-workspace-project-picker select { min-width: 0; max-width: min(160px, 22vw); border: 0; outline: 0; padding: 0 12px 0 0; background: transparent; color: var(--ms-text-bright); font: 600 10px var(--ms-font-sans); cursor: pointer; }
 .ms-workspace-project-picker:focus-within { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
@@ -152,9 +157,6 @@
 .ms-workspace-note-menu button:hover:not(:disabled) { background: #303840; }
 .ms-workspace-note-menu button.is-danger:hover:not(:disabled) { color: var(--ms-danger); }
 .ms-workspace-note-menu button:disabled { opacity: .45; cursor: not-allowed; }
-.ms-workspace-saved-note-list { display: grid; gap: 3px; max-height: 178px; margin: 5px 2px; overflow-y: auto; border-top: 1px solid var(--ms-edge-soft); border-bottom: 1px solid var(--ms-edge-soft); padding: 5px 0; }
-.ms-workspace-saved-note-list .ms-saved-note-row { background: var(--ms-bg-1); }
-.ms-workspace-saved-note-list .ms-note-menu { position: absolute; right: 5px; top: 31px; z-index: 1010; }
 .ms-workspace-project-assignment { display: grid; gap: 3px; padding: 6px 8px 8px; color: var(--ms-text-dim); font: 9px var(--ms-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .ms-workspace-project-assignment select { width: 100%; min-width: 0; border: 1px solid var(--ms-edge); border-radius: 4px; padding: 5px 6px; background: #10171e; color: var(--ms-text); font: 11px var(--ms-font-sans); text-transform: none; }
 .ms-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
@@ -255,7 +257,7 @@
 .ms-line-display { flex: 1; min-width: 0; height: 27px; box-sizing: border-box; padding: 4px; color: var(--ms-text); font: inherit; line-height: 19px; white-space: pre; overflow: hidden; pointer-events: none; }
 .ms-editor-line > [contenteditable="true"]:empty::before, .ms-editor-line > [data-line-content]:empty::before { content: attr(data-placeholder); color: var(--ms-text-dim); pointer-events: none; }
 .ms-line-toggle, .ms-line-prefix, .ms-comment-count { user-select: none; }
-.ms-line-h1 > [contenteditable="true"], .ms-line-h1 .ms-line-display { font-size: 19px; font-weight: 600; color: var(--ms-text-bright); }
+.ms-line-h1 > [contenteditable="true"], .ms-line-h1 .ms-line-display { font-size: 21px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h2 > [contenteditable="true"], .ms-line-h2 .ms-line-display { font-size: 17px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h3 > [contenteditable="true"], .ms-line-h3 .ms-line-display { font-size: 15px; font-weight: 600; color: var(--ms-text-bright); }
 .ms-line-h4 > [contenteditable="true"], .ms-line-h4 .ms-line-display { font-size: 14px; font-weight: 600; color: var(--ms-text-bright); }
@@ -410,7 +412,7 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
 .ms-tables-page.is-sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
 .ms-tables-page.is-sidebar-collapsed .ms-tables-sidebar { overflow: hidden; width: 0; padding: 0; border: 0; }
 .ms-tables-side-head { height: 31px; display: flex; align-items: flex-start; justify-content: space-between; padding: 0 7px; }
-.ms-tables-side-head h1 { margin: 0; color: var(--ms-text-bright); font-size: 15px; font-weight: 600; }
+.ms-tables-side-head h1 { margin: 0; color: var(--ms-text-bright); font-size: 17px; font-weight: 600; }
 .ms-tables-side-head > button { border: 0; background: transparent; color: var(--ms-text-dim); font-size: 17px; cursor: pointer; }
 .ms-table-stage { position: relative; }
 .ms-tables-expand { position: absolute; z-index: 8; left: 7px; top: 8px; width: 27px; height: 27px; border: 1px solid var(--ms-edge); border-radius: 4px; background: var(--ms-bg-2); color: var(--ms-text); cursor: pointer; }
@@ -495,7 +497,7 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
 .ms-data-grid th.is-frozen, .ms-data-grid td.is-frozen { position: sticky; z-index: 3; background: #0e1318; box-shadow: 1px 0 var(--ms-edge); }
 .ms-data-grid td.is-frozen { z-index: 2; background: var(--ms-bg-1); }
 .ms-data-grid tfoot td { height: 32px; border-right: 1px solid var(--ms-edge-soft); border-top: 1px solid var(--ms-edge); padding: 0 8px; color: var(--ms-text-dim); background: #10151b; font: 10px var(--ms-font-mono); }
-.ms-cell-upload { display: block; max-width: 100%; overflow: hidden; margin-left: 8px; border: 1px solid var(--ms-edge); border-radius: 3px; padding: 4px 6px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 11px var(--ms-font-sans); cursor: pointer; text-overflow: ellipsis; white-space: nowrap; }.ms-cell-upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.ms-cell-upload { display: flex; align-items: center; gap: 5px; max-width: calc(100% - 8px); overflow: hidden; min-height: 27px; margin-left: 8px; border: 1px solid var(--ms-edge); border-radius: 3px; padding: 3px 5px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 11px var(--ms-font-sans); cursor: pointer; }.ms-cell-upload > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.ms-cell-upload img { width: 24px; height: 24px; flex: 0 0 auto; border-radius: 2px; object-fit: cover; }.ms-cell-upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .ms-data-grid td:hover .ms-cell-upload { opacity: 1; }
 .ms-page-cell { width: 100%; height: 35px; display: flex; align-items: center; gap: 7px; border: 0; padding: 0 9px; background: transparent; color: var(--ms-text); font: 12px var(--ms-font-sans); text-align: left; cursor: pointer; }
 .ms-page-cell:hover { background: rgba(61,111,140,.09); color: var(--ms-text-bright); }
@@ -612,7 +614,7 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
   .ms-workspace-project-picker span { font-size: 8px; }
   .ms-workspace-project-picker select { max-width: 74px; font-size: 10px; }
   .ms-workspace-note-picker { flex: 1 1 0; }
-  .ms-workspace-note-picker select { max-width: none; width: 100%; }
+  .ms-workspace-note-select { max-width: none; width: 100%; }
   .ms-workspace-note-more { flex: 0 0 25px; }
 }
 
@@ -714,7 +716,7 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
 .ms-verify-evidence small { display: block; margin-top: 3px; color: var(--ms-text-dim); line-height: 1.35; }
 .ms-markdown { color: var(--ms-text); line-height: 1.5; }
 .ms-markdown > :first-child { margin-top: 0; }.ms-markdown > :last-child { margin-bottom: 0; }
-.ms-markdown h1, .ms-markdown h2, .ms-markdown h3, .ms-markdown h4, .ms-markdown h5, .ms-markdown h6 { color: var(--ms-text-bright); margin: 16px 0 7px; }.ms-markdown h1 { font-size: 17px; }.ms-markdown h2 { font-size: 14px; }.ms-markdown h3 { font-size: 12px; }.ms-markdown h4, .ms-markdown h5, .ms-markdown h6 { font-size: 11px; }
+.ms-markdown h1, .ms-markdown h2, .ms-markdown h3, .ms-markdown h4, .ms-markdown h5, .ms-markdown h6 { color: var(--ms-text-bright); margin: 16px 0 7px; }.ms-markdown h1 { font-size: 19px; }.ms-markdown h2 { font-size: 14px; }.ms-markdown h3 { font-size: 12px; }.ms-markdown h4, .ms-markdown h5, .ms-markdown h6 { font-size: 11px; }
 .ms-markdown p { margin: 7px 0; }.ms-markdown ul, .ms-markdown ol { padding-left: 19px; margin: 7px 0; }.ms-markdown a { color: var(--ms-accent); }.ms-markdown img { max-width: 100%; height: auto; border: 1px solid var(--ms-edge); border-radius: 6px; }.ms-markdown code { padding: 1px 4px; border-radius: 3px; background: #0e141a; color: #d7ecff; font: 11px var(--ms-font-mono); }.ms-markdown blockquote { margin: 8px 0; padding-left: 10px; border-left: 2px solid var(--ms-accent-soft); color: var(--ms-text-dim); }.ms-markdown hr { border: 0; border-top: 1px solid var(--ms-edge); margin: 14px 0; }.ms-markdown del { color: var(--ms-text-dim); }
 .ms-markdown-code { display: grid; margin: 10px 0; overflow: auto; border: 1px solid #33434d; border-radius: 7px; background: #0a1015; }.ms-markdown-code small { padding: 4px 9px; border-bottom: 1px solid #26333c; color: var(--ms-text-dim); font: 9px var(--ms-font-mono); text-transform: uppercase; }.ms-markdown-code code { padding: 10px; background: transparent; white-space: pre; }
 .ms-markdown-tasks { list-style: none; padding-left: 0 !important; }.ms-markdown-tasks li { display: flex; align-items: baseline; gap: 7px; }.ms-markdown-tasks input { accent-color: var(--ms-accent); }.ms-markdown-table { max-width: 100%; margin: 10px 0; overflow: auto; border: 1px solid var(--ms-edge); border-radius: 6px; }.ms-markdown-table table { width: 100%; border-collapse: collapse; }.ms-markdown-table th, .ms-markdown-table td { min-width: 110px; border-bottom: 1px solid var(--ms-edge-soft); padding: 7px 9px; text-align: left; vertical-align: top; }.ms-markdown-table th { color: var(--ms-text-bright); background: var(--ms-bg-2); }.ms-markdown-table tr:last-child td { border-bottom: 0; }

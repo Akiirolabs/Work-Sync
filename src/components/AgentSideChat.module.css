@@ -19,6 +19,5 @@
 .chat > div { background: var(--ms-bg-2); }
 .chat .user { border-color: var(--ms-accent-soft); background: var(--ms-bg-3); }
 .destinationChoices { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
-.destinationChoices button:last-child { grid-column: 1 / -1; }
 .backDestination { margin-top: 7px; }
 :global(html[data-theme="light"]) .panel header nav button:hover, :global(html[data-theme="light"]) .actionActive { background: var(--ms-bg-3) !important; color: var(--ms-text-bright) !important; }

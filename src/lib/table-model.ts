@@ -3,6 +3,18 @@ export type SelectOption = { id: string; label: string; color: string };
 export type Column = { id: string; name: string; type: ColumnType; hidden?: boolean; options?: SelectOption[] };
 export type Row = { id: string; cells: Record<string, string | boolean> };
 export type WorkTable = { id: string; name: string; icon: string; columns: Column[]; rows: Row[]; groupBy?: string };
+export type FileCell = { name: string; preview?: string };
+
+const FILE_CELL_PREFIX = "__work_sync_file__:";
+export function encodeFileCell(name: string, preview?: string): string { return `${FILE_CELL_PREFIX}${JSON.stringify({ name, preview })}`; }
+export function decodeFileCell(value: string | boolean | undefined): FileCell | null {
+  if (typeof value !== "string" || !value) return null;
+  if (!value.startsWith(FILE_CELL_PREFIX)) return { name: value };
+  try {
+    const parsed = JSON.parse(value.slice(FILE_CELL_PREFIX.length)) as { name?: unknown; preview?: unknown };
+    return typeof parsed.name === "string" && parsed.name ? { name: parsed.name, preview: typeof parsed.preview === "string" && parsed.preview.startsWith("data:image/") ? parsed.preview : undefined } : null;
+  } catch { return { name: value }; }
+}
 
 export const TABLE_ICON_GROUPS = [
   { label: "Office", icons: [

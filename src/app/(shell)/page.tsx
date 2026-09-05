@@ -93,6 +93,7 @@ export default function WorkspacePage() {
   const activeIdRef = useRef(activeId);
   const [ready, setReady] = useState(false);
   const [noteMenuOpen, setNoteMenuOpen] = useState(false);
+  const [notePickerOpen, setNotePickerOpen] = useState(false);
   const [noteRowMenu, setNoteRowMenu] = useState<string | null>(null);
   const [projects, setProjects] = useState<WorkspaceProject[]>([]);
   const [noteProjects, setNoteProjects] = useState<Record<string, string>>({});
@@ -101,6 +102,7 @@ export default function WorkspacePage() {
   const router = useRouter();
 
   const visibleSaved = activeProjectId === "all" ? saved : saved.filter((note) => activeProjectId === "unassigned" ? !noteProjects[note.id] : noteProjects[note.id] === activeProjectId);
+  const activeNoteLabel = activeId ? noteLabel(saved.find((note) => note.id === activeId)?.title ?? "New note") : "New note";
 
   useEffect(() => { bodyRef.current = body; activeIdRef.current = activeId; }, [body, activeId]);
 
@@ -195,7 +197,7 @@ export default function WorkspacePage() {
     return () => window.removeEventListener("work-sync:server-objects-updated", refreshSavedNotes);
   }, [load]);
 
-  useEffect(() => { function dismiss(event: PointerEvent) { if (!(event.target instanceof Element && event.target.closest("[data-workspace-note-actions]"))) setNoteMenuOpen(false); } document.addEventListener("pointerdown", dismiss); return () => document.removeEventListener("pointerdown", dismiss); }, []);
+  useEffect(() => { function dismiss(event: PointerEvent) { if (!(event.target instanceof Element && event.target.closest("[data-workspace-note-actions]"))) setNoteMenuOpen(false); if (!(event.target instanceof Element && event.target.closest("[data-workspace-note-picker]"))) { setNotePickerOpen(false); setNoteRowMenu(null); } } document.addEventListener("pointerdown", dismiss); return () => document.removeEventListener("pointerdown", dismiss); }, []);
 
   function newNote() {
     persistedNote.current = { id: null, body: "" };
@@ -292,16 +294,10 @@ export default function WorkspacePage() {
     setProjects((current) => current.map((item) => item.id === project.id ? { ...item, title: title.slice(0, 80) } : item));
     setNoteMenuOpen(false);
   }
-  function noteBodyWithTitle(note: Note, title: string) {
-    const rows = note.body.split("\n"); const index = rows.findIndex((row) => Boolean(row.trim()));
-    if (index < 0) return `# ${title}`;
-    const prefix = rows[index]!.match(/^(#{1,4}\s+)/)?.[1] ?? "";
-    rows[index] = `${prefix}${title}`; return rows.join("\n");
-  }
   async function renameNote(note: Note) {
     const currentTitle = noteLabel(note.title); const title = window.prompt("Rename note", currentTitle)?.trim(); if (!title || title === currentTitle) return;
     try {
-      const updated = await api<Note>(`/api/v1/notes/${note.id}`, { method: "PATCH", body: JSON.stringify({ body: noteBodyWithTitle(note, title) }) });
+      const updated = await api<Note>(`/api/v1/notes/${note.id}`, { method: "PATCH", body: JSON.stringify({ title, body: note.body }) });
       setSaved((current) => current.map((item) => item.id === updated.id ? updated : item));
       if (activeId === updated.id) { persistedNote.current = { id: updated.id, body: updated.body }; setBody(updated.body); }
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Could not rename this note."); }
@@ -363,15 +359,13 @@ export default function WorkspacePage() {
                 <option value="all">All notes</option><option value="unassigned">Unassigned</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}<option value="new">New project…</option>
               </select>
             </label>
-            <label className="ms-workspace-note-picker">
-            <span>Notes</span>
-            <select aria-label="Select Workspace note" value={activeId ?? ""} onChange={(event) => { const note = saved.find((item) => item.id === event.target.value); if (note) openNote(note); else newNote(); }}>
-              <option value="">New note</option>
-              {visibleSaved.map((note) => <option key={note.id} value={note.id}>{noteLabel(note.title)}</option>)}
-            </select>
-            </label>
-            <button type="button" className="ms-workspace-note-more" aria-label="Workspace note options" aria-haspopup="menu" aria-expanded={noteMenuOpen} onClick={() => setNoteMenuOpen((open) => !open)}>•••</button>
-            {noteMenuOpen && <div className="ms-workspace-note-menu" role="menu"><button type="button" className="ms-workspace-menu-new" onClick={() => { newNote(); setNoteMenuOpen(false); }} disabled={busy}>New</button><button type="button" onClick={() => { void saveCurrentNote(); setNoteMenuOpen(false); }} disabled={busy || !body.trim()}>Save to cloud</button><button type="button" onClick={renameProject} disabled={!projects.some((project) => project.id === activeProjectId)}>Rename current Project</button><button type="button" onClick={sendCurrentToVerify} disabled={!activeId}>Send to Verify</button><label className="ms-workspace-project-assignment">Add to project<select aria-label="Add current note to project" value={activeId ? noteProjects[activeId] ?? "" : ""} onChange={(event) => assignCurrentNote(event.target.value)} disabled={!activeId}><option value="">No project</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select></label><div className="ms-workspace-saved-note-list" aria-label="Saved Workspace notes">{visibleSaved.map((note) => <div className={`ms-saved-note-row${note.id === activeId ? " is-active" : ""}`} key={note.id}><button type="button" className="ms-saved-note-open" onClick={() => { openNote(note); setNoteMenuOpen(false); }}>{noteLabel(note.title)}</button><button type="button" className="ms-note-more" aria-label={`Options for ${noteLabel(note.title)}`} aria-expanded={noteRowMenu === note.id} onClick={() => setNoteRowMenu((current) => current === note.id ? null : note.id)}>•••</button>{noteRowMenu === note.id && <span className="ms-note-menu"><button type="button" onClick={() => void renameNote(note)}>Rename</button><button type="button" className="is-danger" onClick={() => void deleteSavedNote(note)}>Delete</button></span>}</div>)}</div><button type="button" onClick={() => { setNoteMenuOpen(false); window.requestAnimationFrame(() => importInput.current?.click()); }} disabled={busy}>Import CSV or Word…</button><button type="button" onClick={exportCsv} disabled={!body.trim()}>Export CSV</button><button type="button" onClick={() => { void exportDocx(); }} disabled={!body.trim()}>Export Word (.docx)</button><button type="button" className="is-danger" onClick={() => { void deleteNote(); setNoteMenuOpen(false); }} disabled={busy || !activeId}>Delete</button></div>}
+            <div className="ms-workspace-note-picker" data-workspace-note-picker>
+              <span>Notes</span>
+              <button type="button" className="ms-workspace-note-select" aria-label="Select Workspace note" aria-haspopup="listbox" aria-expanded={notePickerOpen} onClick={() => { setNoteMenuOpen(false); setNotePickerOpen((open) => !open); setNoteRowMenu(null); }}><span>{activeNoteLabel}</span><span aria-hidden>⌄</span></button>
+              {notePickerOpen && <div className="ms-workspace-note-dropdown" role="listbox" aria-label="Workspace notes"><button type="button" role="option" aria-selected={!activeId} className="ms-saved-note-open" onClick={() => { newNote(); setNotePickerOpen(false); }}>New note</button>{visibleSaved.map((note) => <div className={`ms-saved-note-row${note.id === activeId ? " is-active" : ""}`} key={note.id}><button type="button" role="option" aria-selected={note.id === activeId} className="ms-saved-note-open" onClick={() => { openNote(note); setNotePickerOpen(false); }}>{noteLabel(note.title)}</button><button type="button" className="ms-note-more" aria-label={`Options for ${noteLabel(note.title)}`} aria-haspopup="menu" aria-expanded={noteRowMenu === note.id} onClick={() => setNoteRowMenu((current) => current === note.id ? null : note.id)}>•••</button>{noteRowMenu === note.id && <span className="ms-note-menu" role="menu"><button type="button" onClick={() => void renameNote(note)}>Rename</button><button type="button" className="is-danger" onClick={() => void deleteSavedNote(note)}>Delete</button></span>}</div>)}</div>}
+            </div>
+            <button type="button" className="ms-workspace-note-more" aria-label="Workspace note options" aria-haspopup="menu" aria-expanded={noteMenuOpen} onClick={() => { setNotePickerOpen(false); setNoteRowMenu(null); setNoteMenuOpen((open) => !open); }}>•••</button>
+            {noteMenuOpen && <div className="ms-workspace-note-menu" role="menu"><button type="button" className="ms-workspace-menu-new" onClick={() => { newNote(); setNoteMenuOpen(false); }} disabled={busy}>New</button><button type="button" onClick={() => { void saveCurrentNote(); setNoteMenuOpen(false); }} disabled={busy || !body.trim()}>Save to cloud</button><button type="button" onClick={renameProject} disabled={!projects.some((project) => project.id === activeProjectId)}>Rename current Project</button><button type="button" onClick={sendCurrentToVerify} disabled={!activeId}>Send to Verify</button><label className="ms-workspace-project-assignment">Add to project<select aria-label="Add current note to project" value={activeId ? noteProjects[activeId] ?? "" : ""} onChange={(event) => assignCurrentNote(event.target.value)} disabled={!activeId}><option value="">No project</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select></label><button type="button" onClick={() => { setNoteMenuOpen(false); window.requestAnimationFrame(() => importInput.current?.click()); }} disabled={busy}>Import CSV or Word…</button><button type="button" onClick={exportCsv} disabled={!body.trim()}>Export CSV</button><button type="button" onClick={() => { void exportDocx(); }} disabled={!body.trim()}>Export Word (.docx)</button><button type="button" className="is-danger" onClick={() => { void deleteNote(); setNoteMenuOpen(false); }} disabled={busy || !activeId}>Delete</button></div>}
           </div>
           <button type="button" className="ms-btn ms-workspace-new" onClick={newNote} disabled={busy}>
             New
