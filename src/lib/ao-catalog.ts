@@ -1,5 +1,5 @@
-export type AOMacroCategory = "Workspace" | "To Do" | "Tables" | "Rows" | "Columns" | "Pages" | "Vault";
-export type AOMacroFieldType = "text" | "textarea" | "number" | "date" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "note" | "todo" | "heading" | "destination";
+export type AOMacroCategory = "Workspace" | "To Do" | "Tables" | "Rows" | "Columns" | "Pages" | "Vault" | "Flows";
+export type AOMacroFieldType = "text" | "textarea" | "number" | "date" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "note" | "todo" | "heading" | "destination" | "project" | "finding" | "source-result" | "day-document";
 export type AOMacroField = { key: string; label: string; type: AOMacroFieldType; placeholder?: string; optional?: boolean };
 export type AOMacroDefinition = { id: string; label: string; description: string; category: AOMacroCategory; action: string; fields?: AOMacroField[]; value?: string };
 
@@ -12,6 +12,11 @@ const pageColumn: AOMacroField = { key: "columnId", label: "Page column", type: 
 const page: AOMacroField = { key: "page", label: "Page", type: "page" };
 const preset: AOMacroField = { key: "presetId", label: "Saved preset", type: "preset" };
 const note: AOMacroField = { key: "noteId", label: "Saved note", type: "note" };
+const todoItem: AOMacroField = { key: "taskId", label: "Saved To-Do", type: "todo" };
+const project: AOMacroField = { key: "projectId", label: "Project", type: "project" };
+const finding: AOMacroField = { key: "findingId", label: "Saved finding", type: "finding" };
+const sourceResult: AOMacroField = { key: "sourceResultId", label: "Saved source result", type: "source-result" };
+const dayDocument: AOMacroField = { key: "dayDocumentId", label: "Day Document", type: "day-document" };
 
 const workspace: AOMacroDefinition[] = [
   { id: "workspace-new", label: "New blank note", description: "Create and open a separate Workspace note.", category: "Workspace", action: "workspace-new", fields: [text("title", "Note title", "Untitled note")] },
@@ -109,5 +114,30 @@ const vault: AOMacroDefinition[] = [
   { id: "vault-recent", label: "Recently used macros", description: "Show the latest runnable Vault entries.", category: "Vault", action: "vault-recent" },
 ];
 
-export const AO_MACRO_CATEGORIES: AOMacroCategory[] = ["Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Vault"];
-export const AO_MACRO_CATALOG: AOMacroDefinition[] = [...workspace, ...todo, ...tables, ...rows, ...addColumns, ...columnActions, ...pages, ...vault];
+// Cross-workspace workflows intentionally live together so the Macro panel can
+// guide people through object selection instead of asking them to type names.
+const flows: AOMacroDefinition[] = [
+  { id: "flow-add-note", label: "Add New Note", description: "Create and open a Workspace note with its H1 title ready to edit.", category: "Flows", action: "flow-add-note", fields: [text("title", "Note title", "Untitled note")] },
+  { id: "flow-note-project", label: "Add Note to Project", description: "Choose a saved Workspace note and a Project.", category: "Flows", action: "flow-note-project", fields: [note, project] },
+  { id: "flow-project-note", label: "Create Project and Note", description: "Create a Project and immediately open its first note.", category: "Flows", action: "flow-project-note", fields: [text("projectName", "Project name", "New project"), text("title", "First note title", "Project note")] },
+  { id: "flow-verify-note", label: "Verify a Note", description: "Choose a Workspace note and open it in Verify.", category: "Flows", action: "flow-verify-note", fields: [note] },
+  { id: "flow-verify-context", label: "Add Workspace Note to Verify", description: "Choose a note, add a focused question, and run verification.", category: "Flows", action: "flow-verify-context", fields: [note, { key: "context", label: "Question / Context", type: "textarea", placeholder: "What should be verified?" }] },
+  { id: "flow-verify-sources", label: "Verify Note and Find Sources", description: "Start evidence verification and trusted source research together.", category: "Flows", action: "flow-verify-sources", fields: [note, { key: "context", label: "Verify question / context", type: "textarea", placeholder: "What should be verified?" }, { key: "request", label: "Sources subject / request", type: "textarea", placeholder: "What sources are needed?" }] },
+  { id: "flow-todo-workspace", label: "Add To-Do to Workspace", description: "Turn a saved To-Do and its subtasks into rich Workspace content.", category: "Flows", action: "flow-todo-workspace", fields: [todoItem] },
+  { id: "flow-folder-task-subtask", label: "Create Folder, Task and Subtask", description: "Create a To-Do folder with its first task and subtask.", category: "Flows", action: "flow-folder-task-subtask", fields: [text("folderName", "Folder name", "New list"), text("title", "Task", "New task"), { key: "description", label: "Task details", type: "textarea", placeholder: "Optional task details", optional: true }, text("subtaskTitle", "Subtask", "First step"), { key: "subtaskDescription", label: "Subtask description", type: "textarea", placeholder: "Optional subtask details", optional: true }] },
+  { id: "flow-folder-select-task", label: "Create Folder and Add Selected Task", description: "Create a folder and place an existing To-Do in it.", category: "Flows", action: "flow-folder-select-task", fields: [text("folderName", "Folder name", "New list"), todoItem] },
+  { id: "flow-folder-task-subtask-existing", label: "Add Folder, Task and Subtask", description: "Create a folder, choose a task, and add a new subtask.", category: "Flows", action: "flow-folder-task-subtask-existing", fields: [text("folderName", "Folder name", "New list"), todoItem, text("subtaskTitle", "New subtask", "Next step")] },
+  { id: "flow-folder-task-subtask-details", label: "Add Folder, Task and Detailed Subtask", description: "Create a folder, choose a task, and add a detailed subtask.", category: "Flows", action: "flow-folder-task-subtask-details", fields: [text("folderName", "Folder name", "New list"), todoItem, text("subtaskTitle", "New subtask", "Next step"), { key: "subtaskDescription", label: "Subtask description", type: "textarea", placeholder: "Subtask details" }] },
+  { id: "flow-finding-day", label: "Add Finding to Day Document", description: "Append a saved finding to a selected Day Document.", category: "Flows", action: "flow-finding-day", fields: [finding, dayDocument] },
+  { id: "flow-sources-day", label: "Add Sources to Day Document", description: "Add saved sources to an existing or new Day Document.", category: "Flows", action: "flow-sources-day", fields: [sourceResult, dayDocument, { key: "dayDate", label: "New Day Document date", type: "date", optional: true }] },
+  { id: "flow-sources-workspace", label: "Send Sources to Workspace Note", description: "Append saved source results to a note, or create a new note.", category: "Flows", action: "flow-sources-workspace", fields: [sourceResult, { key: "workspaceTarget", label: "Workspace note", type: "note" }] },
+  { id: "flow-finding-table", label: "Add Finding to Table Page", description: "Choose a table and create a page containing a saved finding.", category: "Flows", action: "flow-finding-table", fields: [table, finding] },
+  { id: "flow-sources-table", label: "Add Sources to Table Page", description: "Choose a table and create a page containing saved sources.", category: "Flows", action: "flow-sources-table", fields: [table, sourceResult] },
+  { id: "flow-todo-calendar", label: "Add To-Do to Calendar", description: "Schedule an existing To-Do on a calendar date.", category: "Flows", action: "flow-todo-calendar", fields: [todoItem, date("dueDate", "Calendar date")] },
+  { id: "flow-todo-day", label: "Create To-Do for Day Document", description: "Create a dated To-Do and include it in that day document.", category: "Flows", action: "flow-todo-day", fields: [text("title", "To-Do", "Task for this day"), date("dayDate", "Calendar date")] },
+  { id: "flow-todo-to-day", label: "Add To-Do to Day Document", description: "Add an existing To-Do to a saved or new Day Document.", category: "Flows", action: "flow-todo-to-day", fields: [todoItem, dayDocument, { key: "dayDate", label: "New Day Document date", type: "date", optional: true }] },
+  { id: "flow-note-to-day", label: "Add Note to Day Document", description: "Add an existing Workspace note to a saved or new Day Document.", category: "Flows", action: "flow-note-to-day", fields: [note, dayDocument, { key: "dayDate", label: "New Day Document date", type: "date", optional: true }] },
+];
+
+export const AO_MACRO_CATEGORIES: AOMacroCategory[] = ["Workspace", "To Do", "Tables", "Rows", "Columns", "Pages", "Vault", "Flows"];
+export const AO_MACRO_CATALOG: AOMacroDefinition[] = [...workspace, ...todo, ...tables, ...rows, ...addColumns, ...columnActions, ...pages, ...vault, ...flows];

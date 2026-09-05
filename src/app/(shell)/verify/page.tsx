@@ -12,6 +12,8 @@ type Verification = { note: { id: string; title: string; updatedAt: string }; su
 type SavedChat = { id: string; name: string; noteId: string; context: string; messages: ChatMessage[]; updatedAt: string };
 type SavedFinding = { id: string; name: string; result: Verification; messages: ChatMessage[]; updatedAt: string };
 const AGENT_VERIFY_CONTEXT_KEY = "work-sync:agent-verify-context";
+const VERIFY_PREFILL_KEY = "work-sync:verify-prefill";
+const VERIFY_OPEN_FINDING_KEY = "work-sync:verify-open-finding";
 const uid = () => crypto.randomUUID();
 function markdown(item: Verification) { return `# ${item.note.title} — Verification Findings\n\n## Evidence trust score: ${item.trustScore}/100\n\n${item.trustRationale}\n\n## Summary\n${item.summary}\n\n## How it was checked\n${item.method.map((step) => `- ${step}`).join("\n")}\n\n## Assertions\n${item.confirmed.map((entry) => `### ${entry.assertion}\n**${entry.status}** — ${entry.explanation}${entry.evidenceIds.length ? `\n\nEvidence: ${entry.evidenceIds.join(", ")}` : ""}`).join("\n\n")}\n\n## Sources and evidence\n${item.evidence.map((entry) => `- [${entry.id}: ${entry.title}](${entry.url}) — ${entry.publisher}. ${entry.relevance}`).join("\n")}\n\n## Uncertainty\n${item.uncertainty.length ? item.uncertainty.map((entry) => `- ${entry}`).join("\n") : "- No material uncertainty reported."}\n\n## Verification response\n${item.answer}`; }
 
@@ -26,8 +28,18 @@ export default function VerifyPage() {
   useEffect(() => { if (!chatKey || !findingsKey) return; try { setChats(JSON.parse(localStorage.getItem(chatKey) ?? "[]")); setFindingHistory(JSON.parse(localStorage.getItem(findingsKey) ?? "[]")); } catch { setChats([]); setFindingHistory([]); } setHistoryLoaded(true); }, [chatKey, findingsKey]);
   useEffect(() => { if (chatKey && historyLoaded) localStorage.setItem(chatKey, JSON.stringify(chats)); }, [chatKey, chats, historyLoaded]); useEffect(() => { if (findingsKey && historyLoaded) localStorage.setItem(findingsKey, JSON.stringify(findingHistory)); }, [findingHistory, findingsKey, historyLoaded]);
   useEffect(() => { void loadNotes().catch((reason) => { if (!(reason instanceof ApiError && reason.status === 401)) setError(reason instanceof Error ? reason.message : "Could not load Workspace notes."); }); }, [loadNotes]);
+  useEffect(() => {
+    if (!historyLoaded) return;
+    const scoped = (key: string) => userStorageKey(key);
+    try {
+      const prefill = JSON.parse(localStorage.getItem(scoped(VERIFY_PREFILL_KEY)) ?? "null") as { noteId?: string; context?: string } | null;
+      if (prefill?.noteId) { setNoteId(prefill.noteId); setContext(prefill.context ?? ""); localStorage.removeItem(scoped(VERIFY_PREFILL_KEY)); }
+      const findingId = localStorage.getItem(scoped(VERIFY_OPEN_FINDING_KEY)); const finding = findingHistory.find((item) => item.id === findingId);
+      if (finding) { setFindings(finding.result); setMessages(finding.messages); setNoteId(finding.result.note.id); localStorage.removeItem(scoped(VERIFY_OPEN_FINDING_KEY)); }
+    } catch { /* ignore malformed macro handoff */ }
+  }, [findingHistory, historyLoaded]);
   useEffect(() => { if (conversationRef.current) conversationRef.current.scrollTop = conversationRef.current.scrollHeight; }, [messages, busy]);
-  useEffect(() => { setMessages([]); setFindings(null); setError(null); }, [noteId]);
+  useEffect(() => { setMessages([]); setError(null); }, [noteId]);
   function saveChat(next: ChatMessage[]) { const note = notes.find((item) => item.id === noteId); if (!note) return; setChats((current) => [{ id: current.find((item) => item.noteId === noteId && item.context === context)?.id ?? uid(), name: `${note.title} verification`, noteId, context, messages: next, updatedAt: new Date().toISOString() }, ...current.filter((item) => item.noteId !== noteId || item.context !== context)]); }
   function saveFinding(result: Verification, next: ChatMessage[]) { setFindingHistory((current) => [{ id: uid(), name: `${result.note.title} findings`, result, messages: next, updatedAt: new Date().toISOString() }, ...current]); }
   async function verify(nextMessages: ChatMessage[]) { if (!noteId || !context.trim()) return; setBusy(true); setError(null); try { const result = await api<Verification>("/api/v1/verify-note", { method: "POST", body: JSON.stringify({ noteId, context, messages: nextMessages }) }); const completed = [...nextMessages, { role: "assistant" as const, content: result.answer }]; setFindings(result); setMessages(completed); saveChat(completed); saveFinding(result, completed); } catch (reason) { setError(reason instanceof Error ? reason.message : "Verification failed."); } finally { setBusy(false); } }

@@ -90,6 +90,16 @@ export function applyTableMacro(tables: WorkTable[], activeId: string, command: 
   if (command.action === "table-duplicate") { const copy = duplicateTable(selected, command.name?.trim() || `${selected.name} copy`); return { tables: [...tables, copy], activeId: copy.id }; }
 
   let updated = selected; let openPage: AOTableMacroResult["openPage"]; let openColumn: string | undefined; let focusCell: AOTableMacroResult["focusCell"]; let filter: AOTableMacroResult["filter"]; let summary: string | undefined;
+  if (command.action === "page-create-content") {
+    updated = addRow(updated);
+    const row = updated.rows.at(-1)!;
+    const pageColumn = updated.columns.find((column) => column.type === "page");
+    const withPage = pageColumn ? updated : addColumn(updated, "page");
+    const createdColumn = withPage.columns.find((column) => column.type === "page")!;
+    updated = updateCell(withPage, row.id, withPage.columns[0]!.id, command.title?.trim() || "New page");
+    updated = updateCell(updated, row.id, createdColumn.id, encodePageCell(command.title?.trim() || "New page", wrapExternalValue(command.text?.trim() ?? "")));
+    openPage = { rowId: row.id, columnId: createdColumn.id };
+  }
   if (["add-row", "row-add"].includes(command.action)) updated = addRow(updated);
   if (command.action === "row-many") for (let index = 0; index < Math.min(100, Math.max(1, Number(command.count) || 1)); index += 1) updated = addRow(updated);
   if (["row-named", "row-preset"].includes(command.action)) { updated = addRow(updated); const nextRow = updated.rows.at(-1)!; updated = updateCell(updated, nextRow.id, updated.columns[0]!.id, command.name?.trim() || command.text?.trim() || "New record"); }

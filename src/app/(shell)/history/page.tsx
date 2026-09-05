@@ -9,6 +9,7 @@ import { MarkdownPreview } from "@/components/MarkdownPreview";
 
 type CalendarEvent = { id: string; title: string; date: string; time?: string; alert: boolean; detail?: string; createdAt: string };
 type DayDocument = { id: string; name: string; day: string; body: string; taskId?: string; branchOf?: string; updatedAt: string };
+const TIMELINE_OPEN_DOCUMENT_KEY = "work-sync:timeline-open-document";
 
 const isoDay = (date: Date) => date.toISOString().slice(0, 10);
 const short = (value: string) => value.length > 23 ? `${value.slice(0, 22)}…` : value;
@@ -79,6 +80,12 @@ export default function HistoryPage() {
   useEffect(() => { if (calendarKey && storageLoaded) localStorage.setItem(calendarKey, JSON.stringify(calendarEvents)); }, [calendarEvents, calendarKey, storageLoaded]);
   useEffect(() => { if (docsKey && storageLoaded) localStorage.setItem(docsKey, JSON.stringify(dayDocuments)); }, [dayDocuments, docsKey, storageLoaded]);
   useEffect(() => { if (todoKey && storageLoaded) { localStorage.setItem(todoKey, JSON.stringify(todos)); window.dispatchEvent(new Event(TODO_STORAGE_EVENT)); } }, [todos, todoKey, storageLoaded]);
+  useEffect(() => {
+    if (!storageLoaded || !docsKey || !dayDocuments.length) return;
+    const openId = localStorage.getItem(userStorageKey(TIMELINE_OPEN_DOCUMENT_KEY)); const document = dayDocuments.find((item) => item.id === openId);
+    if (!document) return;
+    setSelectedDay(document.day); setActiveDocumentId(document.id); setDayTaskId(document.taskId ?? todos.find((task) => task.dueDate === document.day)?.id ?? null); setDayEventId(null); setDayDraft(withoutLegacyDayHeading(document.body, document.day)); localStorage.removeItem(userStorageKey(TIMELINE_OPEN_DOCUMENT_KEY));
+  }, [dayDocuments, docsKey, storageLoaded, todos]);
   useEffect(() => { if (todoSourceId && !todos.some((todo) => todo.id === todoSourceId)) setTodoSourceId(""); }, [todoSourceId, todos]);
 
   const dayEvents = useMemo(() => [...calendarEvents, ...todos.filter((todo) => todo.dueDate).map((todo) => ({ id: `todo-${todo.id}`, title: todo.title, date: todo.dueDate!, detail: taskMarkdown(todo), alert: false, createdAt: "", todo }))], [calendarEvents, todos]);

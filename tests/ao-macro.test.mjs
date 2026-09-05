@@ -52,6 +52,16 @@ test("Agent output opens as a dedicated page in a new Tables workspace", () => {
   assert.equal(decodePageCell(table.rows[0].cells[pageColumn.id]).body, "The release is ready.");
 });
 
+test("saved findings and sources can create a page in a selected table", () => {
+  const initial = makeTable(1);
+  const result = applyTableMacro([initial], initial.id, { action: "page-create-content", tableId: initial.id, title: "Evidence bundle", text: "# Findings\n\n- corroborated source" });
+  const table = result.tables[0];
+  const pageColumn = table.columns.find((column) => column.type === "page");
+  assert.ok(pageColumn);
+  assert.deepEqual(result.openPage, { rowId: table.rows.at(-1).id, columnId: pageColumn.id });
+  assert.match(decodePageCell(table.rows.at(-1).cells[pageColumn.id]).body, /Findings/);
+});
+
 test("chained row-page macros can create a missing Page column automatically", () => {
   const initial = makeTable(1);
   const result = applyTableMacro([initial], initial.id, { action: "row-page", tableId: initial.id, columnId: "__new_page__", name: "Trial", title: "Trial page" });

@@ -8,6 +8,7 @@ import { userStorageKey } from "@/lib/user-storage";
 type WorkspaceNote = { id: string; title: string; body: string; updatedAt: string };
 type FoundSource = { title: string; url: string; publisher: string; summary: string; trustReason: string };
 type SavedSourceResult = { id: string; name: string; noteId: string; noteTitle: string; request: string; sources: FoundSource[]; updatedAt: string };
+const SOURCES_OPEN_RESULT_KEY = "work-sync:sources-open-result";
 
 export default function SourcesPage() {
   const [notes, setNotes] = useState<WorkspaceNote[]>([]), [noteId, setNoteId] = useState(""), [name, setName] = useState(""), [request, setRequest] = useState(""), [results, setResults] = useState<FoundSource[]>([]);
@@ -18,6 +19,11 @@ export default function SourcesPage() {
   useEffect(() => { setHistoryKey(userStorageKey("work-sync:source-results")); }, []);
   useEffect(() => { if (!historyKey) return; try { setHistory(JSON.parse(localStorage.getItem(historyKey) ?? "[]")); } catch { setHistory([]); } setHistoryLoaded(true); }, [historyKey]);
   useEffect(() => { if (historyKey && historyLoaded) localStorage.setItem(historyKey, JSON.stringify(history)); }, [history, historyKey, historyLoaded]);
+  useEffect(() => {
+    if (!historyLoaded || !historyKey) return;
+    const openId = localStorage.getItem(userStorageKey(SOURCES_OPEN_RESULT_KEY)); const item = history.find((entry) => entry.id === openId);
+    if (item) { setName(item.name); setNoteId(item.noteId); setRequest(item.request); setResults(item.sources); localStorage.removeItem(userStorageKey(SOURCES_OPEN_RESULT_KEY)); }
+  }, [history, historyKey, historyLoaded]);
 
   async function findSources(event: React.FormEvent) {
     event.preventDefault(); if (!noteId || !name.trim() || !request.trim()) return;

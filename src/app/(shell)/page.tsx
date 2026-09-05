@@ -228,6 +228,8 @@ export default function WorkspacePage() {
     const project = { id: crypto.randomUUID(), title: title.slice(0, 80) };
     setProjects((current) => [...current, project]);
     setActiveProjectId(project.id);
+    // A project starts with a fresh note so there is an immediate place to work.
+    newNote();
   }
   function assignCurrentNote(projectId: string) {
     if (!activeId) return;

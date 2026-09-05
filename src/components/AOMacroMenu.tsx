@@ -11,7 +11,7 @@ import {
   type AOCustomMacroStep, type AOMacroPreset, type AOTableCommand, type AOWorkspaceLineCommand,
 } from "@/lib/ao-macro";
 import { decodePageCell, type WorkTable } from "@/lib/table-model";
-import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, TODO_STORAGE_KEY, type AOTodoCommand, type TodoItem } from "@/lib/todo-model";
+import { AO_TODO_COMMAND_EVENT, AO_TODO_COMMAND_KEY, TODO_LIST_STORAGE_KEY, TODO_STORAGE_EVENT, TODO_STORAGE_KEY, type AOTodoCommand, type TodoItem, type TodoList } from "@/lib/todo-model";
 import { userStorageKey } from "@/lib/user-storage";
 import { MACRO_ICON_OPTIONS, MacroIcon, macroIconFor, type MacroIconName } from "./MacroIcon";
 import styles from "./AOMacroMenu.module.css";
@@ -19,10 +19,23 @@ import styles from "./AOMacroMenu.module.css";
 type View = "main" | "macro" | "route" | "turbo" | "vault" | "preferences";
 type Note = { id: string; title: string; body: string; createdAt: string; updatedAt: string };
 type Option = { value: string; label: string };
+type WorkspaceProject = { id: string; title: string; createdAt?: string };
+type DayDocument = { id: string; name: string; day: string; body: string; taskId?: string; updatedAt: string };
+type Finding = { id: string; name: string; result: { note: { title: string }; summary: string; method: string[]; confirmed: Array<{ assertion: string; status: string; explanation: string }>; evidence: Array<{ title: string; url: string; publisher: string; relevance: string }>; uncertainty: string[]; trustScore: number; trustRationale: string; answer: string }; messages?: Array<{ role: string; content: string }>; updatedAt: string };
+type SourceResult = { id: string; name: string; noteId: string; noteTitle: string; request: string; sources: Array<{ title: string; url: string; publisher: string; summary: string; trustReason: string }>; updatedAt: string };
 type MacroMode = "home" | "presets" | "builder";
 type BuilderStep = AOCustomMacroStep & { id: string };
 const DRAFT_KEY = "work-sync:workspace-draft";
 const TABLES_KEY = "work-sync:tables";
+const PROJECTS_KEY = "work-sync:workspace-projects";
+const NOTE_PROJECTS_KEY = "work-sync:workspace-note-projects";
+const DAY_DOCUMENTS_KEY = "work-sync:timeline-day-docs";
+const FINDINGS_KEY = "work-sync:verify-findings";
+const SOURCE_RESULTS_KEY = "work-sync:source-results";
+const VERIFY_PREFILL_KEY = "work-sync:verify-prefill";
+const VERIFY_OPEN_FINDING_KEY = "work-sync:verify-open-finding";
+const SOURCES_OPEN_RESULT_KEY = "work-sync:sources-open-result";
+const TIMELINE_OPEN_DOCUMENT_KEY = "work-sync:timeline-open-document";
 const MAIN_MACRO_LIMIT = 6;
 
 const ROUTES: ReadonlyArray<{ label: string; href: string; icon: MacroIconName }> = [{ label: "Workspace", href: "/", icon: "document" }, { label: "To Do", href: "/todo", icon: "todo" }, { label: "Tables", href: "/tables", icon: "table" }, { label: "Sources", href: "/sources", icon: "sources" }, { label: "Verify", href: "/verify", icon: "verify" }, { label: "Calendar", href: "/history", icon: "calendar" }, { label: "Connect", href: "/connect", icon: "computer" }];
@@ -41,6 +54,7 @@ export function AOMacroMenu() {
   const [open, setOpen] = useState(false); const [view, setView] = useState<View>("main");
   const [turboText, setTurboText] = useState(""); const [presets, setPresets] = useState<AOMacroPreset[]>([]);
   const [tables, setTables] = useState<WorkTable[]>([]); const [notes, setNotes] = useState<Note[]>([]); const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [projects, setProjects] = useState<WorkspaceProject[]>([]); const [findings, setFindings] = useState<Finding[]>([]); const [sourceResults, setSourceResults] = useState<SourceResult[]>([]); const [dayDocuments, setDayDocuments] = useState<DayDocument[]>([]);
   const [query, setQuery] = useState(""); const [category, setCategory] = useState("Workspace");
   const [selected, setSelected] = useState<AOMacroDefinition | null>(null); const [values, setValues] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
@@ -60,6 +74,10 @@ export function AOMacroMenu() {
     try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(AO_MACROS_KEY)) ?? "[]") as AOMacroPreset[]; setPresets(Array.isArray(parsed) ? parsed.map((item) => item.main ? item : { ...item, icon: undefined }) : []); } catch { setPresets([]); }
     try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(TABLES_KEY)) ?? "[]") as WorkTable[]; setTables(Array.isArray(parsed) ? parsed : []); } catch { setTables([]); }
     try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(TODO_STORAGE_KEY)) ?? "[]") as TodoItem[]; setTodos(Array.isArray(parsed) ? parsed : []); } catch { setTodos([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(PROJECTS_KEY)) ?? "[]") as WorkspaceProject[]; setProjects(Array.isArray(parsed) ? parsed : []); } catch { setProjects([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(FINDINGS_KEY)) ?? "[]") as Finding[]; setFindings(Array.isArray(parsed) ? parsed : []); } catch { setFindings([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(SOURCE_RESULTS_KEY)) ?? "[]") as SourceResult[]; setSourceResults(Array.isArray(parsed) ? parsed : []); } catch { setSourceResults([]); }
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(DAY_DOCUMENTS_KEY)) ?? "[]") as DayDocument[]; setDayDocuments(Array.isArray(parsed) ? parsed : []); } catch { setDayDocuments([]); }
   }
   useEffect(readLocalData, []);
   useEffect(() => {
@@ -152,7 +170,7 @@ export function AOMacroMenu() {
     close();
   }
   async function createWorkspaceNote(title: string, content = "") {
-    const cleanTitle = title.trim() || "Untitled note"; const body = content.trim() ? `${cleanTitle}\n${content.trim()}` : cleanTitle;
+    const cleanTitle = title.trim() || "Untitled note"; const body = content.trim() ? `# ${cleanTitle}\n\n${content.trim()}` : `# ${cleanTitle}`;
     const note = await api<Note>("/api/v1/notes", { method: "POST", body: JSON.stringify({ title: cleanTitle, body }) }); openWorkspaceNote(note);
   }
   function currentDraft() { try { return JSON.parse(localStorage.getItem(userStorageKey(DRAFT_KEY)) ?? "{}") as { body?: string; activeId?: string | null }; } catch { return {}; } }
@@ -166,8 +184,12 @@ export function AOMacroMenu() {
     const pageTableId = context.page?.split(":")[0];
     const selectedTable = tables.find((item) => item.id === (context.tableId || pageTableId)) ?? tables[0];
     if (field.type === "table") return tables.map((item) => ({ value: item.id, label: item.name }));
-    if (field.type === "note") return notes.map((item) => ({ value: item.id, label: item.title }));
+    if (field.type === "note") return [...notes.map((item) => ({ value: item.id, label: item.title })), ...(macro?.action === "flow-sources-workspace" ? [{ value: "__new_note__", label: "＋ New Workspace Note" }] : [])];
     if (field.type === "todo") return todos.map((item) => ({ value: item.id, label: item.title }));
+    if (field.type === "project") return projects.map((item) => ({ value: item.id, label: item.title }));
+    if (field.type === "finding") return findings.map((item) => ({ value: item.id, label: item.name }));
+    if (field.type === "source-result") return sourceResults.map((item) => ({ value: item.id, label: item.name }));
+    if (field.type === "day-document") return [...dayDocuments.map((item) => ({ value: item.id, label: `${item.name} · ${item.day}` })), { value: "__new_day__", label: "＋ New Day Document…" }];
     if (field.type === "heading") return [1, 2, 3, 4].map((level) => ({ value: `h${level}`, label: `H${level}` }));
     if (field.type === "column") return (selectedTable?.columns ?? []).filter((item) => macro?.action === "column-show" ? item.hidden : macro?.action === "column-hide" ? !item.hidden : true).map((item) => ({ value: item.id, label: `${item.name} · ${item.type}` }));
     if (field.type === "column-type") return ([ ["text", "Text"], ["number", "Number"], ["percent", "Percent"], ["currency", "Currency"], ["single", "Single Select"], ["multiple", "Multiple Select"], ["date", "Date"], ["people", "People"], ["files", "Image & Files"], ["checkbox", "Checkbox"], ["reaction", "Reaction"], ["formula", "Formula"], ["relation", "Relation"], ["rollup", "Rollup"], ["page", "Page"], ["url", "URL"], ["phone", "Phone"], ["email", "Email"] ] as Array<[string, string]>).map(([value, label]) => ({ value, label }));
@@ -194,7 +216,15 @@ export function AOMacroMenu() {
     setValues({ ...initial, ...overrides }); setSelected(macro); setError(""); setNotice("");
   }
   function valueFor(key: string) { return values[key]?.trim() ?? ""; }
-  function requiredReady() { return (selected?.fields ?? []).every((field) => field.optional || Boolean(valueFor(field.key))); }
+  function requiredReady() {
+    const normal = (selected?.fields ?? []).every((field) => field.optional || Boolean(valueFor(field.key)));
+    if (!normal) return false;
+    if (valueFor("dayDocumentId") === "__new_day__") {
+      const day = valueFor("dayDate");
+      return Boolean(day) && !dayDocuments.some((item) => item.day === day);
+    }
+    return true;
+  }
 
   function tableCommandFor(macro: AOMacroDefinition, context: Record<string, string>): AOTableCommand {
     const get = (key: string) => context[key]?.trim() ?? ""; const chosen = presetById(get("presetId"));
@@ -220,7 +250,7 @@ export function AOMacroMenu() {
   async function runCustomMacro(entry: AOMacroPreset) {
     const commands: AOTableCommand[] = []; const todoCommands: AOTodoCommand[] = []; setBusy(true); setError("");
     try {
-      for (const step of entry.steps ?? []) { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId); if (!macro) continue; if (macro.category === "Workspace") await runWorkspace(macro, step.values); else if (macro.category === "To Do") todoCommands.push(todoCommandFor(macro, step.values)); else if (macro.category !== "Vault") commands.push(tableCommandFor(macro, step.values)); }
+      for (const step of entry.steps ?? []) { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId); if (!macro) continue; if (macro.category === "Workspace") await runWorkspace(macro, step.values); else if (macro.category === "To Do") todoCommands.push(todoCommandFor(macro, step.values)); else if (macro.category === "Flows") await runFlow(macro, step.values); else if (macro.category !== "Vault") commands.push(tableCommandFor(macro, step.values)); }
       touchPreset(entry.id); if (todoCommands.length && !commands.length) sendTodoCommand({ action: "todo-batch", commands: todoCommands }); else if (commands.length) { if (todoCommands.length) localStorage.setItem(userStorageKey(AO_TODO_COMMAND_KEY), JSON.stringify({ action: "todo-batch", commands: todoCommands })); sendTableCommand({ action: "batch", commands }); } else close();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Custom macro failed."); } finally { setBusy(false); }
   }
@@ -249,6 +279,100 @@ export function AOMacroMenu() {
     }
   }
 
+  function writeScoped(key: string, value: unknown) { localStorage.setItem(userStorageKey(key), JSON.stringify(value)); }
+  function findingMarkdown(item: Finding) {
+    const result = item.result;
+    return `# ${result.note.title} — Verification Findings\n\n## Evidence trust score: ${result.trustScore}/100\n\n${result.trustRationale}\n\n## Summary\n${result.summary}\n\n## How it was checked\n${result.method.map((step) => `- ${step}`).join("\n")}\n\n## Assertions\n${result.confirmed.map((entry) => `### ${entry.assertion}\n**${entry.status}** — ${entry.explanation}`).join("\n\n")}\n\n## Sources and evidence\n${result.evidence.map((entry) => `- [${entry.title}](${entry.url}) — ${entry.publisher}. ${entry.relevance}`).join("\n")}\n\n## Uncertainty\n${result.uncertainty.map((entry) => `- ${entry}`).join("\n") || "- No material uncertainty reported."}\n\n## Verification response\n${result.answer}`;
+  }
+  function sourcesMarkdown(item: SourceResult) { return `# ${item.name}\n\n${item.request}\n\n## Sources\n${item.sources.map((source) => `### [${source.title}](${source.url})\n${source.publisher}\n\n${source.summary}\n\n*${source.trustReason}*`).join("\n\n")}`; }
+  function taskMarkdown(task: TodoItem) { return `# ${task.title}\n\n${task.description ?? ""}${task.subtasks?.length ? `\n\n## Subtasks\n${task.subtasks.map((subtask) => `- ${subtask.title}${subtask.description ? `\n\n  ${subtask.description}` : ""}`).join("\n")}` : ""}`.trim(); }
+  function saveDayDocument(body: string, sourceDayId: string, preferredDay?: string, taskId?: string) {
+    const existing = sourceDayId === "__new_day__" ? undefined : dayDocuments.find((item) => item.id === sourceDayId);
+    const day = existing?.day ?? preferredDay;
+    if (!day) throw new Error("Choose a new Day Document date.");
+    if (!existing && dayDocuments.some((item) => item.day === day)) throw new Error("A Day Document already exists for that date.");
+    const now = new Date().toISOString();
+    const document: DayDocument = existing ? { ...existing, body: existing.body.trim() ? `${existing.body.trimEnd()}\n\n${body}` : body, updatedAt: now } : { id: crypto.randomUUID(), name: `${day} day document`, day, body, taskId, updatedAt: now };
+    const next = existing ? dayDocuments.map((item) => item.id === existing.id ? document : item) : [document, ...dayDocuments];
+    writeScoped(DAY_DOCUMENTS_KEY, next); setDayDocuments(next);
+    localStorage.setItem(userStorageKey(TIMELINE_OPEN_DOCUMENT_KEY), document.id);
+    router.push("/history"); close();
+  }
+  function writeTodos(next: TodoItem[]) { writeScoped(TODO_STORAGE_KEY, next); setTodos(next); window.dispatchEvent(new Event(TODO_STORAGE_EVENT)); }
+  function createFolder(title: string) {
+    const list: TodoList = { id: crypto.randomUUID(), title: title.trim() || "New list", createdAt: new Date().toISOString() };
+    let current: TodoList[] = [];
+    try { const parsed = JSON.parse(localStorage.getItem(userStorageKey(TODO_LIST_STORAGE_KEY)) ?? "[]") as TodoList[]; current = Array.isArray(parsed) ? parsed : []; } catch { /* start fresh */ }
+    writeScoped(TODO_LIST_STORAGE_KEY, [...current, list]); return list;
+  }
+  async function runFlow(macro: AOMacroDefinition, context = values) {
+    const get = (key: string) => context[key]?.trim() ?? "";
+    const selectedNote = notes.find((item) => item.id === get("noteId"));
+    const selectedTask = todos.find((item) => item.id === get("taskId"));
+    const selectedFinding = findings.find((item) => item.id === get("findingId"));
+    const selectedSources = sourceResults.find((item) => item.id === get("sourceResultId"));
+    if (macro.action === "flow-add-note") return createWorkspaceNote(get("title"));
+    if (macro.action === "flow-note-project") {
+      if (!selectedNote || !projects.some((item) => item.id === get("projectId"))) throw new Error("Choose both a saved note and Project.");
+      let assignments: Record<string, string> = {}; try { assignments = JSON.parse(localStorage.getItem(userStorageKey(NOTE_PROJECTS_KEY)) ?? "{}"); } catch { /* start clean */ }
+      writeScoped(NOTE_PROJECTS_KEY, { ...assignments, [selectedNote.id]: get("projectId") }); setNotice(`${selectedNote.title} added to the selected Project.`); setSelected(null); return;
+    }
+    if (macro.action === "flow-project-note") {
+      const project: WorkspaceProject = { id: crypto.randomUUID(), title: get("projectName") || "New project", createdAt: new Date().toISOString() };
+      const next = [...projects, project]; writeScoped(PROJECTS_KEY, next); setProjects(next); return createWorkspaceNote(get("title") || project.title);
+    }
+    if (macro.action === "flow-verify-note") {
+      if (!selectedNote) throw new Error("Choose a saved Workspace note.");
+      writeScoped(VERIFY_PREFILL_KEY, { noteId: selectedNote.id, context: "" }); router.push("/verify"); close(); return;
+    }
+    if (macro.action === "flow-verify-context" || macro.action === "flow-verify-sources") {
+      if (!selectedNote) throw new Error("Choose a saved Workspace note.");
+      const verifyRequest = () => api<Finding["result"]>("/api/v1/verify-note", { method: "POST", body: JSON.stringify({ noteId: selectedNote.id, context: get("context"), messages: [] }) });
+      if (macro.action === "flow-verify-sources") {
+        const [verification, [sourceSearch]] = await Promise.all([verifyRequest(), Promise.all([
+          api<{ note: { id: string; title: string }; sources: SourceResult["sources"] }>("/api/v1/sources/find", { method: "POST", body: JSON.stringify({ noteId: selectedNote.id, notes: get("request") }) }),
+          api("/api/v1/sources", { method: "POST", body: JSON.stringify({ name: `${selectedNote.title} sources`, workspaceNoteId: selectedNote.id, notes: get("request") }) }),
+        ])]);
+        const finding: Finding = { id: crypto.randomUUID(), name: `${selectedNote.title} findings`, result: verification, messages: [{ role: "assistant", content: verification.answer }], updatedAt: new Date().toISOString() };
+        const nextFindings = [finding, ...findings]; writeScoped(FINDINGS_KEY, nextFindings); setFindings(nextFindings); writeScoped(VERIFY_OPEN_FINDING_KEY, finding.id);
+        const source: SourceResult = { id: crypto.randomUUID(), name: `${selectedNote.title} sources`, noteId: selectedNote.id, noteTitle: sourceSearch.note.title, request: get("request"), sources: sourceSearch.sources, updatedAt: new Date().toISOString() };
+        const nextSources = [source, ...sourceResults]; writeScoped(SOURCE_RESULTS_KEY, nextSources); setSourceResults(nextSources); writeScoped(SOURCES_OPEN_RESULT_KEY, source.id); router.push("/sources"); close(); return;
+      }
+      const verification = await verifyRequest();
+      const finding: Finding = { id: crypto.randomUUID(), name: `${selectedNote.title} findings`, result: verification, messages: [{ role: "assistant", content: verification.answer }], updatedAt: new Date().toISOString() };
+      const nextFindings = [finding, ...findings]; writeScoped(FINDINGS_KEY, nextFindings); setFindings(nextFindings); writeScoped(VERIFY_OPEN_FINDING_KEY, finding.id);
+      if (macro.action === "flow-verify-context") { router.push("/verify"); close(); return; }
+    }
+    if (macro.action === "flow-todo-workspace") { if (!selectedTask) throw new Error("Choose a saved To-Do."); return updateCurrent((body) => body.trim() ? `${body.trimEnd()}\n\n${taskMarkdown(selectedTask)}` : taskMarkdown(selectedTask)); }
+    if (macro.action === "flow-folder-task-subtask") {
+      const folder = createFolder(get("folderName")); const todo: TodoItem = { id: crypto.randomUUID(), title: get("title"), description: get("description") || undefined, completed: false, priority: "normal", createdAt: new Date().toISOString(), listId: folder.id, subtasks: [{ id: crypto.randomUUID(), title: get("subtaskTitle"), description: get("subtaskDescription") || undefined, completed: false }] }; writeTodos([...todos, todo]); router.push("/todo"); close(); return;
+    }
+    if (["flow-folder-select-task", "flow-folder-task-subtask-existing", "flow-folder-task-subtask-details"].includes(macro.action)) {
+      if (!selectedTask) throw new Error("Choose a saved To-Do."); const folder = createFolder(get("folderName"));
+      const next = todos.map((item) => item.id === selectedTask.id ? { ...item, listId: folder.id, ...(macro.action === "flow-folder-select-task" ? {} : { subtasks: [...(item.subtasks ?? []), { id: crypto.randomUUID(), title: get("subtaskTitle"), description: get("subtaskDescription") || undefined, completed: false }] }) } : item);
+      writeTodos(next); router.push("/todo"); close(); return;
+    }
+    if (macro.action === "flow-finding-day") { if (!selectedFinding) throw new Error("Choose a saved finding."); return saveDayDocument(findingMarkdown(selectedFinding), get("dayDocumentId")); }
+    if (macro.action === "flow-sources-day") { if (!selectedSources) throw new Error("Choose saved source results."); return saveDayDocument(sourcesMarkdown(selectedSources), get("dayDocumentId"), get("dayDate")); }
+    if (macro.action === "flow-sources-workspace") {
+      if (!selectedSources) throw new Error("Choose saved source results."); const content = sourcesMarkdown(selectedSources); const target = get("workspaceTarget");
+      if (target === "__new_note__") return createWorkspaceNote(selectedSources.name, content);
+      const note = notes.find((item) => item.id === target); if (!note) throw new Error("Choose a Workspace note.");
+      await api<Note>(`/api/v1/notes/${note.id}`, { method: "PATCH", body: JSON.stringify({ body: note.body.trim() ? `${note.body.trimEnd()}\n\n${content}` : content }) }); setNotice("Sources appended to Workspace."); setSelected(null); return;
+    }
+    if (macro.action === "flow-finding-table" || macro.action === "flow-sources-table") {
+      const content = macro.action === "flow-finding-table" ? (selectedFinding ? findingMarkdown(selectedFinding) : "") : (selectedSources ? sourcesMarkdown(selectedSources) : "");
+      if (!content) throw new Error("Choose saved content to add."); sendTableCommand({ action: "page-create-content", tableId: get("tableId"), title: macro.action === "flow-finding-table" ? selectedFinding!.name : selectedSources!.name, text: content }); return;
+    }
+    if (macro.action === "flow-todo-calendar") { if (!selectedTask) throw new Error("Choose a saved To-Do."); writeTodos(todos.map((item) => item.id === selectedTask.id ? { ...item, dueDate: get("dueDate") } : item)); router.push("/history"); close(); return; }
+    if (macro.action === "flow-todo-day") {
+      const task: TodoItem = { id: crypto.randomUUID(), title: get("title"), completed: false, priority: "normal", dueDate: get("dayDate"), createdAt: new Date().toISOString() }; writeTodos([...todos, task]);
+      const existing = dayDocuments.find((item) => item.day === get("dayDate")); return saveDayDocument(taskMarkdown(task), existing?.id ?? "__new_day__", get("dayDate"), task.id);
+    }
+    if (macro.action === "flow-todo-to-day") { if (!selectedTask) throw new Error("Choose a saved To-Do."); return saveDayDocument(taskMarkdown(selectedTask), get("dayDocumentId"), get("dayDate"), selectedTask.id); }
+    if (macro.action === "flow-note-to-day") { if (!selectedNote) throw new Error("Choose a saved Workspace note."); return saveDayDocument(selectedNote.body, get("dayDocumentId"), get("dayDate")); }
+  }
+
   async function runVault(macro: AOMacroDefinition) {
     const chosen = presetById(valueFor("presetId")); const now = new Date().toISOString();
     if (macro.action === "vault-create") { savePresets([...presets, { id: crypto.randomUUID(), label: valueFor("name"), text: valueFor("text"), createdAt: now }]); setSelected(null); setNotice("Text preset saved to Vault."); return; }
@@ -268,6 +392,7 @@ export function AOMacroMenu() {
       if (selected.category === "Workspace") await runWorkspace(selected);
       else if (selected.category === "To Do") sendTodoCommand(todoCommandFor(selected, values));
       else if (selected.category === "Vault") await runVault(selected);
+      else if (selected.category === "Flows") await runFlow(selected);
       else { const chosen = presetById(valueFor("presetId")); if (chosen) touchPreset(chosen.id); sendTableCommand(tableCommandFor(selected, values)); }
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Macro failed."); } finally { setBusy(false); }
   }
@@ -307,10 +432,10 @@ export function AOMacroMenu() {
       {view === "macro" && !selected && macroMode === "builder" && <div className={styles.builder}>
         <label>Macro name<input value={builderName} onChange={(event) => setBuilderName(event.target.value)} placeholder="My workflow" /></label>
         <div className={styles.builderAdd}><select aria-label="Preset element" value={builderChoice} onChange={(event) => setBuilderChoice(event.target.value)}>{AO_MACRO_CATEGORIES.filter((item) => item !== "Vault").map((item) => <optgroup key={item} label={item}>{builderCatalog.filter((macro) => macro.category === item).map((macro) => <option key={macro.id} value={macro.id}>{macro.label}</option>)}</optgroup>)}</select><button type="button" onClick={addBuilderStep}>Add step</button></div>
-        <div className={styles.builderSteps}>{builderSteps.length ? builderSteps.map((step, index) => { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId)!; return <section key={step.id}><header><span>{index + 1}</span><strong>{macro.label}</strong><button type="button" aria-label={`Remove ${macro.label}`} onClick={() => setBuilderSteps((current) => current.filter((item) => item.id !== step.id))}><MacroIcon name="close" /></button></header>{(macro.fields ?? []).map((field) => { const options = optionsFor(field, step.values, macro); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination", "note", "todo", "heading"].includes(field.type); const update = (value: string) => setBuilderSteps((current) => current.map((item) => item.id === step.id ? { ...item, values: { ...item.values, [field.key]: value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) } } : item)); return <label key={`${step.id}-${field.key}`}>{field.label}{isSelect ? <select value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} />}</label>; })}</section>; }) : <p>Add built-in preset elements to create a reusable sequence.</p>}</div>
+        <div className={styles.builderSteps}>{builderSteps.length ? builderSteps.map((step, index) => { const macro = AO_MACRO_CATALOG.find((item) => item.id === step.macroId)!; return <section key={step.id}><header><span>{index + 1}</span><strong>{macro.label}</strong><button type="button" aria-label={`Remove ${macro.label}`} onClick={() => setBuilderSteps((current) => current.filter((item) => item.id !== step.id))}><MacroIcon name="close" /></button></header>{(macro.fields ?? []).map((field) => { const options = optionsFor(field, step.values, macro); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination", "note", "todo", "heading", "project", "finding", "source-result", "day-document"].includes(field.type); const update = (value: string) => setBuilderSteps((current) => current.map((item) => item.id === step.id ? { ...item, values: { ...item.values, [field.key]: value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) } } : item)); return <label key={`${step.id}-${field.key}`}>{field.label}{isSelect ? <select value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={step.values[field.key] ?? ""} onChange={(event) => update(event.target.value)} placeholder={field.placeholder} />}</label>; })}</section>; }) : <p>Add built-in preset elements to create a reusable sequence.</p>}</div>
         {error && <p className={styles.error}>{error}</p>}<button type="button" className={styles.builderSave} disabled={!builderReady} onClick={saveCustomMacro}>Save macro to Vault</button>
       </div>}
-      {view === "macro" && selected && <form className={styles.runner} onSubmit={(event) => { event.preventDefault(); void runSelected(); }}><p>{selected.description}</p>{(selected.fields ?? []).map((field) => { const options = optionsFor(field); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination", "note", "todo", "heading"].includes(field.type); return <label key={`${field.key}-${field.type}`}>{field.label}{isSelect ? <select value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) }))}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} min={field.type === "number" ? 1 : undefined} max={field.type === "number" ? 100 : undefined} value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} />}</label>; })}{selected.action === "vault-run" && valueFor("destination") === "page" && <label>Page<select value={values.page ?? ""} onChange={(event) => setValues((current) => ({ ...current, page: event.target.value }))}><option value="">Choose…</option>{optionsFor({ key: "page", label: "Page", type: "page" }).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>}{error && <p className={styles.error}>{error}</p>}<button type="submit" disabled={busy || !requiredReady()}>{busy ? "Running…" : selected.action === "vault-create" ? "Save Macro" : "Run macro"}</button></form>}
+      {view === "macro" && selected && <form className={styles.runner} onSubmit={(event) => { event.preventDefault(); void runSelected(); }}><p>{selected.description}</p>{(selected.fields ?? []).map((field) => { if (field.key === "dayDate" && valueFor("dayDocumentId") && valueFor("dayDocumentId") !== "__new_day__" && selected.action !== "flow-todo-day") return null; const options = optionsFor(field); const isSelect = options.length || ["table", "column", "column-type", "row", "page-column", "page", "preset", "destination", "note", "todo", "heading", "project", "finding", "source-result", "day-document"].includes(field.type); return <label key={`${field.key}-${field.type}`}>{field.label}{isSelect ? <select value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value, ...(field.type === "table" ? { columnId: "", rowId: "" } : {}) }))}><option value="">Choose…</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : field.type === "textarea" ? <textarea value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} /> : <input type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} min={field.type === "number" ? 1 : undefined} max={field.type === "number" ? 100 : undefined} value={values[field.key] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} />}</label>; })}{valueFor("dayDocumentId") === "__new_day__" && dayDocuments.some((item) => item.day === valueFor("dayDate")) ? <p className={styles.error}>A Day Document already exists for that date. Choose an available date.</p> : null}{selected.action === "vault-run" && valueFor("destination") === "page" && <label>Page<select value={values.page ?? ""} onChange={(event) => setValues((current) => ({ ...current, page: event.target.value }))}><option value="">Choose…</option>{optionsFor({ key: "page", label: "Page", type: "page" }).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>}{error && <p className={styles.error}>{error}</p>}<button type="submit" disabled={busy || !requiredReady()}>{busy ? "Running…" : selected.action === "vault-create" ? "Save Macro" : "Run macro"}</button></form>}
       {view === "route" && <div className={styles.list}><p className={styles.hint}>Open a destination in this app.</p>{ROUTES.map((route) => <button type="button" key={route.href} className={pathname === route.href ? styles.active : ""} onClick={() => { router.push(route.href); close(); }}><MacroIcon name={route.icon} className={styles.menuIcon} /><b>{route.label}</b>{pathname === route.href ? <em>Current</em> : <MacroIcon name="chevron" className={styles.chevron} />}</button>)}</div>}
       {view === "turbo" && <form className={styles.form} onSubmit={(event) => { event.preventDefault(); sendWorkspaceText(turboText); }}><label>Input prompt<textarea value={turboText} onChange={(event) => setTurboText(event.target.value)} placeholder="Write content for a destination…" autoFocus /></label><div className={styles.actions}><button type="submit" disabled={!turboText.trim()}>Write in Workspace</button><button type="button" disabled={!turboText.trim()} onClick={() => sendTableCommand({ action: "add-table", text: turboText })}>Make a new table</button></div></form>}
       {view === "vault" && customToRun && <div className={styles.customRun}><p>Run this saved sequence:</p><ol>{(customToRun.steps ?? []).map((step) => <li key={`${customToRun.id}-${step.macroId}`}>{AO_MACRO_CATALOG.find((item) => item.id === step.macroId)?.label ?? "Unavailable step"}</li>)}</ol>{error && <p className={styles.error}>{error}</p>}<button type="button" disabled={busy} onClick={() => void runCustomMacro(customToRun)}>{busy ? "Running…" : "Run custom macro"}</button></div>}
