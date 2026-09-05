@@ -22,12 +22,12 @@ export const AO_OPEN_VAULT_EVENT = "work-sync:open-vault";
 
 export type AOTableCommand = { action: string; tableId?: string; columnId?: string; rowId?: string; destinationRowId?: string; name?: string; title?: string; text?: string; type?: string; template?: string; query?: string; count?: number; page?: string; commands?: AOTableCommand[] };
 export type AOWorkspaceLineCommand = { action: "add-text" | "add-comment" | "add-heading" | "add-code"; text: string; kind?: "h1" | "h2" | "h3" | "h4" };
-export type AOCustomMacroStep = { macroId: string; values: Record<string, string> };
+export type AOCustomMacroStep = { macroId: string; values: Record<string, string>; mode?: "fixed" | "empty" };
 export type AOMacroPreset = { id: string; label: string; text: string; macroId?: string; steps?: AOCustomMacroStep[]; pinned?: boolean; createdAt?: string; lastUsedAt?: string; main?: boolean; mainOrder?: number; icon?: string };
 export type AOTableMacroResult = { tables: WorkTable[]; activeId: string; openPage?: { rowId: string; columnId: string }; openColumn?: string; focusCell?: { rowId: string; columnId: string }; filter?: { columnId: string; query: string }; summary?: string };
 
 const MACRO_TEXT_ICONS: Record<string, string> = {
-  "workspace-new": "+N", "workspace-new-preset": "N+", "workspace-meeting": "MT", "workspace-project": "PJ", "workspace-open": "ON", "workspace-prepend": "+A", "workspace-add-comment": "CM", "workspace-add-heading": "H#", "workspace-add-code": "</>",
+  "workspace-new": "+N", "workspace-new-preset": "N+", "workspace-meeting": "MT", "workspace-project": "PJ", "workspace-open": "ON", "workspace-prepend": "+A", "workspace-add-comment": "CM", "workspace-add-heading": "H#",
   "todo-add": "+T", "todo-add-detailed": "TD", "todo-add-with-subtask": "T+", "todo-add-high-with-subtask": "!T", "todo-add-subtask": "+S", "todo-set-description": "DS", "todo-add-high": "!T", "todo-add-today": "T0", "todo-add-due": "DT", "todo-open": "OT", "todo-from-note": "N>T", "todo-from-note-content": "N+T", "todo-complete-next": "OK", "todo-clear-completed": "CL",
   "table-blank": "+TB", "table-template": "TB", "table-open": "OTB", "table-rename": "RTB", "table-duplicate": "DTB", "table-project": "PT", "table-meeting": "MTB", "table-lab": "LAB", "table-content": "CAL", "table-issues": "ISS",
   "row-add": "+R", "row-many": "R+", "row-named": "NR", "row-duplicate": "DR", "row-page": "R>P", "row-preset": "PR", "row-empty": "ER",

@@ -10,7 +10,7 @@ test("AO provides the accepted catalog of runnable presets", () => {
 
 test("catalog includes every property type and time-saving chained workflows", () => {
   assert.equal(AO_MACRO_CATALOG.filter((macro) => macro.action === "column-add").length, 18);
-  for (const id of ["workspace-new", "workspace-new-preset", "todo-add", "todo-add-detailed", "todo-add-with-subtask", "todo-add-subtask", "todo-set-description", "todo-add-high", "todo-add-due", "todo-clear-completed", "table-project", "table-lab", "row-page", "page-column-first", "page-open", "vault-create", "vault-run"]) assert.ok(AO_MACRO_CATALOG.some((macro) => macro.id === id), id);
+  for (const id of ["workspace-new", "workspace-new-preset", "todo-add", "todo-add-detailed", "todo-add-with-subtask", "todo-add-subtask", "todo-set-description", "todo-add-high", "todo-add-due", "todo-clear-completed", "todo-save-text", "todo-subtask-save-text", "table-project", "table-lab", "row-page", "page-column-first", "page-open", "vault-run"]) assert.ok(AO_MACRO_CATALOG.some((macro) => macro.id === id), id);
   assert.ok(AO_MACRO_CATALOG.some((macro) => (macro.fields?.length ?? 0) >= 3));
   assert.equal(AO_MACRO_CATALOG.some((macro) => macro.action === "vault-delete"), false);
   assert.equal(AO_MACRO_CATALOG.find((macro) => macro.id === "todo-add-due")?.fields?.find((field) => field.key === "dueDate")?.type, "date");
@@ -18,13 +18,13 @@ test("catalog includes every property type and time-saving chained workflows", (
 
 test("every catalog preset maps to a supported execution action", () => {
   const supported = {
-    Workspace: new Set(["workspace-new", "workspace-new-preset", "workspace-template", "workspace-open", "workspace-prepend", "workspace-add-comment", "workspace-add-heading", "workspace-add-code"]),
-    "To Do": new Set(["todo-add", "todo-add-detailed", "todo-add-with-subtask", "todo-add-high-with-subtask", "todo-add-subtask", "todo-set-description", "todo-add-high", "todo-add-today", "todo-add-due", "todo-open", "todo-from-note", "todo-from-note-content", "todo-complete-next", "todo-clear-completed"]),
+    Workspace: new Set(["workspace-new", "workspace-new-preset", "workspace-template", "workspace-open", "workspace-prepend", "workspace-add-comment", "workspace-add-heading"]),
+    "To Do": new Set(["todo-add", "todo-add-detailed", "todo-add-with-subtask", "todo-add-high-with-subtask", "todo-add-subtask", "todo-set-description", "todo-add-high", "todo-add-today", "todo-add-due", "todo-open", "todo-from-note", "todo-from-note-content", "todo-save-text", "todo-subtask-save-text", "todo-complete-next", "todo-clear-completed"]),
     Tables: new Set(["table-create", "table-template", "table-open", "table-rename", "table-duplicate"]),
     Rows: new Set(["row-add", "row-many", "row-named", "row-duplicate", "row-page", "row-preset", "row-empty"]),
     Columns: new Set(["column-add", "column-rename", "column-duplicate", "column-change", "column-insert-left", "column-insert-right", "column-hide", "column-show", "column-options", "column-summary", "column-filter"]),
     Pages: new Set(["page-create", "page-open", "page-column-first", "row-page", "page-rename", "page-append", "page-duplicate", "page-fill-empty"]),
-    Vault: new Set(["vault-create", "vault-run", "vault-find", "vault-pin", "vault-duplicate", "vault-rename", "vault-edit", "vault-recent"]),
+    Vault: new Set(["vault-run", "vault-find", "vault-pin", "vault-duplicate", "vault-rename", "vault-edit", "vault-recent"]),
     Flows: new Set(["flow-add-note", "flow-note-project", "flow-project-note", "flow-verify-note", "flow-verify-context", "flow-verify-sources", "flow-todo-workspace", "flow-folder-task-subtask", "flow-folder-select-task", "flow-folder-task-subtask-existing", "flow-folder-task-subtask-details", "flow-finding-day", "flow-sources-day", "flow-sources-workspace", "flow-finding-table", "flow-sources-table", "flow-todo-calendar", "flow-todo-day", "flow-todo-to-day", "flow-note-to-day"]),
   };
 

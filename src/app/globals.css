@@ -492,7 +492,7 @@ html[data-theme="light"] input[type="date"] { color-scheme: light; }
 .ms-data-grid th.is-frozen, .ms-data-grid td.is-frozen { position: sticky; z-index: 3; background: #0e1318; box-shadow: 1px 0 var(--ms-edge); }
 .ms-data-grid td.is-frozen { z-index: 2; background: var(--ms-bg-1); }
 .ms-data-grid tfoot td { height: 32px; border-right: 1px solid var(--ms-edge-soft); border-top: 1px solid var(--ms-edge); padding: 0 8px; color: var(--ms-text-dim); background: #10151b; font: 10px var(--ms-font-mono); }
-.ms-cell-upload { margin-left: 8px; opacity: 0; border: 1px solid var(--ms-edge); border-radius: 3px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 11px var(--ms-font-sans); cursor: pointer; }
+.ms-cell-upload { display: block; max-width: 100%; overflow: hidden; margin-left: 8px; border: 1px solid var(--ms-edge); border-radius: 3px; padding: 4px 6px; background: var(--ms-bg-2); color: var(--ms-text-dim); font: 11px var(--ms-font-sans); cursor: pointer; text-overflow: ellipsis; white-space: nowrap; }.ms-cell-upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .ms-data-grid td:hover .ms-cell-upload { opacity: 1; }
 .ms-page-cell { width: 100%; height: 35px; display: flex; align-items: center; gap: 7px; border: 0; padding: 0 9px; background: transparent; color: var(--ms-text); font: 12px var(--ms-font-sans); text-align: left; cursor: pointer; }
 .ms-page-cell:hover { background: rgba(61,111,140,.09); color: var(--ms-text-bright); }

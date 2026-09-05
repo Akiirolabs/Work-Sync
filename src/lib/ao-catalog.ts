@@ -1,5 +1,5 @@
 export type AOMacroCategory = "Workspace" | "To Do" | "Tables" | "Rows" | "Columns" | "Pages" | "Vault" | "Flows";
-export type AOMacroFieldType = "text" | "textarea" | "number" | "date" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "note" | "todo" | "heading" | "destination" | "project" | "finding" | "source-result" | "day-document";
+export type AOMacroFieldType = "text" | "textarea" | "number" | "date" | "table" | "column" | "column-type" | "row" | "page-column" | "page" | "preset" | "note" | "todo" | "subtask" | "heading" | "destination" | "project" | "finding" | "source-result" | "day-document";
 export type AOMacroField = { key: string; label: string; type: AOMacroFieldType; placeholder?: string; optional?: boolean };
 export type AOMacroDefinition = { id: string; label: string; description: string; category: AOMacroCategory; action: string; fields?: AOMacroField[]; value?: string };
 
@@ -27,7 +27,6 @@ const workspace: AOMacroDefinition[] = [
   { id: "workspace-prepend", label: "Add Saved Text to Current Note", description: "Add selected Vault text to the start of the current note.", category: "Workspace", action: "workspace-prepend", fields: [preset] },
   { id: "workspace-add-comment", label: "Add Comment to Selected Note", description: "Attach a comment beneath the selected note heading.", category: "Workspace", action: "workspace-add-comment", fields: [{ key: "comment", label: "Comment", type: "textarea", placeholder: "Comment text" }] },
   { id: "workspace-add-heading", label: "Add Text with Heading to Workspace", description: "Insert supplied text using a selected Workspace heading level.", category: "Workspace", action: "workspace-add-heading", fields: [{ key: "heading", label: "Heading level", type: "heading" }, { key: "text", label: "Heading text", type: "textarea", placeholder: "Heading text" }] },
-  { id: "workspace-add-code", label: "Add Code to Workspace", description: "Insert supplied text using Workspace code formatting.", category: "Workspace", action: "workspace-add-code", fields: [{ key: "text", label: "Code", type: "textarea", placeholder: "Code or command" }] },
 ];
 
 const todo: AOMacroDefinition[] = [
@@ -43,6 +42,8 @@ const todo: AOMacroDefinition[] = [
   { id: "todo-open", label: "Open Saved To-Do", description: "Select an existing To-Do item.", category: "To Do", action: "todo-open", fields: [{ key: "taskId", label: "Saved To-Do", type: "todo" }] },
   { id: "todo-from-note", label: "Create To-Do From Saved Note", description: "Create a To-Do using a saved note title.", category: "To Do", action: "todo-from-note", fields: [note] },
   { id: "todo-from-note-content", label: "Add To-Do From Saved Note With Content", description: "Create a To-Do from a note and turn each content line into a subtask.", category: "To Do", action: "todo-from-note-content", fields: [note] },
+  { id: "todo-save-text", label: "Save To-Do Name as Saved Text", description: "Save a selected To-Do title as reusable saved text.", category: "To Do", action: "todo-save-text", fields: [todoItem] },
+  { id: "todo-subtask-save-text", label: "Save To-Do Subtask as Saved Text", description: "Save a selected subtask title as reusable saved text.", category: "To Do", action: "todo-subtask-save-text", fields: [todoItem, { key: "subtaskId", label: "Subtask", type: "subtask" }] },
   { id: "todo-complete-next", label: "Complete next task", description: "Mark the first open task complete.", category: "To Do", action: "todo-complete-next" },
   { id: "todo-clear-completed", label: "Clear completed tasks", description: "Remove every completed task from To Do.", category: "To Do", action: "todo-clear-completed" },
 ];
@@ -99,7 +100,6 @@ const pages: AOMacroDefinition[] = [
 ];
 
 const vault: AOMacroDefinition[] = [
-  { id: "vault-create", label: "Create text preset", description: "Save reusable text in Vault.", category: "Vault", action: "vault-create", fields: [text("name", "Preset name", "Weekly update"), { key: "text", label: "Preset text", type: "textarea", placeholder: "Reusable text" }] },
   { id: "vault-run", label: "Run saved text preset", description: "Send Vault text to a chosen destination.", category: "Vault", action: "vault-run", fields: [preset, { key: "destination", label: "Destination", type: "destination" }] },
   { id: "vault-find", label: "Find saved macro", description: "Search all saved Vault entries.", category: "Vault", action: "vault-find" },
   { id: "vault-pin", label: "Pin macro", description: "Keep a Vault entry at the top.", category: "Vault", action: "vault-pin", fields: [preset] },

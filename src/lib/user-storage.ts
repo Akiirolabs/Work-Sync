@@ -101,11 +101,17 @@ export function startUserStorageSync(userId: string): () => void {
   };
   schedule();
   const flush = () => { void uploadUserStorage(userId); };
+  const refresh = () => { void hydrateUserStorage(userId).then((changed) => { if (changed) window.dispatchEvent(new Event("work-sync:user-state-updated")); }); };
+  const refreshTimer = window.setInterval(refresh, 2_000);
+  const onVisibility = () => { if (document.visibilityState === "visible") refresh(); };
   window.addEventListener("pagehide", flush);
+  document.addEventListener("visibilitychange", onVisibility);
   return () => {
     stopped = true;
     if (syncTimer) clearTimeout(syncTimer);
+    window.clearInterval(refreshTimer);
     window.removeEventListener("pagehide", flush);
+    document.removeEventListener("visibilitychange", onVisibility);
   };
 }
 

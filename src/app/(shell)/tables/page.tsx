@@ -46,7 +46,7 @@ function Cell({ row, column, onChange, onEnter, onOpenPage, onOpenSelect }: { ro
   if (column.type === "date") return <input type="date" value={String(value)} onChange={(e) => onChange(e.target.value)} onKeyDown={enter} />;
   if (column.type === "single" || column.type === "multiple") { const labels = selectedLabels(value, column.type === "multiple"); return <button type="button" className="ms-select-cell" onClick={(event) => onOpenSelect(event.currentTarget)}>{labels.length ? labels.map((label) => { const option = column.options?.find((item) => item.label === label); return <span key={label} style={{ "--select-color": option?.color ?? SELECT_COLORS[8] } as CSSProperties}>{label}</span>; }) : <em>Select…</em>}</button>; }
   if (column.type === "people") return <input value={String(value)} onChange={(e) => onChange(e.target.value)} onKeyDown={enter} placeholder="Empty" />;
-  if (column.type === "files") return <button className="ms-cell-upload" type="button">+ Add file</button>;
+  if (column.type === "files") return <label className="ms-cell-upload">{String(value) || "+ Add file"}<input type="file" aria-label={`Add file to ${column.name}`} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) onChange(file.name); }} /></label>;
   if (column.type === "page") { const page = decodePageCell(value); return <button className="ms-page-cell" type="button" onClick={onOpenPage}><span>▤</span>{page.title || "Open page"}</button>; }
   return <input type={column.type === "number" || column.type === "currency" || column.type === "percent" ? "number" : column.type === "email" ? "email" : column.type === "url" ? "url" : "text"} value={String(value)} onChange={(e) => onChange(e.target.value)} onKeyDown={enter} />;
 }

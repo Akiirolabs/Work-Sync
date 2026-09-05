@@ -203,7 +203,7 @@ test("FTR 1009.2 updates Workspace controls, table icons, and Vault text actions
   for (const name of ["people", "date", "files", "filter", "group", "appearance", "settings", "comments"]) assert.match(tablesPage, new RegExp(`name="${name}"|${name}:`));
   assert.match(globalCss, /\.ms-ui-icon \{[^}]*color: #fff/);
   assert.match(aoMenu, /className=\{styles\.vaultTextActions\}/);
-  assert.match(aoMenu, /Create text preset/);
+  assert.doesNotMatch(aoMenu, /Create text preset/);
   assert.match(aoMenu, /View saved text/);
   assert.match(aoMenu, /setVaultTextOnly\(true\)/);
   assert.doesNotMatch(aoMenu, /\["All", "Text"/);
@@ -385,7 +385,7 @@ test("AO replaces the badge overlay without scanning or animating Next internals
 });
 
 test("AO menu exposes functional Macro, Route, Turbo and Preferences views", () => {
-  for (const label of ["Macro", "Route", "Turbo", "Vault", "Preferences", "Presets", "Search macros", "Create text preset", "Create macro", "Open Vault", "Write in Workspace", "Make a new table", "Run macro"]) assert.match(aoMenu, new RegExp(label));
+  for (const label of ["Macro", "Route", "Turbo", "Vault", "Preferences", "Presets", "Search macros", "Create macro", "Open Vault", "Write in Workspace", "Make a new table", "Run macro"]) assert.match(aoMenu, new RegExp(label));
   assert.match(aoMenu, /AO_MACROS_KEY/);
   assert.match(aoMenu, /AO_TABLE_COMMAND_KEY/);
   assert.match(aoMenu, /AO_WORKSPACE_TEXT_KEY/);
@@ -408,11 +408,20 @@ test("AO preset browser is gated behind Presets and saved presets can be revoked
   assert.match(aoMenu, /setMacroMode\("presets"\)/);
   assert.match(aoMenu, /macroMode === "presets"/);
   assert.match(aoMenu, /aria-label="Presets information"/);
-  assert.match(aoMenu, /aria-label="Text preset information"/);
+  assert.doesNotMatch(aoMenu, /aria-label="Text preset information"/);
   assert.match(aoMenu, /<VaultIcon \/><b>Create macro<\/b><MacroIcon name="chevron"/);
   assert.match(aoMenu, /saveBuiltIn\(macro\)/);
   assert.match(aoMenu, /\? "Unsave" : "Save"/);
   assert.match(aoMenu, /macroId: macro\.id/);
+});
+
+test("Macro Key keeps removed actions out, labels fixed or empty steps, and restricts Route destinations", () => {
+  assert.match(aoMenu, /REMOVED_PRESET_ACTIONS/);
+  assert.match(aoMenu, /!REMOVED_PRESET_ACTIONS\.has\(item\.action\)/);
+  for (const label of ["Step type", "Fixed", "Empty", "Route destination section", "Route destination page", "Go There", "Create New", "Add to Current", "Add to Page"]) assert.match(aoMenu, new RegExp(label));
+  assert.match(aoMenu, /workspace: \["tables", "sources", "verify", "calendar"\]/);
+  assert.match(aoMenu, /todo: \["workspace", "tables", "calendar"\]/);
+  assert.match(aoMenu, /tables: \["workspace", "verify", "sources", "calendar"\]/);
 });
 
 test("AO builds reusable multi-step macros and stores them in Vault", () => {
