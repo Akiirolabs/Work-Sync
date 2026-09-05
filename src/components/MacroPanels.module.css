@@ -50,6 +50,7 @@
   .dot:hover::after, .dot[aria-expanded="true"]::after { transform: scale(1.18); background: #d7f3ff; }
   .radial { width: 124px; height: 124px; }
   .radialCenter { inset: 48px; font-size: 10px; }
+  .liquidChrome { transform: scale(1.17); transform-origin: center; }
   .liquidVolume { inset: -38% -29%; }
   .liquidSheet { width: 178%; height: 124%; left: -39%; top: -12%; }
   .liquidReflection { width: 132%; height: 67%; left: -16%; top: 10%; }
