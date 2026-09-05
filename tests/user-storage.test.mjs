@@ -53,7 +53,7 @@ test("account sync collects durable user data and excludes one-shot commands", (
 
 test("account sync refreshes authenticated state for changes made on another device", () => {
   const source = readFileSync(new URL("../src/lib/user-storage.ts", import.meta.url), "utf8");
-  assert.match(source, /setInterval\(refresh, 2_000\)/);
+  assert.match(source, /setInterval\(\(\) => \{ refresh\(\); void refreshServerRevision\(\); \}, 2_000\)/);
   assert.match(source, /work-sync:user-state-updated/);
   assert.match(source, /visibilitychange/);
 });

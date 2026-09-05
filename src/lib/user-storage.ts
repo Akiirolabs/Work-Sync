@@ -12,6 +12,17 @@ const TRANSIENT_KEYS = new Set([
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let lastUploaded = "";
 let lastUploadedUser = "";
+let knownServerRevision = "";
+
+async function refreshServerRevision(): Promise<void> {
+  try {
+    const response = await fetch("/api/v1/sync-revision", { cache: "no-store" });
+    if (!response.ok) return;
+    const revision = ((await response.json()) as { revision?: string | null }).revision ?? "";
+    if (knownServerRevision && revision && revision !== knownServerRevision) window.dispatchEvent(new Event("work-sync:server-objects-updated"));
+    knownServerRevision = revision;
+  } catch { /* temporary network loss is handled by the next poll */ }
+}
 
 export function collectUserStorage(userId: string): Record<string, string> {
   const suffix = `:user:${userId}`;
@@ -102,7 +113,8 @@ export function startUserStorageSync(userId: string): () => void {
   schedule();
   const flush = () => { void uploadUserStorage(userId); };
   const refresh = () => { void hydrateUserStorage(userId).then((changed) => { if (changed) window.dispatchEvent(new Event("work-sync:user-state-updated")); }); };
-  const refreshTimer = window.setInterval(refresh, 2_000);
+  void refreshServerRevision();
+  const refreshTimer = window.setInterval(() => { refresh(); void refreshServerRevision(); }, 2_000);
   const onVisibility = () => { if (document.visibilityState === "visible") refresh(); };
   window.addEventListener("pagehide", flush);
   document.addEventListener("visibilitychange", onVisibility);
